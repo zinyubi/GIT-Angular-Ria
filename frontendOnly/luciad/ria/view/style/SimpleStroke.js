@@ -1,0 +1,1 @@
+import{HTML5DrawStrokeCommandProto}from"./HTML5DrawStrokeCommandProto.js";export class SimpleStroke extends HTML5DrawStrokeCommandProto{constructor(t){super(t)}paintMultiPathMapCoords(t,o,r,e){this._traceAndStrokePaths(t,o,r,e)}paintPathMapCoords(t,o,r,e){this._traceAndStrokePath(t,o,r,e)}getStrokeWidth(){return this.getPixelSizes().width}}

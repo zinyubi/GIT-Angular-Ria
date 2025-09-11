@@ -1,0 +1,1 @@
+import{XMLSchema}from"../../util/XMLSchema.js";const nameSchema=new XMLSchema({Name:XMLSchema.content()});export const WFSCapabilitiesSchemaCommon={FeatureTypeNamespaceSchema:XMLSchema.inheritedNamespace((e=>{const a=undefined;const m=nameSchema.parseDocument(e).Name.split(":");if(m.length>1)return m[0]}))};

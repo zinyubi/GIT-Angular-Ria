@@ -1,0 +1,1 @@
+import{kmlValueMapFactory}from"./KMLValues.js";export let KMLDisplayMode=function(D){D[D["DEFAULT"]=0]="DEFAULT";D[D["HIDE"]=1]="HIDE";return D}({});const DISPLAY_MODE_MAP={default:KMLDisplayMode.DEFAULT,hide:KMLDisplayMode.HIDE};export const getKmlDisplayMode=kmlValueMapFactory(KMLDisplayMode.DEFAULT,DISPLAY_MODE_MAP);

@@ -1,0 +1,1 @@
+export const constructors={};export function setConstructors(t){Object.assign(constructors,t)}

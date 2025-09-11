@@ -1,0 +1,1 @@
+export let GridLabelPosition=function(T){T[T["EAST_AND_SOUTH"]=1]="EAST_AND_SOUTH";T[T["EAST_AND_NORTH"]=2]="EAST_AND_NORTH";T[T["WEST_AND_SOUTH"]=3]="WEST_AND_SOUTH";T[T["WEST_AND_NORTH"]=4]="WEST_AND_NORTH";return T}({});

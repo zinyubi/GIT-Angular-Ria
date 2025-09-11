@@ -1,0 +1,1 @@
+export let RasterDataType=function(e){e["IMAGE"]="tileset/image";e["ELEVATION"]="tileset/elevation";e["TIN_ELEVATION"]="tileset/tin-elevation";return e}({});

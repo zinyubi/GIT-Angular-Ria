@@ -1,0 +1,1 @@
+import{AttributeValueProvider}from"./AttributeValueProvider.js";export class PropertyProvider extends AttributeValueProvider{constructor(r){super();this._name=r}getValue(r,e){return r.properties[this._name]}}

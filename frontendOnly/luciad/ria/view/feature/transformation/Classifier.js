@@ -1,0 +1,1 @@
+import{NotImplementedError}from"../../../error/NotImplementedError.js";export class Classifier{getClassification(e){throw new NotImplementedError("Child must implement getClassification")}}

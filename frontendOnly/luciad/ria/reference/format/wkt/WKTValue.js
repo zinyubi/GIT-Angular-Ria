@@ -1,0 +1,1 @@
+export class WKTValue{constructor(t){this._position=t}getPosition(){return this._position}}

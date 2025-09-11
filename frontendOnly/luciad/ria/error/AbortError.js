@@ -1,0 +1,1 @@
+import{LuciadError}from"./LuciadError.js";export class AbortError extends LuciadError{constructor(r){super(r);this.name="AbortError"}}

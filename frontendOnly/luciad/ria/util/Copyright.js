@@ -1,0 +1,1 @@
+export var Copyright={VERSION:"2024.1.09"};

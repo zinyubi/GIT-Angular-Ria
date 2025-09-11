@@ -1,0 +1,1 @@
+import{LuciadError}from"./LuciadError.js";export class ParseError extends LuciadError{constructor(r){super(r);this.name="luciad.error.ParseError"}}

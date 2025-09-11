@@ -1,0 +1,1 @@
+export let LayerTreeNodeType=function(e){e["LAYER"]="LAYER";e["LAYER_GROUP"]="LAYER_GROUP";return e}({});

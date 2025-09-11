@@ -1,0 +1,1 @@
+export var adler32=function(e,r,a,i){var l=65535&e|0,n=e>>>16&65535|0,o=0;while(0!==a){a-=o=a>2e3?2e3:a;do{n=n+(l=l+r[i++]|0)|0}while(--o);l%=65521;n%=65521}return l|n<<16|0};

@@ -1,0 +1,1 @@
+import{HelperHandle}from"./HelperHandle.js";export class CircularArcHelperHandle extends HelperHandle{constructor(e,r){super(r);this._createHelperShape=e}onDraw(e,r){const t=this.getHelperStyle(r);if(t){const a=this._createHelperShape();const p={...t,drapeTarget:this.getDrapeTarget(r,a)};e.drawShape(a,p)}}}

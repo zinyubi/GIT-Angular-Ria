@@ -1,0 +1,1 @@
+export let MapBorder=function(T){T[T["LEFT"]=0]="LEFT";T[T["BOTTOM"]=1]="BOTTOM";return T}({});

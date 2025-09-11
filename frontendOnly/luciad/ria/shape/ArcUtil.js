@@ -1,0 +1,1 @@
+export function normalizeSweepAngle(e,i){if(i<0)while(e>0)e-=360;else while(e<=0)e+=360;return e}

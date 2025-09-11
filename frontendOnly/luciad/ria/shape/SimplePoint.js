@@ -1,0 +1,1 @@
+export function simplePointCreate(o,t,e){return{x:o,y:t,z:e??0}}export function simplePointCopy(o){return{x:o.x,y:o.y,z:o.z}}export function simplePointMove2D(o,t,e){o.x=t;o.y=e}export function simplePointMove3DToCoordinates(o,t,e,n){o.x=t;o.y=e;o.z=n}

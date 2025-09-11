@@ -1,0 +1,1 @@
+import{Codec}from"./Codec.js";import{ProgrammingError}from"../../error/ProgrammingError.js";import{GMLCodecImpl}from"./GMLCodecImpl.js";export class GMLCodec extends Codec{constructor(e){super();this._delegate=new GMLCodecImpl(e)}encode(e){throw new ProgrammingError("The encode method is not supported")}decode(e){return this._delegate.decode(e)}}

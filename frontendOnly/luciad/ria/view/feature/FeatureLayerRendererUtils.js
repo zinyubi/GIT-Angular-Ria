@@ -1,0 +1,1 @@
+export function getDetailLevel(e,t,l){const n=l&&l.getDetailLevelScales?l.getDetailLevelScales(t,e):null;if(!n||0===n.length)return 0;let a=0;const c=e.xScale;for(let e=0;e<n.length;e++)if(c>=n[e])a++;return a}

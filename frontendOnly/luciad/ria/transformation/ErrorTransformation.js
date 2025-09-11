@@ -1,0 +1,1 @@
+import{OutOfBoundsError}from"../error/OutOfBoundsError.js";import{Transformation}from"./Transformation.js";export class ErrorTransformation extends Transformation{constructor(r,o){super(r,o)}_forward(r,o){throw new OutOfBoundsError}_forwardBoundsCoords(r,o){throw new OutOfBoundsError}_inverse(r,o){throw new OutOfBoundsError}_inverseBoundsCoords(r,o){throw new OutOfBoundsError}}

@@ -1,0 +1,1 @@
+export let PanoramicImageProjectionType=function(e){e[e["PINHOLE"]=0]="PINHOLE";e[e["EQUIRECTANGULAR"]=1]="EQUIRECTANGULAR";return e}({});

@@ -1,0 +1,1 @@
+export let TransformationType=function(E){E[E["TYPE_IDENTITY"]=0]="TYPE_IDENTITY";E[E["TYPE_GENERAL"]=1]="TYPE_GENERAL";E[E["TYPE_SCALE"]=2]="TYPE_SCALE";return E}({});

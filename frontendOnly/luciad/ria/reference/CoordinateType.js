@@ -1,0 +1,1 @@
+export let CoordinateType=function(E){E[E["GEODETIC"]=1]="GEODETIC";E[E["CARTESIAN"]=2]="CARTESIAN";return E}({});

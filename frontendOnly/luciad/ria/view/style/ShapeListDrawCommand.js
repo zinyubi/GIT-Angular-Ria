@@ -1,0 +1,1 @@
+import{CompositeDrawCommand}from"./CompositeDrawCommand.js";export class ShapeListDrawCommand extends CompositeDrawCommand{constructor(m,o){super(o);this._shape=m}findDrawCommand(m,o){if(this._shape===m)return this;else return super.findDrawCommand(m,o)}}

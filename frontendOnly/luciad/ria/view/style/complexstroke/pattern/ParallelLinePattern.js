@@ -1,0 +1,1 @@
+import{LinePattern}from"./LinePattern.js";import{PatternType}from"./util/PatternType.js";export class ParallelLinePattern extends LinePattern{constructor(e){super(Object.assign(e,{offset0:e.offset??0,offset1:e.offset??0,length:e.length??1,relative:e.relative??false}),PatternType.PARALLEL_LINE)}}

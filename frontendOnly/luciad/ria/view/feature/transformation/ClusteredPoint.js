@@ -1,0 +1,1 @@
+export class ClusteredPoint{constructor(t,o,i,s){this.modelElement=t;this.modelLocation=o;this.worldLocation=i;this.viewLocation=s;this.cluster=null}}

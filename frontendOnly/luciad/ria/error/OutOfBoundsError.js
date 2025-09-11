@@ -1,0 +1,1 @@
+import{LuciadError}from"./LuciadError.js";export class OutOfBoundsError extends LuciadError{constructor(r){super(r);this.name="luciad.error.OutOfBoundsError"}}

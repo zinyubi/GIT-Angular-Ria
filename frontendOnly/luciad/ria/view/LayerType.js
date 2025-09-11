@@ -1,0 +1,1 @@
+export let LayerType=function(A){A["BASE"]="BASE";A["STATIC"]="STATIC";A["DYNAMIC"]="DYNAMIC";return A}({});

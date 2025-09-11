@@ -1,0 +1,1 @@
+import{Parameter}from"./Parameter.js";import{SEElementType}from"./SEElementType.js";export class SVGParameter extends Parameter{constructor(e,r){super(SEElementType.SVG_PARAMETER,r);this._name=e}get name(){return this._name}}

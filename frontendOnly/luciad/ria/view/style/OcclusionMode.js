@@ -1,0 +1,1 @@
+var OcclusionMode=function(L){L[L["VISIBLE_ONLY"]=0]="VISIBLE_ONLY";L[L["ALWAYS_VISIBLE"]=1]="ALWAYS_VISIBLE";L[L["OCCLUDED_ONLY"]=2]="OCCLUDED_ONLY";return L}(OcclusionMode||{});export{OcclusionMode};

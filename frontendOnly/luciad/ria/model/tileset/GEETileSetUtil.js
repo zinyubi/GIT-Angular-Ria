@@ -1,0 +1,1 @@
+export function tileToGEEString(t,n,e){let i="";for(let o=e;o>=0;--o){const e=1<<o;const r=isBitSet(n,e);const s=undefined;i+=(r?0:2)|(isBitSet(t,e)===r?1:0)}return i}function isBitSet(t,n){return 0!==(t&n)}

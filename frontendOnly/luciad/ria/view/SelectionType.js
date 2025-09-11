@@ -1,0 +1,1 @@
+export let SelectionType=function(E){E[E["NEW"]=0]="NEW";E[E["ADD"]=1]="ADD";E[E["REMOVE"]=2]="REMOVE";E[E["TOGGLE"]=3]="TOGGLE";return E}({});

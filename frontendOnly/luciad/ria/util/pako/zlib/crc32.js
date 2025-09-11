@@ -1,0 +1,1 @@
+function makeTable(){var r,a=[];for(var e=0;e<256;e++){r=e;for(var c=0;c<8;c++)r=1&r?3988292384^r>>>1:r>>>1;a[e]=r}return a}var crcTable=makeTable();export var crc32=function(r,a,e,c){var v=crcTable,n=c+e;r^=-1;for(var o=c;o<n;o++)r=r>>>8^v[255&(r^a[o])];return-1^r};

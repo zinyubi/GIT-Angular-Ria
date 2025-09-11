@@ -1,0 +1,1 @@
+import{WKTValue}from"./WKTValue.js";export class WKTScalar extends WKTValue{constructor(e,a){super(a);this._value=e}getValue(){return this._value}}

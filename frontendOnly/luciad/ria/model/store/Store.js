@@ -1,0 +1,1 @@
+import{isFunction}from"../../util/Lang.js";export function isEditableStore(i){return isFunction(i.add)&&isFunction(i.put)&&isFunction(i.remove)}

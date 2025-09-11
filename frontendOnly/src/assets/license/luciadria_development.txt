@@ -1,0 +1,16 @@
+# 
+# Developer license.
+# 
+version                   = 2024.1
+productName               = LuciadRIA
+copyright                 = Powered by Hexagon.
+message                   = Powered by Hexagon.
+licensee                  = Pentashield Tech Pvt. Ltd
+licenseType               = development
+optionalModules           = Geometry,Panoramic,MilitarySymbology
+expiryDate                = 2025/09/21
+serialNumber              = 5acaca00
+key                       = 260da71b3accde5213619dd1091eba1f37817985d4c6e6d98fd4dc1d537d18c8bac21d4c1988fcf3cc1bc66bf49ab9b20fab770afc398934e0f862cdf932eca5
+#
+INTERNAL/1-FileReference         = 152251
+INTERNAL/2-GenerationInstruction = L1750345318095

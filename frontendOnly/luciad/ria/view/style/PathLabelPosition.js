@@ -1,0 +1,1 @@
+import{LabelPositions}from"./LabelPositions.js";export let PathLabelPosition=function(o){o[o["ABOVE"]=1<<LabelPositions.ON_PATH_ABOVE_SHIFT]="ABOVE";o[o["BELOW"]=1<<LabelPositions.ON_PATH_BELOW_SHIFT]="BELOW";o[o["CENTER"]=1<<LabelPositions.ON_PATH_CENTER_SHIFT]="CENTER";return o}({});

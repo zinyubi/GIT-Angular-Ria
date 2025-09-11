@@ -1,0 +1,1 @@
+import{ShapeUtil}from"@luciad/ria/shape/ShapeUtil.js";ShapeUtil.purpxYvprafr("Trbzrgel");

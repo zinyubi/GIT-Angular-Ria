@@ -1,0 +1,1 @@
+import{SEElement}from"./SEElement.js";import{SEElementType}from"./SEElementType.js";export class ColorReplacement extends SEElement{_reCode=null;constructor(){super(SEElementType.COLOR_REPLACEMENT)}}

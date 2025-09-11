@@ -1,0 +1,1 @@
+var ScalingMode=function(E){E["ADAPTIVE_WORLD_SIZE"]="ADAPTIVE_WORLD_SIZE";E["PIXEL_SIZE"]="PIXEL_SIZE";E["WORLD_SIZE"]="WORLD_SIZE";return E}(ScalingMode||{});export{ScalingMode};

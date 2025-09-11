@@ -1,0 +1,1 @@
+import{WrapperPattern}from"./WrapperPattern.js";import{PatternType}from"./util/PatternType.js";export class AtomicPattern extends WrapperPattern{constructor(t){super(t,PatternType.ATOMIC);this.pattern.atomic=true;this.pattern.canBend=false}appendHash(t){t.appendString("atomic");super.appendHash(t)}}

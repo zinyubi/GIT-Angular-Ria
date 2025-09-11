@@ -1,0 +1,1 @@
+import{KML_SCREEN_OVERLAY}from"../../util/kml/KMLTypes.js";import{cloneDeep}from"../../util/JSON.js";import{KMLFeature}from"./KMLFeature.js";export class KMLScreenOverlayFeature extends KMLFeature{constructor(e,r,t){super(null,e,r,t)}get type(){return KML_SCREEN_OVERLAY}copy(){return new KMLScreenOverlayFeature(cloneDeep(this.properties),this.id,this.options)}}

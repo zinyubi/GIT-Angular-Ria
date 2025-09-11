@@ -1,0 +1,1 @@
+export class AutoIncrement{_counter=1;constructor(){}nextKey=()=>this._counter++}

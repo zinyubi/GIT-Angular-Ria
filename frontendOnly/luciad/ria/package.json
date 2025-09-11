@@ -1,0 +1,20 @@
+{
+  "name": "@luciad/ria",
+  "version": "2024.1.9",
+  "description": "LuciadRIA is an object-oriented JavaScript API designed to build geospatial situational awareness applications that run in browsers.",
+  "scripts": {},
+  "type": "module",
+  "exports": {
+    "./*": "./*"
+  },
+  "keywords": [
+    "RIA",
+    "geometry",
+    "gis",
+    "luciad",
+    "hexagon",
+    "geospatial"
+  ],
+  "author": "Hexagon Geospatial <support.luciad.gsp@hexagon.com>",
+  "license": "SEE LICENSE IN LICENSE.TXT"
+}

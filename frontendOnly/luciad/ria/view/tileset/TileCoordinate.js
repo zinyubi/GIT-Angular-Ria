@@ -1,0 +1,1 @@
+export class TileCoordinate{constructor(e,t,s){this._level=e;this._x=t;this._y=s}get y(){return this._y}set y(e){this._y=e}get x(){return this._x}set x(e){this._x=e}get level(){return this._level}set level(e){this._level=e}equals(e){return this._level===e._level&&this._x===e._x&&this._y===e._y}}

@@ -1,0 +1,1 @@
+export let RasterSamplingMode=function(e){e["AREA"]="AREA";e["POINT"]="POINT";return e}({});

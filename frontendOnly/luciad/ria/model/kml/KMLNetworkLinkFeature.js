@@ -1,0 +1,1 @@
+import{cloneDeep}from"../../util/JSON.js";import{KML_NETWORK_LINK}from"../../util/kml/KMLTypes.js";import{KMLFeature}from"./KMLFeature.js";export class KMLNetworkLinkFeature extends KMLFeature{constructor(e,t,r){super(null,e,t,r)}get type(){return KML_NETWORK_LINK}get shape(){return null}copy(){return new KMLNetworkLinkFeature(cloneDeep(this.properties),this.id,this.options)}}

@@ -1,0 +1,1 @@
+import{GestureEventImpl}from"./GestureEvent.js";export class TouchEventImpl extends GestureEventImpl{_timeStamp=0;_timeDelta=0;constructor(t,e){super(t,e,"touch")}get timeStamp(){return this._timeStamp}set timeStamp(t){this._timeStamp=t}get timeDelta(){return this._timeDelta}set timeDelta(t){this._timeDelta=t}}

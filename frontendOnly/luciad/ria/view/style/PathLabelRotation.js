@@ -1,0 +1,1 @@
+var PathLabelRotation=function(t){t[t["NO_ROTATION"]=0]="NO_ROTATION";t[t["FIXED_LINE_ANGLE"]=1]="FIXED_LINE_ANGLE";return t}(PathLabelRotation||{});export{PathLabelRotation};

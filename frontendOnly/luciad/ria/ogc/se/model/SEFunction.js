@@ -1,0 +1,1 @@
+import{SEElement}from"./SEElement.js";import{SEElementType}from"./SEElementType.js";export class SEFunction extends SEElement{constructor(){super(SEElementType.FUNCTION)}}

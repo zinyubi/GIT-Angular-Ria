@@ -1,0 +1,1 @@
+export class Undoable{constructor(t,e){this._id=t;this._label=e}get label(){return this._label}get id(){return this._id}}

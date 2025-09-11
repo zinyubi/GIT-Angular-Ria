@@ -1,0 +1,1 @@
+export let VisibilityType=function(r){r["FOREGROUND"]="Foreground3D";r["TERRAIN"]="Terrain";return r}({});

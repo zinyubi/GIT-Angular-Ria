@@ -1,0 +1,1 @@
+import{AreaSegmentChooser}from"./AreaSegmentChooser.js";class AreaSegmentChooserSymmetricSubtract extends AreaSegmentChooser{constructor(){super()}isSegmentOkAbstract(e){return!e.isSegmentOnAreaBoundaryOfOther()}}export{AreaSegmentChooserSymmetricSubtract};

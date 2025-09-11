@@ -1,0 +1,1 @@
+import{RequestError}from"./RequestError.js";export class RequestTimeoutError extends RequestError{constructor(r,e,o){super(r,e,o);this.name="luciad.error.RequestTimeoutError"}}

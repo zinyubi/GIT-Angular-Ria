@@ -1,0 +1,1 @@
+export class TopologyUtil{constructor(t){this.toleranceEqualPoints=t}getToleranceX(){return this.toleranceEqualPoints}getToleranceY(){return this.toleranceEqualPoints}contains2D(t,e){return t.contains2DPoint(e)}getNewEditablePoint(t){return t.copy()}}

@@ -1,0 +1,1 @@
+export function instanceOfUrlIconStyle(n){return"url"in n}export function instanceOfImageIconStyle(n){return"image"in n}

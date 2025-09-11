@@ -1,0 +1,1 @@
+import{isPromise}from"../../../../util/PromiseUtil.js";export const PHOTON_STATE_MAP=new Map;export function releaseImages(e){if(PHOTON_STATE_MAP.has(e)){const o=undefined;PHOTON_STATE_MAP.get(e).forEach((function(e,o){if(!isPromise(e))if(e.photonImage)e.photonImage.release()}));PHOTON_STATE_MAP.delete(e)}}

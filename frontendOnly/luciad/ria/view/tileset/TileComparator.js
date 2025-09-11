@@ -1,0 +1,1 @@
+export class TileComparator{constructor(){this._cx=0;this._cy=0}compare(t,c){const s=t.x-this._cx+.5;const i=t.y-this._cy+.5;const o=s*s+i*i;const h=c.x-this._cx+.5;const n=c.y-this._cy+.5;const r=undefined;return o-(h*h+n*n)}configure(t){this._cx=t.x+t.width/2;this._cy=t.y+t.height/2}}

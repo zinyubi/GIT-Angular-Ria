@@ -1,0 +1,1 @@
+export let ReferenceType=function(C){C[C["GEODETIC"]=1]="GEODETIC";C[C["GRID"]=2]="GRID";C[C["CARTESIAN"]=3]="CARTESIAN";C[C["GEOCENTRIC"]=4]="GEOCENTRIC";C[C["TOPOCENTRIC"]=5]="TOPOCENTRIC";return C}({});

@@ -1,0 +1,1 @@
+function fallback(js){return eval("("+js+")")}export function parse(r,t){try{return self.JSON.parse(r,t)}catch(t){try{return fallback(r)}catch(t){throw new Error("Cannot parse as Json: "+r)}}}export const stringify=self.JSON.stringify;export function cloneDeep(r){return parse(stringify(r))}

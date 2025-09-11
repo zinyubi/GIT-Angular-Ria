@@ -1,0 +1,1 @@
+import{ConflictType,LabelConflictChecker}from"../style/LabelConflictChecker.js";export class GridLabelConflictChecker extends LabelConflictChecker{constructor(){super()}isValidPosition(e){return this.intersects(e)?ConflictType.OVERLAP_WITH_LABEL:ConflictType.NO_CONFLICT}}

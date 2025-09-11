@@ -1,0 +1,1 @@
+export let TileRecordType=function(E){E[E["DEFAULT"]=0]="DEFAULT";E[E["EMPTY"]=1]="EMPTY";E[E["ZOOMED"]=2]="ZOOMED";E[E["COMBINED"]=3]="COMBINED";return E}({});

@@ -1,0 +1,1 @@
+import{WFSVersion}from"../../WFSVersion.js";import{OGCEncoder200}from"./OGCEncoder200.js";export class OGCEncoder202 extends OGCEncoder200{constructor(){super(WFSVersion.V202)}}

@@ -1,0 +1,1 @@
+export class MultilevelGridCoordinateFormat{format(t){let o="";for(let e=0;e<t.coordinateLevelCount;e++)o+=this.formatCoordinate(t,e);return o}}

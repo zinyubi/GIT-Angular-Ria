@@ -1,0 +1,1 @@
+export class Projection{cartesianBoundsOnEllipsoidSFCT(e,s){this.cartesianBoundsOnSphereSFCT(e.auxRadius,s)}get EPSILON(){return 1e-5}}

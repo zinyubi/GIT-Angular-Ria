@@ -1,0 +1,1 @@
+export function getLabel(e,t){return e&&e.label?e.label:t}export function formatLabelForPhoton(e){if(e.length>10)e=e.substring(0,10);return e=(e=(e=e.toLowerCase()).trim()).replace(/[^a-z0-9]+/,"_")}

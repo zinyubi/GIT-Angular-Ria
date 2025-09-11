@@ -1,0 +1,1 @@
+export let LabelPosition=function(t){t["AUTO"]="AUTO";t["ALL_SIDES"]="ALL_SIDES";return t}({});

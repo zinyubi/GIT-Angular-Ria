@@ -1,0 +1,1 @@
+import{SEElementType}from"./SEElementType.js";import{SEElement}from"./SEElement.js";export class InlineContent extends SEElement{_content=[];constructor(e){super(SEElementType.INLINE_CONTENT);this._encoding=e}get encoding(){return this._encoding}get content(){return this._content}addContent(e){this._content.push(e)}}

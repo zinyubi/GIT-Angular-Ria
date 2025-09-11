@@ -1,0 +1,1 @@
+import{WrapperPattern}from"./WrapperPattern.js";import{PatternType}from"./util/PatternType.js";export class CombineWithRegularPattern extends WrapperPattern{constructor(r){super(r,PatternType.COMBINE_WITH_REGULAR)}appendHash(r){r.appendString("cwr");super.appendHash(r)}}

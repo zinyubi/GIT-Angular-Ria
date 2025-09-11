@@ -1,0 +1,1 @@
+import{LuciadError}from"./LuciadError.js";export class UnknownIdentifierError extends LuciadError{constructor(r,i){super(r);this.name="luciad.error.UnknownIdentifierError";this.identifier=i}}

@@ -1,0 +1,1 @@
+export function asPromise(e,r,...t){let n=true;return new Promise(((a,c)=>{const l=(e,r)=>{if(n){n=false;return e?c(e):a(r)}};try{e.apply(r??null,t.concat([l]))}catch(e){if(n){n=false;return c(e)}}}))}

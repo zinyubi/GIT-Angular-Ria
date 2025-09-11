@@ -1,0 +1,1 @@
+export class Cacher{constructor(){this._memCache=new Map}cache(e,t){this._memCache.set(e,t);return t}get(e){return this._memCache.get(e)}clear(e){this._memCache.delete(e)}invalidate(){this._memCache.clear()}memoize(e,t){let c=this._memCache.get(e);if(void 0===c){c=t();this._memCache.set(e,c)}return c}}export function buildCache(){return new Cacher}

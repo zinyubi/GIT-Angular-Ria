@@ -1,0 +1,1 @@
+export let EndCapStyle=function(t){t[t["CAP_ROUND"]=1]="CAP_ROUND";t[t["CAP_BUTT"]=2]="CAP_BUTT";return t}({});

@@ -1,0 +1,1 @@
+var PointCloudPointShape=function(o){o["DISC"]="DISC";o["SPHERE"]="SPHERE";return o}(PointCloudPointShape||{});export{PointCloudPointShape};

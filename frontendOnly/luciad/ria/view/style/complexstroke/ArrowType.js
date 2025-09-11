@@ -1,0 +1,1 @@
+export let ArrowType=function(l){l["REGULAR_FILLED"]="regular_filled";l["REGULAR_OUTLINED"]="regular_outlined";l["PLAIN"]="plain";l["PLAIN_OUTLINED"]="plain_outlined";l["PLAIN_FILLED"]="plain_filled";l["BLUNT"]="blunt";l["LEFT_HALF"]="left_half";l["RIGHT_HALF"]="right_half";l["DOUBLE_LEFT_HALF"]="double_left_half";l["DOUBLE_RIGHT_HALF"]="double_right_half";return l}({});

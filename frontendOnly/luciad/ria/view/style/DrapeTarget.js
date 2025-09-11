@@ -1,0 +1,1 @@
+export let DrapeTarget=function(A){A[A["NOT_DRAPED"]=0]="NOT_DRAPED";A[A["TERRAIN"]=1]="TERRAIN";A[A["MESH"]=2]="MESH";A[A["ALL"]=3]="ALL";return A}({});

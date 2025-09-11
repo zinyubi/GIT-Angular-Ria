@@ -1,0 +1,1 @@
+import{ProgrammingError}from"./ProgrammingError.js";export class InvalidReferenceError extends ProgrammingError{constructor(r){super(r);this.name="luciad.error.InvalidReferenceError"}}

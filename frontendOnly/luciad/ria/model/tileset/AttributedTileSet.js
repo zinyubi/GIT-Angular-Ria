@@ -1,0 +1,1 @@
+import{isFunction}from"../../util/Lang.js";export function isAttributedTileSet(t){if(!t)return false;const i=t;return isFunction(i.getAttribution)&&isFunction(i.getLogo)&&isFunction(i.on)}

@@ -1,0 +1,1 @@
+export let Axis=function(t){t[t["X"]=0]="X";t[t["Y"]=1]="Y";return t}({});

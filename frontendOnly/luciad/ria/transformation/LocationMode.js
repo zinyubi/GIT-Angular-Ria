@@ -1,0 +1,1 @@
+export let LocationMode=function(E){E["TERRAIN"]="TERRAIN";E["CLOSEST_SURFACE"]="CLOSEST_SURFACE";E["ELLIPSOID"]="ELLIPSOID";return E}({});

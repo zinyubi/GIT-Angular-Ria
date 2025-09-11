@@ -1,0 +1,1 @@
+import{XMLWriter}from"../../../util/XMLWriter.js";export class OGCXmlWriter extends XMLWriter{constructor(e,r,s){super(e);this._prefix=r;this._namespaces=s}beginNode(e,r,s){return super.beginNode(e,r||this._prefix,s||this._namespaces)}}

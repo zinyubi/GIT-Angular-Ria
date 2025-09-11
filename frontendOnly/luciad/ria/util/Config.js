@@ -1,0 +1,1 @@
+import{isFunction}from"./Lang.js";export function toUrlFromRoot(r){const e=window;let t="string"===typeof e.__LUCIAD_ROOT__?e.__LUCIAD_ROOT__:null;if(t){t=t.replace(/\/$/,"");return t+"/"+r}else if("object"===typeof e&&isFunction(e.require)&&isFunction(e.require.toUrl))return e.require.toUrl("luciad/"+r);else return"/"+r}

@@ -1,0 +1,1 @@
+import{SEElementType}from"./SEElementType.js";import{SEElement}from"./SEElement.js";export class Description extends SEElement{constructor(){super(SEElementType.DESCRIPTION);this._title="";this._abstract=""}set title(t){this._title=t}get title(){return this._title}set abstract(t){this._abstract=t}get abstract(){return this._abstract}}

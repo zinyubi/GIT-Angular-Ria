@@ -1,0 +1,1 @@
+export let EditShapeStatus=function(t){t["IN_PROGRESS"]="in_progress";t["FINISHED"]="finished";return t}({});

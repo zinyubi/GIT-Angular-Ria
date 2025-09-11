@@ -1,0 +1,1 @@
+export let KeyEventType=function(e){e[e["UP"]=0]="UP";e[e["DOWN"]=1]="DOWN";return e}({});

@@ -1,0 +1,1 @@
+export function toPhotonPBRSettings(t){const i=-1;if(t)return{directionalLighting:t.directionalLighting?1:0,lightIntensity:t.lightIntensity,ibl:t.imageBasedLighting?1:0,metallicFactor:t.material?t.material.metallicFactor:i,roughnessFactor:t.material?t.material.roughnessFactor:i};else return{directionalLighting:0,lightIntensity:0,ibl:0,metallicFactor:i,roughnessFactor:i}}

@@ -1,0 +1,1 @@
+export let GridLabelLinePosition=function(E){E[E["ABOVE_OR_LEFT"]=1]="ABOVE_OR_LEFT";E[E["CENTER"]=2]="CENTER";E[E["BELOW_OR_RIGHT"]=3]="BELOW_OR_RIGHT";E[E["ABOVE_OR_RIGHT"]=4]="ABOVE_OR_RIGHT";E[E["BELOW_OR_LEFT"]=5]="BELOW_OR_LEFT";return E}({});

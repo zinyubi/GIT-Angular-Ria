@@ -1,0 +1,1 @@
+export class HeightReference{constructor(e){this._identifier=e}get identifier(){return this._identifier}}export let HeightReferenceType=function(e){e[e["ABOVE_GEOID"]=1]="ABOVE_GEOID";e[e["ABOVE_TERRAIN"]=2]="ABOVE_TERRAIN";return e}({});

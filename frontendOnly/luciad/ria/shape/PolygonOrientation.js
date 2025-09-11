@@ -1,0 +1,1 @@
+export let PolygonOrientation=function(I){I[I["CLOCKWISE"]=0]="CLOCKWISE";I[I["COUNTER_CLOCKWISE"]=1]="COUNTER_CLOCKWISE";I[I["INVALID_ORIENTATION"]=-1]="INVALID_ORIENTATION";return I}({});

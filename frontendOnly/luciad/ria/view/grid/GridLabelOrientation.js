@@ -1,0 +1,1 @@
+export let GridLabelOrientation=function(L){L[L["HORIZONTAL"]=1]="HORIZONTAL";L[L["ALONG_LINE"]=2]="ALONG_LINE";return L}({});

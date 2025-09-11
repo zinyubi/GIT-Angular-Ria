@@ -1,0 +1,1 @@
+export class ParsePosition{_index=0;_errorIndex=-1;constructor(){}get errorIndex(){return this._errorIndex}set errorIndex(e){this._errorIndex=e}get index(){return this._index}set index(e){this._index=e}}

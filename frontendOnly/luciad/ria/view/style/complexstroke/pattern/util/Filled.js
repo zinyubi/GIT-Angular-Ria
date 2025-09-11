@@ -1,0 +1,1 @@
+export class Filled{constructor(l){l=l||{};this._fillColor=l.color||null}fillPath(l){if(this._fillColor){l.fillStyle=this._fillColor;l.fill()}}get fillColor(){return this._fillColor}set fillColor(l){this._fillColor=l}appendHash(l){if(this._fillColor)l.appendString(`FillColor ${this._fillColor}`)}}

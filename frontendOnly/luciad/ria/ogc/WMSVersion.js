@@ -1,0 +1,1 @@
+export let WMSVersion=function(V){V["V100"]="1.0.0";V["V110"]="1.1.0";V["V111"]="1.1.1";V["V130"]="1.3.0";return V}({});

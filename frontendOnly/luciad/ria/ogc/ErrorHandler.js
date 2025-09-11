@@ -1,0 +1,1 @@
+import{isFunction}from"../util/Lang.js";import{Log}from"../util/Log.js";export class ErrorHandler{constructor(r){if(isFunction((r=r||{}).errorCtor))this.errorCtor=r.errorCtor;else this.errorCtor=Error;this._strict=r.strict}get strict(){return this._strict}warn(r){if(this._strict)this.fatal(r);else Log.warn(r)}fatal(r){throw new this.errorCtor(r)}}

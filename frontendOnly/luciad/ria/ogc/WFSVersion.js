@@ -1,0 +1,1 @@
+export let WFSVersion=function(V){V["V100"]="1.0.0";V["V110"]="1.1.0";V["V200"]="2.0.0";V["V202"]="2.0.2";return V}({});

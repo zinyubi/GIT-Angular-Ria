@@ -1,0 +1,1 @@
+import{ComposedShapeEditor}from"./ComposedShapeEditor.js";import{ShapeType}from"../../../shape/ShapeType.js";export class ComplexPolygonEditor extends ComposedShapeEditor{constructor(o){super(ShapeType.COMPLEX_POLYGON,o)}getSubShapeCount(o){return o.polygonCount}getSubShape(o,e){return o.getPolygon(e)}}

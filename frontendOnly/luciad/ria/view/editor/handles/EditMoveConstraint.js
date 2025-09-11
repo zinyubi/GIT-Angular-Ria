@@ -1,0 +1,1 @@
+export let EditMoveConstraint=function(R){R["XY"]="XY";R["Z"]="Z";R["ON_TERRAIN"]="ON_TERRAIN";R["VERTICAL"]="VERTICAL";R["HORIZONTAL"]="HORIZONTAL";return R}({});

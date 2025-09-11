@@ -1,0 +1,1 @@
+import{isFunction}from"./Lang.js";export function isPromise(t){return!!t&&isFunction(t.then)}export function whenInternal(t,n,r){if(isPromise(t))return t.then(n).catch((t=>{if(r)return r(t);else throw t}));else try{return n(t)}catch(t){if(r)r(t);throw t}}

@@ -1,0 +1,1 @@
+import{getReference}from"../../reference/ReferenceProvider.js";import{createDrawNull}from"./HTML5DrawCommands.js";export class DummyGeoCanvas{constructor(){}get worldReference(){return getReference("")}drawIcon(e,r){}drawIcon3D(e,r){}drawPanorama(e,r,a){}drawShape(e,r){}drawText(e,r,a){}_didProcessing(){return false}buildDrawCommand(){return createDrawNull()}reset(){}}

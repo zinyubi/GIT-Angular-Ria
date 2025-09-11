@@ -1,0 +1,1 @@
+export function addHttpRequestOptions(e,t){const r={...e};if(t){if("boolean"===typeof t.credentials)r.credentials=t.credentials?"include":"same-origin";if("object"===typeof t.requestHeaders)r.headers={...t?.requestHeaders,...e.headers}}return r}

@@ -1,0 +1,1 @@
+export class LuciadError extends Error{constructor(r){super(r);if(LuciadError.captureStackTrace)LuciadError.captureStackTrace(this,this.constructor);this.name="luciad.error.Error";this.message=r?r:"";this.stackTrace=(new Error).stack}static isOrThrow(r){if(!(r instanceof this))throw r}static is(r){return r instanceof this}}

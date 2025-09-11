@@ -1,0 +1,1 @@
+let globalStyleIdCounter=3;export class StyleIdGenerator{constructor(){}get(){const t=globalStyleIdCounter;globalStyleIdCounter++;return t}}

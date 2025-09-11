@@ -1,0 +1,1 @@
+export class TileRequest{constructor(s){this._coordinate=s;this._isValid=true;this._mustProcess=this._isValid}get isValid(){return this._isValid}get coordinate(){return this._coordinate}invalidate(){this._isValid=false}get mustProcess(){return this._mustProcess&&this._isValid}set mustProcess(s){this._mustProcess=s}}

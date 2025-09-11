@@ -1,0 +1,1 @@
+import{cloneDeep}from"../../util/JSON.js";import{KML_DOCUMENT}from"../../util/kml/KMLTypes.js";import{KMLContainer}from"./KMLContainer.js";export class KMLDocumentContainer extends KMLContainer{constructor(e,t,o){super(e,t,o)}get type(){return KML_DOCUMENT}copy(){return new KMLDocumentContainer(cloneDeep(this.properties),this.id,this.options)}}

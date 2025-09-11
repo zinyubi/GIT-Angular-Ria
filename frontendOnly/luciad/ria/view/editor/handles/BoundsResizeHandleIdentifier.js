@@ -1,0 +1,1 @@
+export let BoundsResizeHandleIdentifier=function(R){R["LOWER_LEFT"]="LOWER_LEFT";R["UPPER_LEFT"]="UPPER_LEFT";R["UPPER_RIGHT"]="UPPER_RIGHT";R["LOWER_RIGHT"]="LOWER_RIGHT";return R}({});

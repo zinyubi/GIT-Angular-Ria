@@ -1,0 +1,23 @@
+{
+  "name": "@luciad/ria-geometry",
+  "version": "2024.1.9",
+  "description": "The LuciadRIA Geometry package provides support for calculating constructive boolean operations of 2D shapes.",
+  "scripts": {},
+  "type": "module",
+  "exports": {
+    "./*": "./*"
+  },
+  "keywords": [
+    "RIA",
+    "geometry",
+    "gis",
+    "luciad",
+    "hexagon",
+    "geospatial"
+  ],
+  "author": "Hexagon Geospatial <support.luciad.gsp@hexagon.com>",
+  "license": "SEE LICENSE IN LICENSE.TXT",
+  "dependencies": {
+    "@luciad/ria": "2024.1.9"
+  }
+}

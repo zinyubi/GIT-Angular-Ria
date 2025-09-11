@@ -1,0 +1,1 @@
+export class AbstractContentEncoder{constructor(n){this._encoding=n}get encoding(){return this._encoding}}

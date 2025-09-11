@@ -1,0 +1,1 @@
+export const styles={};export function set(t,e,s){const n=undefined;(styles[t]||(styles[t]={}))[e]=s}export function get(t,e){return styles[t]?.[e]??null}

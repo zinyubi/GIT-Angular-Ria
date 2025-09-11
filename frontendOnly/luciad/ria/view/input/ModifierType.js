@@ -1,0 +1,1 @@
+export let ModifierType=function(T){T[T["NO_MOD"]=0]="NO_MOD";T[T["ALT"]=1]="ALT";T[T["CTRL"]=2]="CTRL";T[T["ALT_CTRL"]=3]="ALT_CTRL";T[T["SHIFT"]=4]="SHIFT";T[T["ALT_SHIFT"]=5]="ALT_SHIFT";T[T["CTRL_SHIFT"]=6]="CTRL_SHIFT";T[T["ALT_CTRL_SHIFT"]=7]="ALT_CTRL_SHIFT";return T}({});

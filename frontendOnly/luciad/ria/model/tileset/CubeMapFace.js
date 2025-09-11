@@ -1,0 +1,1 @@
+export let CubeMapFace=function(T){T[T["TOP"]=1]="TOP";T[T["BOTTOM"]=2]="BOTTOM";T[T["FRONT"]=3]="FRONT";T[T["BACK"]=4]="BACK";T[T["LEFT"]=5]="LEFT";T[T["RIGHT"]=6]="RIGHT";return T}({});

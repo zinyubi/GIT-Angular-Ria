@@ -1,0 +1,1 @@
+import{LayerGroup}from"./LayerGroup.js";class LayerTree extends LayerGroup{constructor(e,r){super(r);this._map=e}destroy(){this._removeAll()}_constructClone(){return new LayerTree(this._map,{id:`${this.id}_clone`})}calculatePath(e){return e}fireEvent(e,r){this.emit(e,r)}on(e,r,t){return super.on(e,r,t)}}export{LayerTree};

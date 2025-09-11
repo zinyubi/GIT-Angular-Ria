@@ -1,0 +1,1 @@
+import{LuciadError}from"./LuciadError.js";export class LuciadAggregateError extends LuciadError{constructor(r,o){super(r);this.name="luciad.error.LuciadAggregateError";this._errors=o??[]}addErrors(r){this._errors.push(...r)}}

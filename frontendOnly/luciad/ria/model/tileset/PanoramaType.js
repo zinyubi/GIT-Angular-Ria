@@ -1,0 +1,1 @@
+export let PanoramaType=function(E){E[E["CUBE_MAP"]=0]="CUBE_MAP";E[E["SINGLE_IMAGE"]=1]="SINGLE_IMAGE";return E}({});

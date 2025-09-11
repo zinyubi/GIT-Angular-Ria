@@ -1,0 +1,1 @@
+import{AttributeValueProvider}from"./AttributeValueProvider.js";export class FunctionProvider extends AttributeValueProvider{constructor(t){super(t);this._function=t}getValue(t,r){return this._function(t,r)}}

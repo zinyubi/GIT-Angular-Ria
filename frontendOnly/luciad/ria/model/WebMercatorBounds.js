@@ -1,0 +1,1 @@
+import{getReference}from"../reference/ReferenceProvider.js";import{createBounds}from"../shape/ShapeFactory.js";var WEB_MERCATOR=getReference("EPSG:900913");var EXTENT_IN_METERS=[-20037508.34278924,40075016.68557848,-20037508.352,40075016.704];export var WebMercatorBounds={create:function(){return createBounds(WEB_MERCATOR,EXTENT_IN_METERS)}};

@@ -1,0 +1,1 @@
+import{EventedSupport}from"../../util/EventedSupport.js";class Grid{constructor(){this._eventedSupport=new EventedSupport}get eventedSupport(){return this._eventedSupport}on(t,e,r){return this._eventedSupport.on(t,e,r)}}export{Grid};

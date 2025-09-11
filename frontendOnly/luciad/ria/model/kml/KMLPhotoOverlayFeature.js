@@ -1,0 +1,1 @@
+import{cloneDeep}from"../../util/JSON.js";import{KML_PHOTO_OVERLAY}from"../../util/kml/KMLTypes.js";import{KMLFeature}from"./KMLFeature.js";export class KMLPhotoOverlayFeature extends KMLFeature{constructor(e,t,r){super(null,e,t,r)}get type(){return KML_PHOTO_OVERLAY}copy(){return new KMLPhotoOverlayFeature(cloneDeep(this.properties),this.id,this.options)}}

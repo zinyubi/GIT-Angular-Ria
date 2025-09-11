@@ -1,0 +1,1 @@
+import{QueryProvider}from"./QueryProvider.js";export class SingleQueryProvider extends QueryProvider{constructor(e){super();this._query=e;this._scales=[]}getQueryLevelScales(){return this._scales}getQueryForLevel(){return this._query}}

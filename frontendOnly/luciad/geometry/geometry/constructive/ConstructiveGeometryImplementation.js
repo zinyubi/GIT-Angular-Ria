@@ -1,0 +1,1 @@
+import{ConstructiveGeometry as ConstructiveGeometryInternal}from"@luciad/ria/geometry/ConstructiveGeometry.js";export class ConstructiveGeometryImplementation extends ConstructiveGeometryInternal{constructor(e){super(e)}}

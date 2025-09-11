@@ -1,0 +1,1 @@
+var PinEndPosition=function(n){n[n["MIDDLE"]=1]="MIDDLE";n[n["BORDER"]=2]="BORDER";n[n["MIDDLE_BORDER"]=3]="MIDDLE_BORDER";return n}(PinEndPosition||{});export{PinEndPosition};

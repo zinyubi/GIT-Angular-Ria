@@ -1,0 +1,1 @@
+export let LineType=function(T){T[T["SHORTEST_DISTANCE"]=1]="SHORTEST_DISTANCE";T[T["CONSTANT_BEARING"]=2]="CONSTANT_BEARING";return T}({});

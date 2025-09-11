@@ -1,0 +1,1 @@
+export class SEElement{_vendorOptions=[];_eventedSupport=null;constructor(t){this._type=t}get type(){return this._type}get validVendorOptions(){return[]}get vendorOptions(){return this._vendorOptions}addVendorOption(t){this._vendorOptions.push(t)}set eventedSupport(t){this._eventedSupport=t}get eventedSupport(){return this._eventedSupport}}

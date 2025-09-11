@@ -1,0 +1,1 @@
+import{Lang}from"./Lang.js";function throttle(t,r,e){var i=true;var n;return function(){var a;var o=Lang.isFunction(r)?r.call(this):r;if(o<0)a=e;else if(0===o)a=t.apply(this,arguments);else if(i){a=t.apply(this,arguments);i=false;setTimeout((function(){i=true}),o)}n=o;return a}}export var Throttle={throttle:throttle};

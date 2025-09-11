@@ -1,0 +1,1 @@
+import{SEElement}from"./SEElement.js";export class SENamedElement extends SEElement{static VALID_CHILDREN=["Name","Description"];_name=null;_description=null;constructor(e){super(e)}get name(){return this._name}set name(e){this._name=e}set description(e){this._description=e}get description(){return this._description}}

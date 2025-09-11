@@ -1,0 +1,1 @@
+const funcNoop=()=>{};const funcNull=()=>null;const funcTrue=()=>true;export const DrawNullLabel={index:0,handle:null,isReady:funcTrue,requestToDrawLabel:funcNoop,findLabelDrawCommand:funcNull,reuseStateFrom:funcNull,setPickInfoContext:funcNoop,canBeReused:funcTrue};

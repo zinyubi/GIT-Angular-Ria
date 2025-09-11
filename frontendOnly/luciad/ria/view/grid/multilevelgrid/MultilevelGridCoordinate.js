@@ -1,0 +1,1 @@
+export class MultilevelGridCoordinate{_coordinateLevelCount=0;get coordinateLevelCount(){return this._coordinateLevelCount}set coordinateLevelCount(e){this._coordinateLevelCount=e}}

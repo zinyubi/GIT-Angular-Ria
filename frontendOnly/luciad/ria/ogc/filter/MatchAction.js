@@ -1,0 +1,1 @@
+export let MatchAction=function(n){n["ALL"]="All";n["ANY"]="Any";n["ONE"]="One";return n}({});

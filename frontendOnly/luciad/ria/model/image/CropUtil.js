@@ -1,0 +1,1 @@
+export var CropUtil={crop:function(e,t,r,a,n){var o=document.createElement("canvas");var c=o.getContext("2d",{willReadFrequently:true});o.width=a;o.height=n;c.drawImage(e,t,r,a,n,0,0,a,n);return o}};

@@ -1,0 +1,1 @@
+export function pool(t,n,o=8192){const r=o||8192;const e=r>>>1;let c;let l=r;return o=>{if(o<1||o>e)return t(o);if(l+o>r){c=t(r);l=0}const f=n.call(c,l,l+=o);if(7&l)l=(7|l)+1;return f}}
