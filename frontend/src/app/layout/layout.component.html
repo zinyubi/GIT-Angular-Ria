@@ -1,0 +1,13 @@
+<app-navbar 
+  [username]="username"
+  [timeLeft]="timeLeft"
+  [logout]="logout.bind(this)">
+</app-navbar>
+
+<div class="layout-body">
+  <app-sidebar [userScreens]="userScreens"></app-sidebar>
+
+  <main class="layout-content">
+    <router-outlet></router-outlet>
+  </main>
+</div>
