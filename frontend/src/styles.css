@@ -1,0 +1,20 @@
+/* styles.css or global CSS file */
+:root {
+  --color-primary: #007BFF;
+  --color-bg: #F8F9FA;
+  --color-text: #212529;
+  --color-error: #DC3545;
+  --color-border: #CED4DA;
+  --font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+body {
+  margin: 0;
+  font-family: var(--font-family);
+  background-color: var(--color-bg);
+  color: var(--color-text);
+}
+
+input, button {
+  font-family: inherit;
+}

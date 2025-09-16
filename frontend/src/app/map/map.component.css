@@ -1,0 +1,24 @@
+/* Ensure the component fills the parent container */
+:host {
+  display: block;
+  height: 100%;
+  width: 100%;
+}
+
+/* Map fills the host */
+#map {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+/* Optional overlay title or controls */
+h1 {
+  position: absolute;
+  top: 10px;
+  left: 20px;
+  z-index: 100;
+  color: white;
+  text-shadow: 0 0 5px black;
+  font-size: 1.5rem;
+}
