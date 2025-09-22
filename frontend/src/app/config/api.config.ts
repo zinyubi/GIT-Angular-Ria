@@ -18,6 +18,10 @@ export const API_URLS = {
 
   /** Endpoint to retrieve user screens information */
   USER_SCREENS: `${BACKEND_BASE}/users/screens/`,
+  USERS: `${BACKEND_BASE}/users/users/`,
+  ROLES: `${BACKEND_BASE}/users/roles/`,
+  SCREENS: `${BACKEND_BASE}/users/screens/`,
+  ROLES_SCREENS: `${BACKEND_BASE}/users/roles/screens/`,
 };
 
 /**

@@ -1,0 +1,14 @@
+<div class="rbac-container">
+
+  <nav>
+    <button (click)="setView('users')" [class.active]="currentView === 'users'">User Management</button>
+    <button (click)="setView('roles')" [class.active]="currentView === 'roles'">Role Management</button>
+    <button (click)="setView('rolescreen')" [class.active]="currentView === 'rolescreen'">Role Screen Mapping</button>
+  </nav>
+  <section>
+    <app-usermanagement *ngIf="currentView === 'users'"></app-usermanagement>
+    <app-role-management *ngIf="currentView === 'roles'"></app-role-management>
+    <app-role-screen-mapping *ngIf="currentView === 'rolescreen'"></app-role-screen-mapping>
+  </section>
+
+</div>

@@ -5,9 +5,16 @@
 </app-navbar>
 
 <div class="layout-body">
-  <app-sidebar [userScreens]="userScreens"></app-sidebar>
+  <app-top-nav [userScreens]="userScreens"></app-top-nav>
 
   <main class="layout-content">
-    <router-outlet></router-outlet>
+    <!-- Conditional rendering for 'usermanagement' route -->
+    <ng-container *ngIf="router.url.includes('usermanagement'); else showRouterOutlet">
+      <app-rbac-container></app-rbac-container>
+    </ng-container>
+
+    <ng-template #showRouterOutlet>
+      <router-outlet></router-outlet>
+    </ng-template>
   </main>
 </div>

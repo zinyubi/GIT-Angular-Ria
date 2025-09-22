@@ -1,0 +1,16 @@
+<nav class="top-nav">
+  <ul>
+    <li
+      *ngFor="let screen of userScreens"
+      [class.unauthorized]="!screen.isAuthorized"
+      [class.active]="isActiveScreen(screen)"
+    >
+      <a
+        [routerLink]="screen.isAuthorized ? screen.path : '/unauthorized'"
+        [title]="!screen.isAuthorized ? 'Access not granted' : screen.name"
+      >
+        {{ screen.name }}
+      </a>
+    </li>
+  </ul>
+</nav>

@@ -1,0 +1,15 @@
+.rbac-container nav {
+  margin-bottom: 10px;
+}
+
+.rbac-container button {
+  margin-right: 8px;
+  padding: 6px 12px;
+  cursor: pointer;
+}
+
+.rbac-container button.active {
+  background-color: #007bff;
+  color: rgb(197, 78, 78);
+  border: none;
+}

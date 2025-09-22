@@ -28,13 +28,13 @@ def populate_data():
 
     # --- Define Screens ---
     screens_data = [
-        {"name": "User Management", "description": "User Management"},
-        {"name": "Inventory Manager", "description": "Inventory Manager"},
-        {"name": "Planner", "description": "Planner"},
-        {"name": "Combat Flight Display", "description": "Combat Flight Display"},
-        {"name": "ICC Display", "description": "ICC Display"},
-        {"name": "Secondary", "description": "Secondary"},
-        {"name": "Primary", "description": "Primary"},
+        {"name": "User Management", "description": "User Management", "path": "/usermanagement"},
+        {"name": "Inventory Manager", "description": "Inventory Manager", "path": "/inventorymanagement"},
+        {"name": "Planner", "description": "Planner", "path": "/planner"},
+        {"name": "Combat Flight Display", "description": "Combat Flight Display", "path": "/cfd"},
+        {"name": "ICC Display", "description": "ICC Display", "path": "/icc"},
+        {"name": "Secondary", "description": "Secondary", "path": "/secondary"},
+        {"name": "Primary", "description": "Primary", "path": "/primary"},
     ]
 
     screen_objs = {}

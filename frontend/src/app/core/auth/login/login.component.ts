@@ -6,7 +6,6 @@ import { AuthService } from '../services/auth.service';
 
 /**
  * LoginComponent allows users to authenticate by entering their username and password.
- * 
  * Provides a simple login form and handles authentication errors.
  */
 @Component({
@@ -17,33 +16,32 @@ import { AuthService } from '../services/auth.service';
   styleUrls: ['./login.component.css']
 })
 export class LoginComponent {
-  /** Bound to the username input field */
   username = '';
-
-  /** Bound to the password input field */
   password = '';
-
-  /** Holds error messages for failed login attempts */
   error: string | null = null;
 
-  /**
-   * @param authService - Service responsible for authentication logic.
-   * @param router - Router to navigate after successful login.
-   */
   constructor(private authService: AuthService, private router: Router) {}
 
   /**
    * Attempts to log in the user with the provided credentials.
-   * 
    * On success, navigates to the dashboard.
    * On failure, sets an error message.
    */
-  async login() {
-    try {
-      await this.authService.login(this.username, this.password);
-      this.router.navigate(['/dashboard']);
-    } catch (err) {
-      this.error = 'Invalid username or password';
+  login() {
+    this.error = null; // reset previous errors
+
+    if (!this.username || !this.password) {
+      this.error = 'Username and password are required';
+      return;
     }
+
+    this.authService.login(this.username, this.password).subscribe({
+      next: () => {
+        this.router.navigate(['/dashboard']);
+      },
+      error: (err) => {
+        this.error = err.message || 'Invalid username or password';
+      }
+    });
   }
 }

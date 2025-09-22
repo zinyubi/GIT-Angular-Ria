@@ -1,0 +1,128 @@
+<div class="card">
+  <h2>User Management</h2>
+
+  <!-- Tabs -->
+  <div class="tabs">
+    <button
+      [class.active]="activeTab === 'list'"
+      (click)="activeTab = 'list'"
+      type="button"
+    >
+      Users
+    </button>
+    <button
+      [class.active]="activeTab === 'create'"
+      (click)="activeTab = 'create'"
+      type="button"
+    >
+      Add User
+    </button>
+  </div>
+
+  <!-- Users List -->
+  <div *ngIf="activeTab === 'list'">
+    <div *ngIf="isLoading" class="loading">Loading users...</div>
+    <div *ngIf="errorMessage" class="error">{{ errorMessage }}</div>
+
+    <table *ngIf="!isLoading && users.length > 0" class="user-table">
+      <thead>
+        <tr>
+          <th>Username</th>
+          <th>Email</th>
+          <th>Roles</th>
+          <th style="width: 150px;">Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let user of paginatedUsers">
+          <td>{{ user.username }}</td>
+          <td>{{ user.email }}</td>
+          <td>
+            <label *ngFor="let role of roles" class="role-label">
+              <input
+                type="checkbox"
+                [checked]="user.roles.includes(role.id)"
+                (change)="toggleRole(user, role.id)"
+              />
+              {{ role.name }}
+            </label>
+          </td>
+          <td>
+            <button class="btn" (click)="updateUserRoles(user)" type="button">Update</button>
+            <button
+              class="btn delete"
+              (click)="deleteUser(user.id)"
+              [disabled]="user.id === loggedInUserId"
+              type="button"
+            >
+              Delete
+            </button>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+
+    <!-- Pagination -->
+    <div class="pagination" *ngIf="totalPages > 1">
+      <button
+        (click)="currentPage = currentPage - 1"
+        [disabled]="currentPage === 1"
+        type="button"
+      >
+        Prev
+      </button>
+      <span>Page {{ currentPage }} of {{ totalPages }}</span>
+      <button
+        (click)="currentPage = currentPage + 1"
+        [disabled]="currentPage === totalPages"
+        type="button"
+      >
+        Next
+      </button>
+    </div>
+  </div>
+
+  <!-- Add User -->
+  <div *ngIf="activeTab === 'create'">
+    <form (ngSubmit)="createUser()" #userForm="ngForm" class="form">
+      <label>
+        Username:
+        <input name="username" [(ngModel)]="newUser.username" required />
+      </label>
+
+      <label>
+        Email:
+        <input type="email" name="email" [(ngModel)]="newUser.email" />
+      </label>
+
+      <label>
+        Password:
+        <input
+          type="password"
+          name="password"
+          [(ngModel)]="newUser.password"
+          required
+        />
+      </label>
+
+      <div class="roles">
+        <label *ngFor="let role of roles">
+          <input
+            type="checkbox"
+            [checked]="newUser.roles?.includes(role.id)"
+            (change)="toggleRole(newUser, role.id)"
+          />
+          {{ role.name }}
+        </label>
+      </div>
+
+      <button
+        type="submit"
+        [disabled]="userForm.invalid"
+        class="btn"
+      >
+        Create User
+      </button>
+    </form>
+  </div>
+</div>

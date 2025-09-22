@@ -20,13 +20,15 @@ from .views import (
     RoleViewSet,
     UserViewSet,
     UserScreensAPIView,
-    me
+    me,
+    ScreenViewSet,
 )
 
 # Initialize the router and register viewsets
 router = DefaultRouter()
 router.register(r'roles', RoleViewSet, basename='role')
 router.register(r'users', UserViewSet, basename='user')
+router.register(r'screens', ScreenViewSet, basename='screen') 
 
 urlpatterns = [
     # Chat message list and create
@@ -35,6 +37,7 @@ urlpatterns = [
         ChatMessageListView.as_view(),
         name='chat_messages'
     ),
+    
 
     # User registration (JWT issued after registration)
     path(

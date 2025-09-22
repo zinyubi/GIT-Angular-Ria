@@ -3,25 +3,6 @@ from .models import Message, Role, TWCCUser, Screen
 from drf_spectacular.utils import extend_schema_serializer, OpenApiExample
 
 # -----------------------------------------------------------------------------
-# Role Serializer
-# -----------------------------------------------------------------------------
-
-class RoleSerializer(serializers.ModelSerializer):
-    """
-    Serializer for the Role model.
-
-    Fields:
-        - id: Integer, primary key.
-        - name: Name of the role.
-        - description: Role description.
-    """
-
-    class Meta:
-        model = Role
-        fields = ["id", "name", "description"]
-
-
-# -----------------------------------------------------------------------------
 # Screen Serializer
 # -----------------------------------------------------------------------------
 
@@ -33,11 +14,56 @@ class ScreenSerializer(serializers.ModelSerializer):
         - id: Integer, primary key.
         - name: Name of the screen.
         - description: Screen description.
+        - path: Frontend route path.
     """
-
     class Meta:
         model = Screen
-        fields = ["id", "name", "description"]
+        fields = ["id", "name", "description", "path"]
+
+
+
+# -----------------------------------------------------------------------------
+# Role Serializer
+# -----------------------------------------------------------------------------
+class RoleSerializer(serializers.ModelSerializer):
+    # Read-only: shows full screen objects (for UI display)
+    screens = ScreenSerializer(many=True, read_only=True)
+
+    # Write-only: accept list of screen IDs to assign
+    screen_ids = serializers.PrimaryKeyRelatedField(
+        queryset=Screen.objects.all(),
+        many=True,
+        write_only=True,
+        source="screens"
+    )
+
+    class Meta:
+        model = Role
+        fields = ["id", "name", "description", "screens", "screen_ids"]
+
+    def update(self, instance, validated_data):
+        # Extract screens if provided
+        screens = validated_data.pop("screens", None)
+
+        # Update role fields
+        for attr, value in validated_data.items():
+            setattr(instance, attr, value)
+        instance.save()
+
+        # Update screen mapping
+        if screens is not None:
+            instance.screens.set(screens)
+
+        return instance
+
+    def create(self, validated_data):
+        # Handle role creation with screens
+        screens = validated_data.pop("screens", [])
+        role = Role.objects.create(**validated_data)
+        if screens:
+            role.screens.set(screens)
+        return role
+
 
 class UserScreensResponseSerializer(serializers.Serializer):
     roles = RoleSerializer(many=True)
@@ -218,3 +244,7 @@ class MessageSerializer(serializers.ModelSerializer):
             "visible_roles",
             "visible_users"
         ]
+
+
+
+

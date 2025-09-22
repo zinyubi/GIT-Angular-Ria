@@ -1,0 +1,24 @@
+<div *ngIf="isLoading">Loading...</div>
+
+<div *ngIf="!isLoading">
+  <h2>Manage Role Screen Access</h2>
+
+  <div class="role-container" *ngFor="let role of roles">
+    <h3>{{ role.name }}</h3>
+
+    <div class="screen-list">
+      <div *ngFor="let screen of screens" class="screen-item">
+        <label>
+          <input
+            type="checkbox"
+            [checked]="mappings[role.id].includes(screen.id)"
+            (change)="toggleAccess(role.id, screen.id, $event)"
+          />
+          {{ screen.name }}
+        </label>
+      </div>
+    </div>
+  </div>
+
+  <button class="save-button" (click)="saveMappings()">Save Mappings</button>
+</div>

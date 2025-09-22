@@ -6,10 +6,51 @@
   </div>
   <div class="navbar-center">
     <span class="session-text">
-      Session expires in: <strong>{{ timeLeft || 'Unknown' }}</strong>
+       TWCC  PORTAL
     </span>
   </div>
-  <div class="navbar-right">
-    <button class="logout-button" (click)="logout()">Logout</button>
+  <div class="navbar-right" style="position: relative;">
+    <!-- User Action Button -->
+    <button class="user-action-button" (click)="toggleUserActions($event)">
+      {{ usernameInitial }}
+    </button>
+
+
+
+    <!-- Popup dialog -->
+
+
+    <div class="popup-dialog" *ngIf="showUserActions" (click)="$event.stopPropagation()">
+      <div class="popup-row popup-row-session">
+        <span class="popup-label">Session Timeout:</span>
+        <span>{{ timeLeft }}</span>
+      </div>
+
+      <div class="popup-row popup-row-theme">
+        <span class="popup-label">Theme:</span>
+        <label class="switch">
+          <input
+            id="theme-toggle"
+            type="checkbox"
+            [checked]="(themeService.theme$ | async) === 'dark'"
+            (change)="onThemeToggle()"
+          />
+          <span class="slider"></span>
+        </label>
+        <span class="theme-text">
+          {{ (themeService.theme$ | async) === 'dark' ? 'Dark' : 'Light' }}
+        </span>
+      </div>
+
+      <div class="popup-row popup-row-logout">
+        <button class="logout-button" (click)="onLogout()">Logout</button>
+      </div>
+    </div>
+
+
+
+
+
+
   </div>
 </nav>

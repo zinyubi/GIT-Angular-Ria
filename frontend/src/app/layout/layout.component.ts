@@ -1,26 +1,46 @@
-import { Component, OnDestroy, OnInit } from '@angular/core';
+import { Component, OnDestroy, OnInit, ApplicationRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { Router, RouterModule } from '@angular/router';
+import { first } from 'rxjs/operators';
+import { firstValueFrom } from 'rxjs';
 
 import { NavbarComponent } from './navbar/navbar.component';
-import { SidebarComponent } from './sidebar/sidebar.component';
-import { RouterModule } from '@angular/router';
+import { ScreenSelectorComponent } from './screenselector/screenselector.component';
 import { AuthService } from '../core/auth/services/auth.service';
+import { RbacContainerComponent } from './screens/rbac/rbaccontainer/rbaccontainer.component';
+
+
+interface Screen {
+  name: string;
+  path: string;
+  isAuthorized: boolean;
+}
 
 @Component({
   selector: 'app-layout',
   standalone: true,
-  imports: [CommonModule, NavbarComponent, SidebarComponent, RouterModule],
+  imports: [
+    CommonModule,
+    NavbarComponent,
+    ScreenSelectorComponent,
+    RouterModule,
+    RbacContainerComponent,
+  ],
   templateUrl: './layout.component.html',
-  styleUrls: ['./layout.component.css']
+  styleUrls: ['./layout.component.css'],
 })
 export class LayoutComponent implements OnInit, OnDestroy {
   username: string | null = null;
   timeLeft = '';
-  userScreens: any[] = [];
+  userScreens: Screen[] = [];
 
   private intervalId?: number;
 
-  constructor(private auth: AuthService) {}
+  constructor(
+    private auth: AuthService,
+    public router: Router,
+    private appRef: ApplicationRef
+  ) {}
 
   ngOnInit(): void {
     this.username = this.auth.getUsername() || 'Guest';
@@ -57,12 +77,44 @@ export class LayoutComponent implements OnInit, OnDestroy {
 
   async loadUserScreens(): Promise<void> {
     try {
-      const screensResponse = await this.auth.getUserScreens();
-      this.userScreens = screensResponse.screens || [];
+      const screensResponse = await firstValueFrom(this.auth.getUserScreens());
+      const screens = screensResponse.screens || [];
+
+      this.auth.setUserScreensCache(screens);
+
+      this.userScreens = screens.map((screen: any) => {
+        const path = this.mapScreenNameToPath(screen.name || '');
+        return {
+          name: screen.name,
+          path,
+          isAuthorized: true,
+        };
+      });
+
+      const firstAuthorized = this.userScreens.find((s) => s.isAuthorized);
+
+      if (!firstAuthorized) {
+        this.router.navigate(['/unauthorized']);
+        return;
+      }
+
+      if (
+        this.router.url === '/' ||
+        this.router.url === '/login' ||
+        this.router.url === '/unauthorized'
+      ) {
+        this.appRef.isStable.pipe(first()).subscribe(() => {
+          this.router.navigate([firstAuthorized.path]);
+        });
+      }
     } catch (error) {
-      console.error('Failed to load user screens:', error);
       this.userScreens = [];
+      this.router.navigate(['/unauthorized']);
     }
+  }
+
+  mapScreenNameToPath(name: string): string {
+    return name.toLowerCase().replace(/\s+/g, '');
   }
 
   logout(): void {

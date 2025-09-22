@@ -11,15 +11,35 @@ class Role(models.Model):
     def __str__(self) -> str:
         return self.name
 
+from django.db import models
+
 class Screen(models.Model):
     """
     Represents an application screen or dashboard.
     """
-    name = models.CharField(max_length=64, unique=True, help_text="Screen unique name, e.g. 'Primary', 'Secondary', 'ICC Display'")
-    description = models.TextField(blank=True, help_text="Optional description for this screen")
-    roles = models.ManyToManyField(Role, related_name="screens", blank=True)
+    name = models.CharField(
+        max_length=64,
+        unique=True,
+        help_text="Screen display name, e.g., 'Primary', 'Secondary', 'ICC Display'"
+    )
+    description = models.TextField(
+        blank=True,
+        help_text="Optional description for this screen."
+    )
+    path = models.CharField(
+        max_length=64,
+        # unique=False,   # Set to True only if all paths must be unique
+        # null=True,
+        # blank=True,
+        help_text="Frontend route path, e.g., 'primary', 'secondary', 'usermanagement'."
+    )
+    roles = models.ManyToManyField(
+        'Role',  # Use string if Role is defined below or in another file
+        related_name="screens",
+        blank=True
+    )
 
-    def __str__(self) -> str:
+    def __str__(self):
         return self.name
 
 class Functionality(models.Model):

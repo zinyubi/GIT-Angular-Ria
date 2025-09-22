@@ -1,0 +1,59 @@
+<div class="card">
+  <h2>Role Management</h2>
+
+  <table class="role-table">
+    <thead>
+      <tr>
+        <th>Role</th>
+        <th>Description</th>
+        <th style="width: 100px;">Actions</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr *ngFor="let role of roles">
+        <td>{{ role.name }}</td>
+        <td>{{ role.description || '-' }}</td>
+        <td>
+          <button
+            (click)="deleteRole(role.id)"
+            class="btn btn-danger"
+            type="button"
+          >
+            Delete
+          </button>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+
+  <hr />
+
+  <h3>Create Role</h3>
+  <form (ngSubmit)="createRole()" #roleForm="ngForm" class="form">
+    <label>
+      Role Name:
+      <input
+        [(ngModel)]="newRole.name"
+        name="roleName"
+        required
+        #roleName="ngModel"
+      />
+    </label>
+    <div *ngIf="roleName.invalid && roleName.touched" class="error">
+      Role name is required.
+    </div>
+
+    <label>
+      Description:
+      <input [(ngModel)]="newRole.description" name="roleDescription" />
+    </label>
+
+    <button
+      type="submit"
+      [disabled]="roleForm.invalid"
+      class="btn btn-primary"
+    >
+      Create
+    </button>
+  </form>
+</div>
