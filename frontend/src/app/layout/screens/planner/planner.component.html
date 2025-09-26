@@ -1,0 +1,112 @@
+<div class="planner">
+  <h2>Planner Screen</h2>
+</div>
+
+<div class="plannercontainer">
+  <div class="splitRoot">
+    <div class="planningLeft">
+      <div class="scenarioPanel">
+        <h3>Your Scenarios</h3>
+        <ul class="scenarioList">
+          <li
+            *ngFor="let s of scenarios"
+            [class.activeScenario]="selectedScenario?.id === s.id"
+            class="scenarioListItem"
+            (click)="handleSelect(s)"
+          >
+            <span>{{ s.name }}</span>
+            <button
+              class="deleteBtn"
+              (click)="
+                $event.stopPropagation();
+                handleDeleteScenario(s)
+              "
+              title="Delete"
+            >
+              🗑
+            </button>
+          </li>
+        </ul>
+        <button (click)="handleCreateScenario()" class="addBtn">
+          + Create New Scenario
+        </button>
+      </div>
+
+      <div class="scenarioDetails">
+        <ng-container *ngIf="editing; else viewMode">
+          <!-- Edit / Create Scenario Form -->
+          <form (ngSubmit)="handleSaveScenario()" class="scenarioForm">
+            <input
+              class="scenarioInput"
+              [(ngModel)]="form.name"
+              name="name"
+              placeholder="Scenario Name"
+              required
+            />
+            <textarea
+              class="scenarioInput"
+              [(ngModel)]="form.description"
+              name="description"
+              [style.height.px]="60"
+              placeholder="Description (optional)"
+            ></textarea>
+
+            <div style="margin-top: 12px; display: flex; gap: 10px;">
+            <button class="saveBtn" type="submit">Save</button>
+            <button
+                class="cancelBtn"
+                type="button"
+                (click)="handleCancelEditScenario()"
+            >
+                Cancel
+            </button>
+            </div>
+
+
+
+
+
+            <div
+              *ngIf="scenarioError"
+              style="background: #fff3f3; color: #cb1818; border: 1px solid #ffb3b3; border-radius: 7px; font-weight: bold; padding: 7px; margin: 9px 0;"
+            >
+              {{ scenarioError }}
+            </div>
+          </form>
+        </ng-container>
+
+        <ng-template #viewMode>
+          <ng-container *ngIf="selectedScenario; else hintMode">
+            <div>
+              <h3>{{ selectedScenario.name }}</h3>
+              <div class="detailsDesc">
+                {{ selectedScenario.description || 'No description' }}
+              </div>
+              <button class="editBtn" (click)="handleEditScenario()">
+                Edit
+              </button>
+
+              <!--
+              <div class="acSection">
+                <h4>Aircrafts in this Scenario</h4>
+                ... 
+                (Aircraft editing UI commented out since you want only scenarios for now)
+              </div>
+              -->
+            </div>
+          </ng-container>
+
+          <ng-template #hintMode>
+            <div class="hintBox">
+              <p>Click on a scenario to view and edit aircrafts.</p>
+            </div>
+          </ng-template>
+        </ng-template>
+      </div>
+    </div>
+
+    <div class="planningRight">
+      <app-map></app-map>
+    </div>
+  </div>
+</div>

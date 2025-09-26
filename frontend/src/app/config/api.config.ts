@@ -22,6 +22,19 @@ export const API_URLS = {
   ROLES: `${BACKEND_BASE}/users/roles/`,
   SCREENS: `${BACKEND_BASE}/users/screens/`,
   ROLES_SCREENS: `${BACKEND_BASE}/users/roles/screens/`,
+
+
+  // Add scenario endpoints:
+  SCENARIOS_BASE: `${BACKEND_BASE}/scenariosimulation/scenarios/`,
+  // for convenience, individual:
+  SCENARIOS: `${BACKEND_BASE}/scenariosimulation/scenarios/`, // list & create
+  SCENARIO_BY_ID: (id: number | string) => `${BACKEND_BASE}/scenariosimulation/scenarios/${id}/`, // get, update, delete
+
+
+
+
+
+
 };
 
 /**

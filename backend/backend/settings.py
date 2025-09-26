@@ -88,6 +88,7 @@ INSTALLED_APPS = [
 
     # Local apps
     'users',
+    'scenariosimulation',
 
     # Third-party apps
     'rest_framework',

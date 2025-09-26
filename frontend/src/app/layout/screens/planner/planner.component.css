@@ -1,0 +1,231 @@
+:host {
+  display: flex;
+  flex-direction: column;
+  height: 100%; /* full viewport height */
+}
+
+.planner {
+  text-align: center;
+  padding: 2rem;
+  color: var(--color-error);
+  flex-shrink: 0; /* prevent shrinking */
+}
+
+.plannercontainer {
+  flex-grow: 1; /* occupy remaining space */
+  width: 100%;
+  display: block;
+}
+
+.splitRoot {
+  display: flex;
+  height: 100%;
+  gap: 20px;
+  padding: 10px;
+  box-sizing: border-box;
+}
+
+.planningLeft {
+  width: 400px;
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+  border-right: 1px solid #ddd;
+  padding-right: 10px;
+  box-sizing: border-box;
+}
+
+.planningRight {
+  flex-grow: 1;
+  min-width: 0;
+  height: 100%;
+  border-radius: 10px;
+  overflow: hidden;
+  box-sizing: border-box;
+}
+
+.scenarioPanel {
+  margin-bottom: 15px;
+}
+
+.scenarioList {
+  list-style: none;
+  padding-left: 0;
+  margin: 0 0 10px 0;
+  max-height: 250px;
+  overflow-y: auto;
+}
+
+.scenarioListItem {
+  padding: 7px 8px;
+  border-radius: 6px;
+  cursor: pointer;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  transition: background-color 0.2s ease;
+}
+
+.scenarioListItem:hover {
+  background-color: #e0e0e0;
+}
+
+.activeScenario {
+  background-color: #66b3ff;
+  color: white;
+  font-weight: 600;
+}
+
+.deleteBtn {
+  background: none;
+  border: none;
+  color: #ff5555;
+  cursor: pointer;
+  font-size: 1.1em;
+}
+
+.addBtn {
+  width: 100%;
+  padding: 10px 0;
+  font-weight: 600;
+  background-color: #0099ff;
+  color: white;
+  border: none;
+  border-radius: 7px;
+  cursor: pointer;
+  margin-top: 5px;
+  transition: background-color 0.3s ease;
+}
+
+.addBtn:hover {
+  background-color: #007acc;
+}
+
+.scenarioDetails {
+  background: #fafafa;
+  padding: 10px 15px;
+  border-radius: 8px;
+  box-shadow: 0 0 8px #ccc;
+  flex-grow: 1;
+  overflow-y: auto;
+}
+
+.detailsDesc {
+  font-style: italic;
+  color: #666;
+  margin-bottom: 10px;
+}
+
+.editBtn {
+  background-color: #00aaff;
+  color: white;
+  border: none;
+  padding: 6px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+  margin-bottom: 12px;
+}
+
+.editBtn:hover {
+  background-color: #008ecc;
+}
+
+.acSection h4 {
+  margin: 12px 0 6px 0;
+  font-weight: 600;
+}
+
+.acList {
+  list-style: none;
+  padding-left: 0;
+  margin: 0 0 10px 0;
+  max-height: 220px;
+  overflow-y: auto;
+}
+
+.acListItem {
+  background: white;
+  border-radius: 6px;
+  padding: 6px 10px;
+  margin-bottom: 6px;
+  box-shadow: 0 0 4px #ddd;
+}
+
+.accordionToggler {
+  cursor: pointer;
+  user-select: none;
+  font-weight: 600;
+}
+
+.wpDeleteBtn {
+  background: none;
+  border: none;
+  color: #cc2c65;
+  margin-left: 10px;
+  cursor: pointer;
+  font-weight: 900;
+  font-size: 1em;
+}
+
+.scenarioForm {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.scenarioInput {
+  padding: 8px 10px;
+  font-size: 1rem;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+}
+
+.saveBtn {
+  background-color: #44a744;
+  border: none;
+  color: white;
+  padding: 8px 14px;
+  font-weight: 600;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.saveBtn:hover {
+  background-color: #3a8a3a;
+}
+
+.cancelBtn {
+  background-color: #cccccc;
+  border: none;
+  color: #444;
+  padding: 8px 14px;
+  font-weight: 600;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.cancelBtn:hover {
+  background-color: #aaaaaa;
+}
+
+.plotBtn {
+  background-color: #0099ff;
+  border: none;
+  color: white;
+  padding: 6px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.plotBtn:hover {
+  background-color: #007acc;
+}
+
+.hintBox {
+  color: #777;
+  font-style: italic;
+  padding: 20px;
+  text-align: center;
+  border: 1px dashed #aaa;
+  border-radius: 8px;
+}

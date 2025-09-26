@@ -38,6 +38,7 @@ urlpatterns = [
 
     # Include user app endpoints (chat, auth, roles, etc.)
     path('users/', include('users.urls')),
+    path('scenariosimulation/', include('scenariosimulation.urls')),
 
     # JWT Authentication endpoints
     path('api/token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),

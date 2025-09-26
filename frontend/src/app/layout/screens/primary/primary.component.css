@@ -1,0 +1,18 @@
+:host {
+  display: flex;
+  flex-direction: column;
+  height: 100%; /* full viewport height */
+}
+
+.primary {
+  text-align: center;
+  padding: 2rem;
+  color: var(--color-error);
+  flex-shrink: 0; /* prevent shrinking */
+}
+
+.primarycontainer {
+  flex-grow: 1; /* occupy remaining space */
+  width: 100%;
+  display: block;
+}

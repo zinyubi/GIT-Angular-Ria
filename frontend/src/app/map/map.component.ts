@@ -43,7 +43,6 @@ export class MapComponent implements AfterViewInit, OnDestroy {
 
       // Set up the base layers after map initialization
       await this.baseLayerService.setupInitialLayers(map);
-      console.log('All layers setup successfully');
     } catch (error) {
       console.warn('Layer setup failed or map initialization error:', error);
     }
