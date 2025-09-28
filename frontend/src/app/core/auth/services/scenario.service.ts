@@ -12,6 +12,32 @@ export interface Scenario {
   // add other fields relevant to your scenario entity
 }
 
+export interface AircraftType {
+  id: number;
+  name: string;
+  model: string;
+  color?: string;
+  max_speed_mps?: number;
+}
+
+interface Waypoint {
+  lat: number;
+  lon: number;
+  alt: number;
+}
+
+
+export interface DeployedAircraft {
+  id?: number;
+  name?: string;
+  scenario: number;
+  aircraft_type: number;
+  initial_latitude: number;
+  initial_longitude: number;
+  initial_altitude_m: number;
+  planned_waypoints?: Waypoint[]; // For now, empty or later extended
+}
+
 @Injectable({
   providedIn: 'root',
 })
@@ -59,4 +85,32 @@ export class ScenarioService {
     console.error('Scenario API error:', error);
     return throwError(() => new Error(error.message || 'Server error'));
   }
+
+  getAircraftTypes(): Observable<AircraftType[]> {
+    return this.http
+      .get<AircraftType[]>(API_URLS.AIRCRAFT_TYPES, { headers: this.getAuthHeaders() })
+      .pipe(catchError(this.handleError));
+  }
+
+  getDeployedAircrafts(scenarioId: number): Observable<DeployedAircraft[]> {
+    return this.http
+      .get<DeployedAircraft[]>(API_URLS.DEPLOYED_AIRCRAFT_BY_SCENARIO(scenarioId), {
+        headers: this.getAuthHeaders(),
+      })
+      .pipe(catchError(this.handleError));
+  }
+
+  deployAircraft(data: DeployedAircraft): Observable<DeployedAircraft> {
+    return this.http
+      .post<DeployedAircraft>(API_URLS.DEPLOYED_AIRCRAFT, data, {
+        headers: this.getAuthHeaders(),
+      })
+      .pipe(catchError(this.handleError));
+  }
+
+  updateDeployedAircraft(id: number, data: Partial<DeployedAircraft>) {
+    return this.http.put<DeployedAircraft>(`/api/deployedaircrafts/${id}/`, data);
+  }
+
+
 }

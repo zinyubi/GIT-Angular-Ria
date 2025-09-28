@@ -1,16 +1,18 @@
 """
 API views for the Simulation backend application.
 
-This module provides REST API endpoints for managing simulation entities such as scenarios,
-aircraft types, deployed aircraft, radars, missiles, and asset deployments.
+Provides REST API endpoints for managing simulation entities like:
+- Scenarios
+- Aircraft types
+- Deployed aircraft
+- Radars, Missiles, Assets
 
 All endpoints require authentication.
 """
 
-from rest_framework import viewsets, status
+from rest_framework import viewsets
 from rest_framework.permissions import IsAuthenticated
-from rest_framework.response import Response
-from drf_spectacular.utils import extend_schema, OpenApiResponse
+from drf_spectacular.utils import extend_schema
 
 from .models import (
     Scenario,
@@ -20,10 +22,12 @@ from .models import (
     RadarType,
     AssetDeployment,
 )
+
 from .serializers import (
     ScenarioSerializer,
     AircraftTypeSerializer,
-    DeployedAircraftSerializer,
+    DeployedAircraftListSerializer,
+    DeployedAircraftCreateUpdateSerializer,
     MissileTypeSerializer,
     RadarTypeSerializer,
     AssetDeploymentSerializer,
@@ -38,11 +42,7 @@ class ScenarioViewSet(viewsets.ModelViewSet):
     ViewSet for managing Scenario instances.
 
     Actions:
-        - list: Retrieve all scenarios.
-        - retrieve: Get a single scenario by ID.
-        - create: Create a new scenario.
-        - update / partial_update: Modify a scenario by ID.
-        - destroy: Delete a scenario by ID.
+        - list, retrieve, create, update, partial_update, destroy
 
     Permissions:
         Requires authentication.
@@ -51,19 +51,8 @@ class ScenarioViewSet(viewsets.ModelViewSet):
     serializer_class = ScenarioSerializer
     permission_classes = [IsAuthenticated]
 
-    @extend_schema(
-        request=ScenarioSerializer,
-        responses={
-            201: ScenarioSerializer,
-            400: OpenApiResponse(description="Invalid data")
-        },
-    )
-    def create(self, request, *args, **kwargs):
-        serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        serializer.save(created_by=request.user)
-        headers = self.get_success_headers(serializer.data)
-        return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
+    def perform_create(self, serializer):
+        serializer.save(created_by=self.request.user)
 
 
 # ----------------- AircraftType ---------------------
@@ -72,9 +61,6 @@ class ScenarioViewSet(viewsets.ModelViewSet):
 class AircraftTypeViewSet(viewsets.ModelViewSet):
     """
     ViewSet for managing AircraftType instances.
-
-    Actions:
-        - list, retrieve, create, update, partial_update, destroy.
 
     Permissions:
         Requires authentication.
@@ -86,31 +72,36 @@ class AircraftTypeViewSet(viewsets.ModelViewSet):
 
 # ----------------- DeployedAircraft ---------------------
 
-@extend_schema(tags=['DeployedAircraft'])
+@extend_schema(tags=['DeployedAircrafts'])
 class DeployedAircraftViewSet(viewsets.ModelViewSet):
     """
     ViewSet for managing DeployedAircraft instances.
 
-    Includes current position and velocity info in responses.
+    - Supports listing all deployed aircrafts in a scenario
+    - Supports creating and updating deployed aircraft with waypoints
 
     Permissions:
         Requires authentication.
     """
-    queryset = DeployedAircraft.objects.all()
-    serializer_class = DeployedAircraftSerializer
     permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        queryset = DeployedAircraft.objects.all()
+        scenario_id = self.request.query_params.get('scenario')
+        if scenario_id:
+            queryset = queryset.filter(scenario_id=scenario_id)
+        return queryset
+
+    def get_serializer_class(self):
+        if self.action in ['list', 'retrieve']:
+            return DeployedAircraftListSerializer
+        return DeployedAircraftCreateUpdateSerializer
 
 
 # ----------------- MissileType ---------------------
 
 @extend_schema(tags=['MissileTypes'])
 class MissileTypeViewSet(viewsets.ModelViewSet):
-    """
-    ViewSet for managing MissileType instances.
-
-    Permissions:
-        Requires authentication.
-    """
     queryset = MissileType.objects.all()
     serializer_class = MissileTypeSerializer
     permission_classes = [IsAuthenticated]
@@ -120,12 +111,6 @@ class MissileTypeViewSet(viewsets.ModelViewSet):
 
 @extend_schema(tags=['RadarTypes'])
 class RadarTypeViewSet(viewsets.ModelViewSet):
-    """
-    ViewSet for managing RadarType instances.
-
-    Permissions:
-        Requires authentication.
-    """
     queryset = RadarType.objects.all()
     serializer_class = RadarTypeSerializer
     permission_classes = [IsAuthenticated]
@@ -135,12 +120,6 @@ class RadarTypeViewSet(viewsets.ModelViewSet):
 
 @extend_schema(tags=['AssetDeployments'])
 class AssetDeploymentViewSet(viewsets.ModelViewSet):
-    """
-    ViewSet for managing AssetDeployment instances.
-
-    Permissions:
-        Requires authentication.
-    """
     queryset = AssetDeployment.objects.all()
     serializer_class = AssetDeploymentSerializer
     permission_classes = [IsAuthenticated]

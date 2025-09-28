@@ -1,112 +1,211 @@
-<div class="planner">
-  <h2>Planner Screen</h2>
-</div>
+<!-- HEADER -->
+<!-- <div class="planning-header">
+  <h2 class="planning-title">Planner Workspace</h2>
+</div> -->
 
-<div class="plannercontainer">
-  <div class="splitRoot">
-    <div class="planningLeft">
-      <div class="scenarioPanel">
-        <h3>Your Scenarios</h3>
-        <ul class="scenarioList">
-          <li
-            *ngFor="let s of scenarios"
-            [class.activeScenario]="selectedScenario?.id === s.id"
-            class="scenarioListItem"
-            (click)="handleSelect(s)"
-          >
-            <span>{{ s.name }}</span>
-            <button
-              class="deleteBtn"
-              (click)="
-                $event.stopPropagation();
-                handleDeleteScenario(s)
-              "
-              title="Delete"
-            >
-              🗑
-            </button>
-          </li>
-        </ul>
-        <button (click)="handleCreateScenario()" class="addBtn">
-          + Create New Scenario
-        </button>
-      </div>
+<!-- WORKSPACE GRID -->
+<div class="planning-workspace" [class.is-collapsed]="sidebarCollapsed">
 
-      <div class="scenarioDetails">
-        <ng-container *ngIf="editing; else viewMode">
-          <!-- Edit / Create Scenario Form -->
-          <form (ngSubmit)="handleSaveScenario()" class="scenarioForm">
-            <input
-              class="scenarioInput"
-              [(ngModel)]="form.name"
-              name="name"
-              placeholder="Scenario Name"
-              required
-            />
-            <textarea
-              class="scenarioInput"
-              [(ngModel)]="form.description"
-              name="description"
-              [style.height.px]="60"
-              placeholder="Description (optional)"
-            ></textarea>
+  <!-- ============== LEFT: BLUE SIDEBAR ============== -->
+  <aside class="rail-sidebar">
+    <!-- RAIL: COLLAPSED STATE (4 icons) -->
+    <div class="rail-collapsed" *ngIf="sidebarCollapsed">
+      <!-- Expand -->
+      <button class="rail-btn" data-tip="Expand" (click)="expand()">‹</button>
 
-            <div style="margin-top: 12px; display: flex; gap: 10px;">
-            <button class="saveBtn" type="submit">Save</button>
-            <button
-                class="cancelBtn"
-                type="button"
-                (click)="handleCancelEditScenario()"
-            >
-                Cancel
-            </button>
+      <!-- Create new -->
+      <button class="rail-btn" data-tip="Create scenario"
+              (click)="expandAnd('create')">＋</button>
+
+      <!-- Edit selected -->
+      <button class="rail-btn" [class.disabled]="!selectedScenario"
+              [attr.data-tip]="selectedScenario ? 'Edit scenario' : 'Select a scenario'"
+              [disabled]="!selectedScenario"
+              (click)="expandAnd('edit')">✎</button>
+
+      <!-- Scenarios list -->
+      <button class="rail-btn" data-tip="Scenarios list"
+              (click)="expandAnd('list')">≡</button>
+    </div>
+
+    <!-- RAIL: EXPANDED STATE (collapse only) -->
+    <div class="rail-expanded" *ngIf="!sidebarCollapsed">
+      <button class="rail-btn" data-tip="Collapse" (click)="sidebarCollapsed = true">›</button>
+    </div>
+
+    <!-- EXPANDED CONTENT (hidden when collapsed) -->
+    <div class="rail-content" *ngIf="!sidebarCollapsed">
+      <section class="rail-header">
+        <h3>Scenarios</h3>
+        <button class="chip" (click)="handleCreateScenario()">+ New</button>
+      </section>
+
+      <!-- LIST -->
+      <ul #listBlock class="scenario-list" role="list">
+        <li *ngFor="let s of scenarios"
+            class="scenario-row"
+            [class.active]="selectedScenario?.id === s.id"
+            (click)="handleSelect(s)">
+          <span class="row-icon" aria-hidden="true">🛰</span>
+          <span class="row-name">{{ s.name }}</span>
+          <button class="row-del"
+                  (click)="$event.stopPropagation(); handleDeleteScenario(s)"
+                  [attr.aria-label]="'Delete ' + s.name">🗑</button>
+        </li>
+      </ul>
+
+      <!-- DETAIL / EDIT (your existing logic) -->
+      <section class="detail-card">
+        <ng-container *ngIf="editing; else detailView">
+          <form (ngSubmit)="handleSaveScenario()" class="form">
+            <label>
+              <span>Name</span>
+              <input [(ngModel)]="form.name" name="name" placeholder="Scenario Name" required />
+            </label>
+
+            <label>
+              <span>Description</span>
+              <textarea [(ngModel)]="form.description" name="description" placeholder="Description (optional)" rows="2"></textarea>
+            </label>
+
+            <div class="form-actions">
+              <button type="submit" class="btn btn-success">Save</button>
+              <button type="button" class="btn btn-secondary" (click)="handleCancelEditScenario()">Cancel</button>
             </div>
 
-
-
-
-
-            <div
-              *ngIf="scenarioError"
-              style="background: #fff3f3; color: #cb1818; border: 1px solid #ffb3b3; border-radius: 7px; font-weight: bold; padding: 7px; margin: 9px 0;"
-            >
-              {{ scenarioError }}
-            </div>
+            <div *ngIf="scenarioError" class="error">{{ scenarioError }}</div>
           </form>
         </ng-container>
 
-        <ng-template #viewMode>
-          <ng-container *ngIf="selectedScenario; else hintMode">
-            <div>
-              <h3>{{ selectedScenario.name }}</h3>
-              <div class="detailsDesc">
-                {{ selectedScenario.description || 'No description' }}
-              </div>
-              <button class="editBtn" (click)="handleEditScenario()">
-                Edit
-              </button>
-
-              <!--
-              <div class="acSection">
-                <h4>Aircrafts in this Scenario</h4>
-                ... 
-                (Aircraft editing UI commented out since you want only scenarios for now)
-              </div>
-              -->
+        <ng-template #detailView>
+          <ng-container *ngIf="selectedScenario; else pickHint">
+            <div class="detail">
+              <h4>{{ selectedScenario.name }}</h4>
+              <p class="muted">{{ selectedScenario.description || 'No description' }}</p>
+              <button class="btn btn-light" (click)="handleEditScenario()">Edit Scenario</button>
             </div>
           </ng-container>
-
-          <ng-template #hintMode>
-            <div class="hintBox">
-              <p>Click on a scenario to view and edit aircrafts.</p>
-            </div>
+          <ng-template #pickHint>
+            <div class="hint">Select a scenario or create a new one.</div>
           </ng-template>
         </ng-template>
+      </section>
+    </div>
+  </aside>
+  <!-- ============== END LEFT ============== -->
+
+  <!-- ============== CENTER: TOOLS (SCROLLS) ============== -->
+<section class="tools">
+  <!-- Deployment -->
+  <section class="card accordion">
+    <button class="acc-summary" type="button"
+            (click)="deployOpen = !deployOpen" [attr.aria-expanded]="deployOpen">
+      <span>Deployment</span>
+      <span class="chev" [class.open]="deployOpen">▾</span>
+    </button>
+
+    <div class="acc-content" [class.open]="deployOpen">
+      <form (ngSubmit)="handleDeployAircraft()" class="form grid2">
+        <label>Aircraft Type
+          <select [(ngModel)]="newAircraftForm.aircraft_type" name="aircraft_type" required>
+            <option value="" disabled selected>Select Type</option>
+            <option *ngFor="let type of aircraftTypes" [value]="type.id">
+              {{ type.name }} ({{ type.model }})
+            </option>
+          </select>
+        </label>
+
+        <label>Name
+          <input type="text" [(ngModel)]="newAircraftForm.name" name="name" />
+        </label>
+
+        <label>Latitude
+          <input type="number" [(ngModel)]="newAircraftForm.initial_latitude" name="initial_latitude" required />
+        </label>
+
+        <label>Longitude
+          <input type="number" [(ngModel)]="newAircraftForm.initial_longitude" name="initial_longitude" required />
+        </label>
+
+        <label>Altitude (m)
+          <input type="number" [(ngModel)]="newAircraftForm.initial_altitude_m" name="initial_altitude_m" required />
+        </label>
+
+        <div class="form-actions push">
+          <button type="submit" class="btn btn-primary">Deploy Aircraft</button>
+        </div>
+      </form>
+
+      <div *ngIf="deployedAircrafts?.length" class="list-block">
+        <h4 class="subtle">Deployed Aircraft</h4>
+        <ul class="plain">
+          <li *ngFor="let ac of deployedAircrafts" class="row">
+            <div>
+              <strong>{{ ac.name || 'Unnamed' }}</strong>
+              <span class="muted">({{ ac.aircraft_type }})</span>
+              <span class="muted">[{{ ac.initial_latitude }}, {{ ac.initial_longitude }}] · Alt {{ ac.initial_altitude_m }}m</span>
+            </div>
+            <button class="btn btn-link" (click)="startEditAircraft(ac)">Edit</button>
+          </li>
+        </ul>
       </div>
     </div>
+  </section>
 
-    <div class="planningRight">
-      <app-map></app-map>
+  <!-- Aircraft Editor -->
+  <section class="card accordion" *ngIf="selectedScenario">
+    <button class="acc-summary" type="button"
+            (click)="editorOpen = !editorOpen" [attr.aria-expanded]="editorOpen">
+      <span>Aircraft Editor</span>
+      <span class="chev" [class.open]="editorOpen">▾</span>
+    </button>
+
+    <div class="acc-content" [class.open]="editorOpen">
+      <div *ngIf="editingAircraft; else noAircraft">
+        <form (ngSubmit)="saveAircraft()" class="form grid2">
+          <label>Name <input [(ngModel)]="editingAircraft.name" name="editName" /></label>
+          <label>Initial Latitude <input type="number" [(ngModel)]="editingAircraft.initial_latitude" name="editLatitude" /></label>
+          <label>Initial Longitude <input type="number" [(ngModel)]="editingAircraft.initial_longitude" name="editLongitude" /></label>
+          <label>Initial Altitude (m) <input type="number" [(ngModel)]="editingAircraft.initial_altitude_m" name="editAltitude" /></label>
+
+          <div class="divider"></div>
+
+          <h5>Waypoints</h5>
+          <ul class="plain">
+            <li *ngFor="let wp of editingAircraft.planned_waypoints; let i = index" class="row">
+              <span>Lat: {{ wp.lat }}, Lon: {{ wp.lon }}, Alt: {{ wp.alt }}</span>
+              <span>
+                <button type="button" class="btn btn-link" (click)="editWaypoint(i)">Edit</button>
+                <button type="button" class="btn btn-link" (click)="deleteWaypoint(i)">Delete</button>
+              </span>
+            </li>
+          </ul>
+
+          <div class="form grid3">
+            <label>Latitude <input type="number" [(ngModel)]="waypointForm.lat" name="wpLat" /></label>
+            <label>Longitude <input type="number" [(ngModel)]="waypointForm.lon" name="wpLon" /></label>
+            <label>Altitude (m) <input type="number" [(ngModel)]="waypointForm.alt" name="wpAlt" /></label>
+            <div class="form-actions">
+              <button type="button" (click)="saveWaypoint()" class="btn btn-success">Save</button>
+              <button type="button" (click)="waypointEditIndex = null; waypointForm = { lat: 0, lon: 0, alt: 0 }" class="btn btn-secondary">Cancel</button>
+            </div>
+          </div>
+
+          <div class="form-actions push">
+            <button type="submit" class="btn btn-success">Save Aircraft</button>
+            <button type="button" (click)="cancelEditAircraft()" class="btn btn-secondary">Cancel</button>
+          </div>
+        </form>
+      </div>
+      <ng-template #noAircraft>
+        <div class="hint">Choose an aircraft from “Deployed Aircraft” to edit.</div>
+      </ng-template>
     </div>
-  </div>
+  </section>
+</section>
+
+  <!-- ============== RIGHT: MAP ============== -->
+  <section class="map-wrap">
+    <app-map class="map"></app-map>
+  </section>
 </div>

@@ -10,7 +10,6 @@ This module defines all REST API endpoints related to:
 
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
-
 from .views import (
     ScenarioViewSet,
     AircraftTypeViewSet,
@@ -23,16 +22,16 @@ from .views import (
 # Initialize the router and register all viewsets
 router = DefaultRouter()
 router.register(r'scenarios', ScenarioViewSet, basename='scenario')
-router.register(r'aircraft-types', AircraftTypeViewSet, basename='aircrafttype')
-router.register(r'deployed-aircraft', DeployedAircraftViewSet, basename='deployedaircraft')
-router.register(r'missile-types', MissileTypeViewSet, basename='missiletype')
-router.register(r'radar-types', RadarTypeViewSet, basename='radartype')
-router.register(r'asset-deployments', AssetDeploymentViewSet, basename='assetdeployment')
+router.register(r'aircrafttypes', AircraftTypeViewSet, basename='aircrafttype')
+router.register(r'deployedaircrafts', DeployedAircraftViewSet, basename='deployedaircraft')
+router.register(r'missiletypes', MissileTypeViewSet, basename='missiletype')
+router.register(r'radartypes', RadarTypeViewSet, basename='radartype')
+router.register(r'assetdeployments', AssetDeploymentViewSet, basename='assetdeployment')
 
 urlpatterns = [
-    # Include all router-generated routes
     path('', include(router.urls)),
 ]
+
 
 """
 ## API Endpoints Summary
@@ -44,19 +43,19 @@ urlpatterns = [
 - `PATCH scenarios/{id}/` - Partial update scenario by ID (auth required)
 - `DELETE scenarios/{id}/` - Delete scenario by ID (auth required)
 
-- `GET aircraft-types/` - List all aircraft types
-- `POST aircraft-types/` - Create new aircraft type
+- `GET aircrafttypes/` - List all aircraft types
+- `POST aircrafttypes/` - Create new aircraft type
 - (similar CRUD for aircraft-types/{id}/)
 
-- `GET deployed-aircraft/` - List all deployed aircraft
+- `GET deployedaircraft/` - List all deployed aircraft
 - (similar CRUD for deployed-aircraft/{id}/)
 
-- `GET missile-types/` - List all missile types
+- `GET missiletypes/` - List all missile types
 - (similar CRUD for missile-types/{id}/)
 
-- `GET radar-types/` - List all radar types
+- `GET radartypes/` - List all radar types
 - (similar CRUD for radar-types/{id}/)
 
-- `GET asset-deployments/` - List all asset deployments
+- `GET assetdeployments/` - List all asset deployments
 - (similar CRUD for asset-deployments/{id}/)
 """

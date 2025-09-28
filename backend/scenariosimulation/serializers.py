@@ -1,3 +1,12 @@
+"""
+Serializers for the Simulation backend application.
+
+This module defines serializers for entities like Scenarios,
+Deployed Aircraft, Aircraft Types, Missile Types, Radars, and Assets.
+
+Each serializer defines how data is serialized and deserialized for API use.
+"""
+
 from rest_framework import serializers
 from .models import (
     Scenario,
@@ -7,7 +16,6 @@ from .models import (
     RadarType,
     AssetDeployment,
 )
-from django.utils import timezone
 
 
 # -------------- Basic Serializers ------------------
@@ -65,7 +73,7 @@ class AssetDeploymentSerializer(serializers.ModelSerializer):
         ]
 
 
-# -------------- Nested Position and Velocity for DeployedAircraft ------------------
+# -------------- Deployed Aircraft ------------------
 
 class PositionSerializer(serializers.Serializer):
     latitude = serializers.FloatField()
@@ -80,7 +88,7 @@ class VelocitySerializer(serializers.Serializer):
     rate_of_turn_deg_per_sec = serializers.FloatField(allow_null=True)
 
 
-class DeployedAircraftSerializer(serializers.ModelSerializer):
+class DeployedAircraftListSerializer(serializers.ModelSerializer):
     position = serializers.SerializerMethodField()
     velocity = serializers.SerializerMethodField()
     aircraft_type = AircraftTypeSerializer(read_only=True)
@@ -89,13 +97,20 @@ class DeployedAircraftSerializer(serializers.ModelSerializer):
     class Meta:
         model = DeployedAircraft
         fields = [
-            'external_id', 'name', 'status', 'scenario',
-            'aircraft_type', 'position', 'velocity',
-            'last_updated', 'planned_waypoints', 'radar_asset',
+            'id',
+            'external_id',
+            'name',
+            'status',
+            'scenario',
+            'aircraft_type',
+            'position',
+            'velocity',
+            'last_updated',
+            'planned_waypoints',
+            'radar_asset',
         ]
 
     def get_position(self, obj):
-        # Return current position, fallback to initial if current is None
         return {
             "latitude": obj.current_latitude if obj.current_latitude is not None else obj.initial_latitude,
             "longitude": obj.current_longitude if obj.current_longitude is not None else obj.initial_longitude,
@@ -111,26 +126,16 @@ class DeployedAircraftSerializer(serializers.ModelSerializer):
         }
 
 
-# -------------- Radar Live Feed Serializer ------------------
-
-class RadarFeedSerializer(serializers.Serializer):
-    radar_id = serializers.UUIDField()
-    location = PositionSerializer()
-    timestamp = serializers.DateTimeField()
-    detected_aircraft = DeployedAircraftSerializer(many=True)
-
-
-# Example usage (not part of serializer code):
-# radar_feed_data = {
-#     "radar_id": radar_asset.external_id,
-#     "location": {
-#         "latitude": radar_asset.latitude,
-#         "longitude": radar_asset.longitude,
-#         "altitude_m": radar_asset.elevation_m or 0,
-#     },
-#     "timestamp": timezone.now(),
-#     "detected_aircraft": deployed_aircraft_queryset,  # Pass queryset to serializer
-# }
-# serializer = RadarFeedSerializer(data=radar_feed_data)
-# serializer.is_valid(raise_exception=True)
-# return Response(serializer.data)
+class DeployedAircraftCreateUpdateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = DeployedAircraft
+        fields = [
+            'id',
+            'name',
+            'scenario',
+            'aircraft_type',
+            'initial_latitude',
+            'initial_longitude',
+            'initial_altitude_m',
+            'planned_waypoints',
+        ]

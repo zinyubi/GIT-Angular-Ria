@@ -1,155 +1,176 @@
-import { Component, OnInit } from '@angular/core';
-import { HttpClient, HttpHeaders } from '@angular/common/http';
+import { Component, OnInit, ViewChild, ElementRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { MapComponent } from '../../../map/map.component'; 
-import { ScenarioService, Scenario } from '../../../core/auth/services/scenario.service'; // import your service and interface
-import { catchError } from 'rxjs/operators';
-import { of } from 'rxjs';
+import { catchError, of } from 'rxjs';
+
+import { MapComponent } from '../../../map/map.component';
+import {
+  ScenarioService,
+  Scenario,
+  AircraftType,
+  DeployedAircraft,
+} from '../../../core/auth/services/scenario.service';
+
+interface Waypoint {
+  lat: number;
+  lon: number;
+  alt: number;
+}
 
 @Component({
   standalone: true,
   selector: 'app-primary',
-  imports: [MapComponent, CommonModule, FormsModule], 
+  imports: [MapComponent, CommonModule, FormsModule],
   templateUrl: './planner.component.html',
   styleUrls: ['./planner.component.css'],
 })
 export class PlannerComponent implements OnInit {
+  // ===== Left (sidebar) state =====
   scenarios: Scenario[] = [];
   selectedScenario: Scenario | null = null;
-  editing = false;
-
+  editing = false; // editing scenario details (left panel)
   form = { name: '', description: '' };
   scenarioError = '';
 
-  // Comment out unused aircraft properties
-  /*
-  aircraftTypes: AircraftType[] = [];
-  aircraftInstances: AircraftInstance[] = [];
-  */
+  // Collapsed/expanded rail
+  sidebarCollapsed = true;
 
-  // Comment out aircraft editing properties
-  /*
-  editingAircraftIdx: number | 'add' | null = null;
-  acForm: any = {
-    aircraft: '',
+  // Hook to the scenarios list for smooth scroll when expanding to "list"
+  @ViewChild('listBlock', { static: false }) listBlock?: ElementRef<HTMLElement>;
+
+  // ===== Center (tools) data =====
+  aircraftTypes: AircraftType[] = [];
+  deployedAircrafts: DeployedAircraft[] = [];
+
+  // Accordion state
+  deployOpen = true;
+  editorOpen = false;
+
+  // Deployment form
+  newAircraftForm = {
+    aircraft_type: '',        // type id as string; cast to number on submit
     name: '',
-    initial_lat: '',
-    initial_lon: '',
-    planned_waypoints: [],
-    id: null,
+    initial_latitude: '',
+    initial_longitude: '',
+    initial_altitude_m: 0,
   };
 
-  isPlottingInitial = false;
-  isPlottingWaypoint = false;
-  */
+  // Aircraft editing + waypoints
+  editingAircraft: DeployedAircraft | null = null;
+  waypointEditIndex: number | null = null;
+  waypointForm: Waypoint = { lat: 0, lon: 0, alt: 0 };
 
   constructor(private scenarioService: ScenarioService) {}
 
+  // ===== Lifecycle =====
   ngOnInit() {
     this.loadScenarios();
-
-    // Comment out
-    // this.loadAircraftTypes();
+    this.loadAircraftTypes();
   }
 
+  // ===== Sidebar helpers (new rail behavior) =====
+  expand(): void {
+    this.sidebarCollapsed = false;
+  }
+
+  expandAnd(section: 'create' | 'edit' | 'list'): void {
+    this.sidebarCollapsed = false;
+
+    // Defer to let the view render expanded state before acting
+    requestAnimationFrame(() => {
+      if (section === 'create') {
+        this.handleCreateScenario();
+      } else if (section === 'edit') {
+        if (this.selectedScenario) this.handleEditScenario();
+      } else if (section === 'list') {
+        this.listBlock?.nativeElement?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    });
+  }
+
+  // ===== Scenarios =====
   loadScenarios() {
-    this.scenarioService.getAllScenarios()
+    this.scenarioService
+      .getAllScenarios()
       .pipe(
-        catchError(err => {
+        catchError((err) => {
           console.error('Failed to load scenarios', err);
-          return of([]); // fallback to empty list
+          return of<Scenario[]>([]);
         })
       )
-      .subscribe(scenarios => {
-        this.scenarios = scenarios;
+      .subscribe((scenarios) => {
+        this.scenarios = scenarios ?? [];
+        // keep selection valid if list changed
+        if (this.selectedScenario) {
+          const found = this.scenarios.find((s) => s.id === this.selectedScenario!.id);
+          if (!found) {
+            this.selectedScenario = null;
+            this.deployedAircrafts = [];
+          }
+        }
       });
   }
 
-  // Comment out aircraft loading methods
-  /*
   loadAircraftTypes() {
-    if (!this.token) return;
-    this.http
-      .get<AircraftType[]>(API_URLS.AIRCRAFTS, this.getAuthHeaders())
-      .subscribe((res) => {
-        this.aircraftTypes = res;
-      });
+    this.scenarioService.getAircraftTypes().subscribe({
+      next: (types) => (this.aircraftTypes = types ?? []),
+      error: (err) => console.error('Failed to load aircraft types', err),
+    });
   }
 
-  loadAircraftInstances() {
-    if (!this.token || !this.selectedScenario) {
-      this.aircraftInstances = [];
-      return;
-    }
-    const url = `${API_URLS.AIRCRAFT_INSTANCES}?scenario=${this.selectedScenario.id}`;
-    this.http
-      .get<AircraftInstance[]>(url, this.getAuthHeaders())
-      .subscribe((res) => {
-        this.aircraftInstances = res;
-      });
+  loadDeployedAircrafts() {
+    if (!this.selectedScenario?.id) return;
+    this.scenarioService.getDeployedAircrafts(this.selectedScenario.id).subscribe({
+      next: (aircrafts) => (this.deployedAircrafts = aircrafts ?? []),
+      error: (err) => console.error('Failed to load deployed aircrafts', err),
+    });
   }
-  */
 
   handleSelect(s: Scenario) {
     this.selectedScenario = s;
     this.editing = false;
     this.form = { name: s.name, description: s.description || '' };
-
-    // Comment out aircraft related reset
-    /*
-    this.editingAircraftIdx = null;
-    this.acForm = {
-      aircraft: '',
-      name: '',
-      initial_lat: '',
-      initial_lon: '',
-      planned_waypoints: [],
-      id: null,
-    };
-    this.isPlottingInitial = false;
-    this.isPlottingWaypoint = false;
-    this.loadAircraftInstances();
-    */
+    this.loadDeployedAircrafts();
+    this.deployOpen = true;
+    this.editorOpen = false;
   }
 
   handleEditScenario() {
+    // Editing the selected scenario's meta
+    if (!this.selectedScenario) return;
     this.editing = true;
   }
 
   handleCancelEditScenario() {
-  this.editing = false;
-
-  if (this.selectedScenario) {
-    this.form = {
-      name: this.selectedScenario.name,
-      description: this.selectedScenario.description || '',
-    };
-  } else {
-    this.form = { name: '', description: '' };
+    this.editing = false;
+    if (this.selectedScenario) {
+      this.form = {
+        name: this.selectedScenario.name,
+        description: this.selectedScenario.description || '',
+      };
+    } else {
+      this.form = { name: '', description: '' };
+    }
   }
-}
 
   handleDeleteScenario(s: Scenario) {
+    if (!s?.id) return;
     if (!window.confirm('Delete this scenario?')) return;
 
-    if (!s.id) return;
-
-    this.scenarioService.deleteScenario(s.id)
-      .subscribe({
-        next: () => {
-          this.scenarios = this.scenarios.filter(x => x.id !== s.id);
+    this.scenarioService.deleteScenario(s.id).subscribe({
+      next: () => {
+        this.scenarios = this.scenarios.filter((x) => x.id !== s.id);
+        if (this.selectedScenario?.id === s.id) {
           this.selectedScenario = null;
           this.editing = false;
-
-          // Comment out aircraft reset
-          // this.editingAircraftIdx = null;
-        },
-        error: (err) => {
-          console.error('Failed to delete scenario', err);
-          alert('Failed to delete scenario.');
+          this.deployedAircrafts = [];
         }
-      });
+      },
+      error: (err) => {
+        console.error('Failed to delete scenario', err);
+        alert('Failed to delete scenario.');
+      },
+    });
   }
 
   handleCreateScenario() {
@@ -161,53 +182,137 @@ export class PlannerComponent implements OnInit {
   handleSaveScenario() {
     this.scenarioError = '';
 
-    if (!this.form.name) {
+    if (!this.form.name?.trim()) {
       this.scenarioError = 'Scenario name is required.';
       return;
     }
 
-    if (this.editing && this.selectedScenario && this.selectedScenario.id) {
-      this.scenarioService.updateScenario(this.selectedScenario.id, this.form)
-        .subscribe({
-          next: (updatedScenario) => {
-            this.scenarios = this.scenarios.map(s => s.id === updatedScenario.id ? updatedScenario : s);
-            this.selectedScenario = updatedScenario;
-            this.editing = false;
-          },
-          error: (err) => {
-            console.error('Failed to update scenario', err);
-            this.scenarioError = err.message || 'Failed to save scenario.';
-          }
-        });
-    } else {
-      this.scenarioService.createScenario(this.form)
-        .subscribe({
-          next: (newScenario) => {
-            this.scenarios = [...this.scenarios, newScenario];
-            this.selectedScenario = newScenario;
-            this.editing = false;
-
-            // Comment out aircraft load
-            // this.loadAircraftInstances();
-          },
-          error: (err) => {
-            console.error('Failed to create scenario', err);
-            this.scenarioError = err.message || 'Failed to create scenario.';
-          }
-        });
+    // update existing
+    if (this.selectedScenario?.id && this.editing) {
+      this.scenarioService.updateScenario(this.selectedScenario.id, this.form).subscribe({
+        next: (updatedScenario) => {
+          this.scenarios = this.scenarios.map((s) =>
+            s.id === updatedScenario.id ? updatedScenario : s
+          );
+          this.selectedScenario = updatedScenario;
+          this.editing = false;
+        },
+        error: (err) => {
+          console.error('Failed to update scenario', err);
+          this.scenarioError = err?.message || 'Failed to save scenario.';
+        },
+      });
+      return;
     }
+
+    // create new
+    this.scenarioService.createScenario(this.form).subscribe({
+      next: (newScenario) => {
+        this.scenarios = [...this.scenarios, newScenario];
+        this.selectedScenario = newScenario;
+        this.editing = false;
+      },
+      error: (err) => {
+        console.error('Failed to create scenario', err);
+        this.scenarioError = err?.message || 'Failed to create scenario.';
+      },
+    });
   }
 
-  // Comment out all aircraft-related methods for now
-  /*
-  handleStartAddAircraft() { ... }
-  handleAircraftEdit(idx: number) { ... }
-  handleAcFormChange(field: string, value: any) { ... }
-  handleCancelAircraftEdit() { ... }
-  handleDeleteWaypoint(idx: number) { ... }
-  handleSaveAircraft() { ... }
-  handleDeleteAircraft(idx: number) { ... }
-  onMapClick(lat: number, lon: number) { ... }
-  getAllMarkers() { ... }
-  */
+  // ===== Deployment =====
+  handleDeployAircraft() {
+    if (!this.selectedScenario?.id) return;
+
+    const payload: DeployedAircraft = {
+      scenario: this.selectedScenario.id,
+      aircraft_type: Number(this.newAircraftForm.aircraft_type),
+      name: this.newAircraftForm.name,
+      initial_latitude: Number(this.newAircraftForm.initial_latitude),
+      initial_longitude: Number(this.newAircraftForm.initial_longitude),
+      initial_altitude_m: Number(this.newAircraftForm.initial_altitude_m),
+      planned_waypoints: [],
+    };
+
+    this.scenarioService.deployAircraft(payload).subscribe({
+      next: (aircraft) => {
+        this.deployedAircrafts = [...this.deployedAircrafts, aircraft];
+        this.newAircraftForm = {
+          aircraft_type: '',
+          name: '',
+          initial_latitude: '',
+          initial_longitude: '',
+          initial_altitude_m: 0,
+        };
+      },
+      error: (err) => {
+        console.error('Failed to deploy aircraft', err);
+        alert('Deployment failed.');
+      },
+    });
+  }
+
+  // ===== Aircraft Editing =====
+  startEditAircraft(ac: DeployedAircraft) {
+    this.editingAircraft = JSON.parse(JSON.stringify(ac));
+    this.waypointEditIndex = null;
+    this.waypointForm = { lat: 0, lon: 0, alt: 0 };
+    this.editorOpen = true;
+  }
+
+  cancelEditAircraft() {
+    this.editingAircraft = null;
+    this.waypointEditIndex = null;
+  }
+
+  saveAircraft() {
+    if (!this.editingAircraft?.id) return;
+
+    this.scenarioService.updateDeployedAircraft(this.editingAircraft.id, this.editingAircraft).subscribe({
+      next: (updated) => {
+        const idx = this.deployedAircrafts.findIndex((a) => a.id === updated.id);
+        if (idx >= 0) {
+          const next = [...this.deployedAircrafts];
+          next[idx] = updated;
+          this.deployedAircrafts = next;
+        }
+        this.editingAircraft = null;
+        this.waypointEditIndex = null;
+      },
+      error: (err) => {
+        console.error('Failed to save aircraft', err);
+        alert('Failed to save aircraft.');
+      },
+    });
+  }
+
+  // ===== Waypoints =====
+  editWaypoint(index: number) {
+    if (!this.editingAircraft?.planned_waypoints) return;
+    const wp = this.editingAircraft.planned_waypoints[index];
+    if (!wp) return;
+    this.waypointEditIndex = index;
+    this.waypointForm = { lat: wp.lat, lon: wp.lon, alt: wp.alt };
+  }
+
+  saveWaypoint() {
+    if (!this.editingAircraft) return;
+
+    if (!this.editingAircraft.planned_waypoints) {
+      this.editingAircraft.planned_waypoints = [];
+    }
+
+    if (this.waypointEditIndex === null) {
+      this.editingAircraft.planned_waypoints.push({ ...this.waypointForm });
+    } else {
+      this.editingAircraft.planned_waypoints[this.waypointEditIndex] = { ...this.waypointForm };
+    }
+
+    this.waypointForm = { lat: 0, lon: 0, alt: 0 };
+    this.waypointEditIndex = null;
+  }
+
+  deleteWaypoint(index: number) {
+    if (!this.editingAircraft?.planned_waypoints) return;
+    this.editingAircraft.planned_waypoints.splice(index, 1);
+  }
 }

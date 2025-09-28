@@ -23,18 +23,18 @@ export const API_URLS = {
   SCREENS: `${BACKEND_BASE}/users/screens/`,
   ROLES_SCREENS: `${BACKEND_BASE}/users/roles/screens/`,
 
-
   // Add scenario endpoints:
   SCENARIOS_BASE: `${BACKEND_BASE}/scenariosimulation/scenarios/`,
   // for convenience, individual:
   SCENARIOS: `${BACKEND_BASE}/scenariosimulation/scenarios/`, // list & create
-  SCENARIO_BY_ID: (id: number | string) => `${BACKEND_BASE}/scenariosimulation/scenarios/${id}/`, // get, update, delete
+  SCENARIO_BY_ID: (id: number | string) =>
+    `${BACKEND_BASE}/scenariosimulation/scenarios/${id}/`, // get, update, delete
 
-
-
-
-
-
+  // Add these to your API_URLS
+  AIRCRAFT_TYPES: `${BACKEND_BASE}/scenariosimulation/aircrafttypes/`,
+  DEPLOYED_AIRCRAFT: `${BACKEND_BASE}/scenariosimulation/deployedaircrafts/`,
+  DEPLOYED_AIRCRAFT_BY_SCENARIO: (scenarioId: number | string) =>
+    `${BACKEND_BASE}/scenariosimulation/deployedaircrafts/?scenario=${scenarioId}`,
 };
 
 /**
@@ -46,9 +46,10 @@ export const WS_URLS = {
 
   /**
    * Generates the WebSocket URL for simulation data for a given scenario.
-   * 
+   *
    * @param scenarioId - The ID of the simulation scenario (number or string).
    * @returns WebSocket URL string for the simulation.
    */
-  simulation: (scenarioId: number | string) => `${WS_BASE}/ws/simulations/${scenarioId}/`,
+  simulation: (scenarioId: number | string) =>
+    `${WS_BASE}/ws/simulations/${scenarioId}/`,
 };

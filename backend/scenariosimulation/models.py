@@ -1,8 +1,8 @@
 from django.db import models
 from django.conf import settings
 from django.core.validators import MinValueValidator, MaxValueValidator
-from django.utils import timezone
 import uuid
+from django.db.models import Q, F, CheckConstraint
 
 
 # ----------- Scenario -------------
@@ -73,8 +73,9 @@ class DeployedAircraft(models.Model):
     last_updated = models.DateTimeField(null=True, blank=True)
 
     # Link deployed radar asset currently tracking or related (optional)
+    # Use string literal here to avoid forward reference error
     radar_asset = models.ForeignKey('AssetDeployment', on_delete=models.SET_NULL, null=True, blank=True,
-                                    limit_choices_to={'category': AssetDeployment.CATEGORY_RADAR},
+                                    limit_choices_to={'category': 'Radar'},
                                     related_name='tracked_aircraft')
 
     external_id = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
@@ -97,9 +98,9 @@ class DeployedAircraft(models.Model):
         Return current position as a dict {lat, lon, alt}.
         """
         return {
-            "latitude": self.current_latitude or self.initial_latitude,
-            "longitude": self.current_longitude or self.initial_longitude,
-            "altitude_m": self.current_altitude_m or self.initial_altitude_m,
+            "latitude": self.current_latitude if self.current_latitude is not None else self.initial_latitude,
+            "longitude": self.current_longitude if self.current_longitude is not None else self.initial_longitude,
+            "altitude_m": self.current_altitude_m if self.current_altitude_m is not None else self.initial_altitude_m,
         }
 
 
@@ -190,7 +191,7 @@ class AssetDeployment(models.Model):
     notes = models.TextField(blank=True)
 
     # Access Control Lists: who can access this deployment
-    roles = models.ManyToManyField('communications.Role', related_name='asset_deployments', blank=True)
+    roles = models.ManyToManyField('users.Role', related_name='asset_deployments', blank=True)
     users = models.ManyToManyField(settings.AUTH_USER_MODEL, related_name='asset_deployments', blank=True)
 
     # Audit fields
@@ -206,10 +207,14 @@ class AssetDeployment(models.Model):
             models.Index(fields=['deployment_zone']),
         ]
         constraints = [
-            models.CheckConstraint(check=models.Q(category= CATEGORY_RADAR, radar_type__isnull=False) | models.Q(category=CATEGORY_MISSILE, missile_type__isnull=False),
-                                   name='category_type_match')
+            CheckConstraint(
+                check=(
+                    Q(category='Radar', radar_type__isnull=False) |
+                    Q(category='Missile', missile_type__isnull=False)
+                ),
+                name='category_type_match'
+            )
         ]
 
     def __str__(self):
-        return f"{self.name} ({self.category})"
-
+        return f
