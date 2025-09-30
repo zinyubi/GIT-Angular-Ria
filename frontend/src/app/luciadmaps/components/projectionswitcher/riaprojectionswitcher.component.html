@@ -1,0 +1,5 @@
+<div class="select-wrap">
+  <select class="proj-select" (change)="onChange($event)">
+    <option *ngFor="let k of keys" [value]="k">{{ k }}</option>
+  </select>
+</div>

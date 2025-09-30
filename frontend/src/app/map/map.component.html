@@ -1,2 +1,34 @@
-<!-- src/app/map/map.component.html -->
-<div #luciadMap id="luciadMap" class="luciadMap" style="width: 100%; height: 100%;"></div>
+<div class="map-host">
+  <div #luciadMap class="map-canvas"></div>
+
+  <!-- Pan controls (top-right) -->
+  <div class="overlay overlay-top-right pan-controls" role="group" aria-label="Pan controls">
+    <button class="btn" (click)="panUp()"    title="Pan up">▲</button>
+    <div class="row">
+      <button class="btn" (click)="panLeft()"  title="Pan left">◀</button>
+      <button class="btn" (click)="panRight()" title="Pan right">▶</button>
+    </div>
+    <button class="btn" (click)="panDown()"  title="Pan down">▼</button>
+  </div>
+
+  <!-- Actions (top-left) -->
+  <div class="overlay overlay-top-left action-bar">
+    <button class="btn" (click)="fitToData()">Fit to data</button>
+    <button class="btn" [class.active]="picking" (click)="startPointPicking()">
+      {{ picking ? 'Picking… click map' : 'Pick point' }}
+    </button>
+    <button class="btn" *ngIf="picking" (click)="stopPointPicking()">Cancel</button>
+    <projectionchanger></projectionchanger>
+  </div>
+
+  <!-- Scale bar (bottom-left) -->
+  <div class="overlay overlay-bottom-left scale-wrap">
+    <div class="scale-bar" [style.width.px]="scaleBarPx"></div>
+    <div class="scale-text">{{ scaleText }}</div>
+  </div>
+
+  <!-- Cursor readout (bottom-right) -->
+  <div class="overlay overlay-bottom-right cursor-readout">
+    {{ cursorText }}
+  </div>
+</div>

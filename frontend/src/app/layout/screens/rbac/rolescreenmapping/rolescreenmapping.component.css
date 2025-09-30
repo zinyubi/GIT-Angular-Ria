@@ -1,31 +1,56 @@
-/* Styles for the component */
+/* Role container */
 .role-container {
-  margin-bottom: 20px;
+  margin-block-end: calc(var(--spacing-unit) * 4);
 }
 
-h3 {
-  font-size: 1.2em;
-  margin-bottom: 10px;
+/* Section heading */
+.role-container h3 {
+  font-size: 1.2rem;
+  font-weight: 600;
+  margin-block-end: calc(var(--spacing-unit) * 2);
+  color: var(--color-text);
 }
 
+/* Screen list */
 .screen-list {
-  margin-left: 20px;
+  margin-inline-start: calc(var(--spacing-unit) * 3);
+  list-style: none;
+  padding: 0;
 }
-
 .screen-item {
-  margin-bottom: 8px;
+  margin-block-end: calc(var(--spacing-unit) * 1.5);
+  color: var(--color-muted);
 }
 
+/* Save button */
 button.save-button {
-  margin-top: 20px;
-  padding: 10px 15px;
-  background-color: #007bff;
-  color: white;
-  border: none;
+  margin-block-start: calc(var(--spacing-unit) * 4);
+  padding: 0.65rem 1rem;
+  border-radius: var(--radius-sm, 8px);
+  border: 1px solid color-mix(in srgb, var(--color-accent) 35%, var(--color-border) 65%);
+  background: color-mix(in srgb, var(--color-accent) 65%, transparent 35%);
+  color: #fff;
+  font-weight: 600;
   cursor: pointer;
-  border-radius: 4px;
+  transition: background-color var(--transition),
+              border-color var(--transition),
+              color var(--transition),
+              box-shadow var(--transition),
+              transform var(--transition);
 }
 
 button.save-button:hover {
-  background-color: #0056b3;
+  background: color-mix(in srgb, var(--color-accent) 75%, transparent 25%);
+  border-color: color-mix(in srgb, var(--color-accent) 55%, var(--color-border) 45%);
+  transform: translateY(-1px);
+}
+
+button.save-button:focus-visible {
+  outline: 2px solid color-mix(in srgb, var(--color-accent) 60%, transparent 40%);
+  outline-offset: 2px;
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--color-accent) 25%, transparent 75%);
+}
+button.save-button:disabled {
+  opacity: .6;
+  cursor: not-allowed;
 }

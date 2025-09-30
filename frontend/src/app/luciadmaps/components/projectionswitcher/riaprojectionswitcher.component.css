@@ -1,0 +1,68 @@
+:host { display: inline-block; }
+
+/* Wrapper to draw our own caret */
+.select-wrap {
+  position: relative;
+  display: inline-block;
+}
+
+/* Closed control — matches your zoom buttons */
+.proj-select {
+  /* make the UA use dark-themed form parts where possible */
+  color-scheme: dark;
+
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  inline-size: auto;        /* grows to text */
+  block-size: 36px;         /* match buttons */
+  padding: 0 10px;
+
+  line-height: 1;
+  font: 500 13px/1.2 system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+  color: #fff;
+
+  border-radius: 8px;
+  border: 1px solid rgba(255,255,255,.25);
+  background: rgba(0,0,0,.35);
+  backdrop-filter: blur(4px);
+  cursor: pointer;
+}
+.proj-select:hover  { background: rgba(0,0,0,.45); }
+.proj-select:focus  { outline: none; border-color: rgba(255,255,255,.45); }
+
+/* Hide old IE arrow if it ever appears */
+.proj-select::-ms-expand { display: none; }
+
+/* Our custom caret */
+.select-wrap::after {
+  content: "";
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-40%);
+  pointer-events: none;
+
+  /* draw a small chevron using borders */
+  width: 6px; height: 6px;
+  border-right: 2px solid rgba(255,255,255,.8);
+  border-bottom: 2px solid rgba(255,255,255,.8);
+  transform: translateY(-40%) rotate(45deg);
+  opacity: .9;
+}
+
+/* Best-effort styling of the OPEN list (browser-dependent)
+   Works in Firefox and many Chromium builds, but not all platforms. */
+.proj-select option {
+  background-color: rgba(5, 8, 13, 0.98);
+  color: #fff;
+}
+.proj-select option:checked {
+  background-color: rgba(30, 41, 59, .95);
+  color: #fff;
+}

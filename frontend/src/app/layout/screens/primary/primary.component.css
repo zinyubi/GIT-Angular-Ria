@@ -1,18 +1,46 @@
 :host {
   display: flex;
   flex-direction: column;
-  height: 100%; /* full viewport height */
+  height: 100%;   /* inherits from parent; fine because parent uses 100dvh */
 }
 
-.primary {
+.primary {            /* if you show banners/headings here */
   text-align: center;
-  padding: 2rem;
+  padding: 0.5rem;
   color: var(--color-error);
-  flex-shrink: 0; /* prevent shrinking */
+  flex: 0 0 auto;
 }
 
+/* The map container fills remaining space and can scroll if needed */
 .primarycontainer {
-  flex-grow: 1; /* occupy remaining space */
+  display: flex;        /* Enable flex layout */
+  flex-direction: row;  /* Horizontal split */
+  height: 100%;
   width: 100%;
+  overflow: hidden;     /* Prevent scrollbars from flex container */
+  border-radius: var(--radius);
+  min-height: 0;        /* Important for flex children with overflow */
+}
+
+
+/* Left side - you can customize content */
+.left-side {
+  flex: 0 0 40%;        /* Take 40% width */
+  background: #f0f0f0;  /* Optional: distinguish visually */
+  overflow: auto;       /* Scroll if content overflows */
+}
+
+/* Right side - the ria-map */
+.right-side {
+  flex: 0 0 60%;        /* Take 60% width */
+  min-height: 0;        /* Prevent overflow issues */
+  overflow: hidden;     /* Hide scrollbars here */
+  border-radius: var(--radius);
+}
+
+/* Make the map fill its parent */
+ria-map, ria-map *:host { 
   display: block;
+  inline-size: 100%;
+  block-size: 100%;
 }

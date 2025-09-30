@@ -1,69 +1,78 @@
+/* Top navigation bar */
 .top-nav {
   display: flex;
-  justify-content: center; /* Center the ul horizontally */
+  justify-content: center;
   align-items: center;
-  width: 100%;
-  background: var(--color-surface);
+  inline-size: 100%;
+  padding: 0.2rem;
+  background: color-mix(in srgb, var(--color-surface) 92%, transparent 8%);
   backdrop-filter: var(--blur);
-  padding: 0.5rem 1rem;
-  border-bottom: 5px solid var(--color-border);
-  box-shadow: var(--shadow);
-  /* border-radius: var(--radius); */
-  /* -webkit-overflow-scrolling: touch;
-  scrollbar-width: thin; */
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  margin-block: calc(var(--spacing-unit) * 1); 
   z-index: 900;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: thin;
 }
 
+
+/* Inline menu list */
 .top-nav ul {
-  display: inline-flex; /* inline-flex makes ul shrink to content */
+  display: inline-flex;
+  gap: clamp(1rem, 2vw, 2rem);
   list-style: none;
   padding: 0;
-  margin: 0 auto; /* center ul horizontally */
-  gap: 2rem;
-  white-space: nowrap; /* prevent wrapping */
+  margin: 0 ;
+  white-space: nowrap;
 }
 
+/* Links */
 .top-nav a {
+  display: inline-block;
+  padding: 0.3rem 0.6rem;
+  margin: 0rem;
+  font-weight: 400;
   color: var(--color-text);
   text-decoration: none;
-  font-weight: 600;
-  padding: 1rem 1rem;
   border-radius: var(--radius);
-  white-space: nowrap;
-  transition: background-color 0.3s ease;
+  transition: background-color var(--transition),
+              border-color var(--transition),
+              color var(--transition),
+              box-shadow var(--transition);
 }
 
-.top-nav a:hover {
-  border: 1px solid var(--color-primary);
-  box-shadow: 0 4px 10px rgba(79, 70, 229, 0.6);
-
+/* Hover & focus */
+.top-nav a:hover,
+.top-nav a:focus-visible {
+  background: color-mix(in srgb, var(--color-accent) 12%, var(--color-surface) 88%);
+  border: 1px solid color-mix(in srgb, var(--color-accent) 35%, var(--color-border) 65%);
+  box-shadow: 0 4px 10px color-mix(in srgb, var(--color-accent) 45%, transparent 55%);
+  outline: none;
 }
 
-.top-nav a.active {
-  background-color: var(--color-primary);
-  color: white;
-  box-shadow: 0 4px 10px rgba(79, 70, 229, 0.6);
-}
-
+/* Active link */
+.top-nav a.active,
 .top-nav li.active a {
-  background-color: var(--color-primary);
-  color: white;
-  box-shadow: 0 4px 10px rgba(79, 70, 229, 0.5);
+  background: color-mix(in srgb, var(--color-accent) 65%, transparent 35%);
+  border: 1px solid color-mix(in srgb, var(--color-accent) 55%, var(--color-border) 45%);
+  color: #fff;
+  box-shadow: 0 4px 12px color-mix(in srgb, var(--color-accent) 50%, transparent 50%);
 }
 
-.top-nav::-webkit-scrollbar {
-  height: 6px;
-}
-
-.top-nav::-webkit-scrollbar-thumb {
-  background: rgba(79, 70, 229, 0.5);
-  border-radius: 3px;
-}
-
-
+/* Unauthorized links */
 .unauthorized a {
-  color: gray;
+  color: var(--color-muted);
   font-style: italic;
   cursor: not-allowed;
   pointer-events: none;
+  opacity: 0.7;
 }
+
+/* Scrollbar styling */
+.top-nav::-webkit-scrollbar { height: 6px; }
+.top-nav::-webkit-scrollbar-thumb {
+  background: color-mix(in srgb, var(--color-accent) 40%, transparent 60%);
+  border-radius: 3px;
+}
+.top-nav::-webkit-scrollbar-track { background: transparent; }

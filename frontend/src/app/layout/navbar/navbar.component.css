@@ -1,16 +1,24 @@
+/* NAVBAR */
 .navbar {
+  position: sticky; /* keeps it visible on scroll; switch to relative if not desired */
+  inset-block-start: 0;
+  z-index: 10000;
+
   display: flex;
   align-items: center;
   justify-content: space-between;
-  background: var(--color-surface);
+
+  background: color-mix(in srgb, var(--color-surface) 88%, transparent 12%);
   backdrop-filter: var(--blur);
-  box-shadow: var(--shadow);
-  padding: 1rem 2rem;
-  position: relative;  /* add this */
-  z-index: 10000;      /* higher than map and top-nav */
-  /* border-radius: var(--radius); */
-  /* border: 1px solid var(--color-border); */
-  /* margin: 1rem; */
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  /* box-shadow: var(--elev-2); */
+
+  padding: clamp(0.2rem, 0.4vw, 0.3rem) clamp(.4rem, 0.8vw, 0.8rem);
+  /* margin-block: calc(var(--spacing-unit) * 1);  */
+  gap: calc(var(--spacing-unit) * 2);
+
+  transition: background-color var(--transition), border-color var(--transition), box-shadow var(--transition);
 }
 
 .navbar-left,
@@ -18,191 +26,214 @@
 .navbar-right {
   display: flex;
   align-items: center;
-  gap: 1rem;
+  gap: calc(var(--spacing-unit) * 2);
 }
-
-.session-text{
-  font-size: 2rem;
-  font-weight: 600;
-  color: var(--color-muted);
-}
-
 
 .navbar-center {
   justify-content: center;
-  flex: 1;
+  flex: 1 1 auto;
+  min-width: 0; /* prevents overflow in tight viewports */
+}
+
+/* TEXT */
+.session-text {
+  font-size: clamp(1.25rem, 2.2vw, 1.75rem);
+  font-weight: 600;
+  color: var(--color-text);
+  letter-spacing: 0.2px;
 }
 
 .welcome-text {
-  font-size: 1.1rem;
+  font-size: 1.05rem;
   font-weight: 600;
   color: var(--color-muted);
 }
 
+/* CIRCULAR USER BUTTON */
+.user-action-button {
+  inline-size: 3rem;
+  block-size: 3rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  background: color-mix(in srgb, var(--color-surface) 92%, transparent 8%);
+  color: var(--color-text);
+  border: 1px solid var(--color-border);
+  border-radius: 50%;
+
+  font: inherit;
+  font-weight: 600;
+  font-size: 1.1rem;
+  padding: 0;
+  cursor: pointer;
+
+  transition: transform var(--transition), background-color var(--transition), border-color var(--transition), color var(--transition), box-shadow var(--transition);
+}
+.user-action-button:hover {
+  background: color-mix(in srgb, var(--color-accent) 12%, var(--color-surface) 88%);
+  border-color: color-mix(in srgb, var(--color-accent) 35%, var(--color-border) 65%);
+}
+.user-action-button:focus-visible {
+  outline: 2px solid color-mix(in srgb, var(--color-accent) 60%, transparent 40%);
+  outline-offset: 2px;
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--color-accent) 25%, transparent 75%);
+}
+
+/* LOGOUT BUTTON */
 .logout-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  width: 100%;
+  padding: 0.6rem 0.9rem;
+
   background: transparent;
   color: var(--color-text);
   border: 1px solid var(--color-border);
-  padding: 1.5rem 1.5rem;
-  border-radius: 999px;
+  border-radius: var(--radius);
   font-weight: 600;
   cursor: pointer;
-  transition: all 0.3s ease;
-}
 
+  transition: background-color var(--transition), border-color var(--transition), color var(--transition), box-shadow var(--transition);
+}
 .logout-button:hover {
-  background-color: rgba(239, 68, 68, 0.2);
+  background: color-mix(in srgb, var(--color-error) 10%, transparent 90%);
   border-color: var(--color-error);
   color: var(--color-error);
 }
-
-.user-action-button {
-  background: transparent;
-  color: var(--color-text);
-  border: 1px solid var(--color-border);
-  width: 3.0rem;
-  height: 3.0rem;
-  border-radius: 50%; /* perfect circle */
-  cursor: pointer;
-  font-weight: 500;
-  transition: all 0.3s ease;
-  display: flex;            /* enable flexbox */
-  align-items: center;      /* center vertically */
-  justify-content: center;  /* center horizontally */
-  font-size: 1.25rem;       /* bigger font for the letter */
-  padding: 0;               /* no padding */
+.logout-button:focus-visible {
+  outline: 2px solid color-mix(in srgb, var(--color-accent) 60%, transparent 40%);
+  outline-offset: 2px;
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--color-accent) 25%, transparent 75%);
 }
 
-.user-action-button:hover {
-  background-color: rgba(239, 68, 68, 0.2);
-  border-color: var(--color-error);
-  color: var(--color-error);
-}
+/* POPUP / MENU */
 .popup-dialog {
   position: absolute;
-  right: 0;
-  top: 100%;
-  margin-top: 0.75rem;
-  background: var(--color-surface);
+  inset-inline-end: 0;
+  inset-block-start: 100%;
+  margin-block-start: 0.75rem;
+
+  display: flex;
+  flex-direction: column;
+  gap: calc(var(--spacing-unit) * 2);
+
+  min-inline-size: 240px;
+  padding: 1rem 1.1rem;
+
+  background: color-mix(in srgb, var(--color-surface) 92%, transparent 8%);
   backdrop-filter: var(--blur);
   border: 1px solid var(--color-border);
   border-radius: var(--radius);
-  box-shadow: var(--shadow);
-  padding: 1rem 1.25rem;
-  min-width: 240px;
+  box-shadow: var(--elev-3);
   z-index: 9999;
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
+
+  transition: background-color var(--transition), border-color var(--transition), box-shadow var(--transition);
 }
 
-/* Each row in the popup */
 .popup-row {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 0.75rem;
+  gap: calc(var(--spacing-unit) * 1.5);
 }
 
-/* Label text inside popup */
 .popup-label {
   font-weight: 600;
   color: var(--color-text);
   font-size: 0.95rem;
-  flex: 1;
+  flex: 1 1 auto;
 }
 
-/* Row-specific alignment tweaks */
-.popup-row-session {
-  justify-content: space-between;
-}
+.popup-row-session { justify-content: space-between; }
+.popup-row-theme { justify-content: flex-start; }
+.popup-row-theme .switch { margin-inline-start: auto; margin-inline-end: 0.5rem; }
 
-.popup-row-theme {
-  justify-content: flex-start;
-}
+.popup-row:last-child { margin-bottom: 0; }
 
-.popup-row-theme .switch {
-  margin-left: auto;
-  margin-right: 0.5rem;
-}
-
-/* Switch styles */
+/* THEME SWITCH */
 .switch {
   position: relative;
   display: inline-block;
-  width: 48px;
-  height: 24px;
+  inline-size: 48px;
+  block-size: 24px;
   flex-shrink: 0;
 }
-
 .switch input {
   opacity: 0;
-  width: 0;
-  height: 0;
+  inline-size: 0;
+  block-size: 0;
+  position: absolute;
 }
-
 .slider {
   position: absolute;
+  inset: 0;
   cursor: pointer;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background-color: var(--color-border);
-  transition: 0.4s;
-  border-radius: 24px;
-}
 
-.slider:before {
-  position: absolute;
+  background: color-mix(in srgb, var(--color-accent) 22%, transparent 78%);
+  border: 1px solid var(--color-border);
+  border-radius: 999px;
+
+  transition: background-color var(--transition), border-color var(--transition);
+}
+.slider::before {
   content: "";
-  height: 18px;
-  width: 18px;
-  left: 3px;
-  bottom: 3px;
-  background-color: var(--color-surface);
-  transition: 0.4s;
+  position: absolute;
+  inline-size: 18px;
+  block-size: 18px;
+  inset-block-start: 2px;
+  inset-inline-start: 2px;
+
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
   border-radius: 50%;
-  box-shadow: 0 0 2px rgba(0, 0, 0, 0.2);
+  box-shadow: var(--elev-1);
+
+  transition: transform var(--transition), background-color var(--transition), border-color var(--transition);
 }
 
+/* checked state */
 .switch input:checked + .slider {
-  background-color: var(--color-primary);
+  background: color-mix(in srgb, var(--color-accent) 60%, transparent 40%);
+  border-color: color-mix(in srgb, var(--color-accent) 55%, var(--color-border) 45%);
 }
-
-.switch input:checked + .slider:before {
+.switch input:checked + .slider::before {
   transform: translateX(24px);
 }
 
-/* Light/Dark text */
+/* Light/Dark text next to switch */
 .theme-text {
   font-weight: 500;
   color: var(--color-muted);
   font-size: 0.9rem;
-  min-width: 40px;
-  text-align: left;
+  min-inline-size: 40px;
+  text-align: start;
 }
 
-/* Logout button refinement */
-.logout-button {
-  width: 100%;
-  padding: 0.5rem;
-  border-radius: var(--radius);
-  font-weight: 600;
-  border: 1px solid var(--color-border);
-  background: transparent;
-  color: var(--color-text);
-  cursor: pointer;
-  transition: all 0.3s ease;
-  text-align: center;
+/* HOVER LIFT FOR NAVBAR (pointer devices) */
+@media (hover: hover) and (pointer: fine) {
+  .navbar:hover { box-shadow: var(--elev-3); }
 }
 
-.logout-button:hover {
-  background-color: rgba(239, 68, 68, 0.1);
-  border-color: var(--color-error);
-  color: var(--color-error);
+/* REDUCED MOTION */
+@media (prefers-reduced-motion: reduce) {
+  .navbar,
+  .user-action-button,
+  .logout-button,
+  .slider,
+  .slider::before,
+  .popup-dialog {
+    transition-duration: 0.001ms !important;
+    transform: none !important;
+  }
 }
 
-.popup-row:last-child {
-  margin-bottom: 0;
+/* SMALL SCREENS */
+@media (max-width: 720px) {
+  .navbar { border-radius: var(--radius-sm); padding: 0.6rem 1rem; }
+  .navbar-left, .navbar-right { gap: var(--spacing-unit); }
+  .session-text { font-size: 1.25rem; }
+  .welcome-text { font-size: 1rem; }
 }

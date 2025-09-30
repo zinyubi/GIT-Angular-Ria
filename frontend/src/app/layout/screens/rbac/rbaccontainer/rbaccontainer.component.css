@@ -1,15 +1,54 @@
+/* RBAC: nav spacing */
 .rbac-container nav {
-  margin-bottom: 10px;
+  margin-block-end: calc(var(--spacing-unit) * 2);
+  display: flex;
+  flex-wrap: wrap;
+  gap: calc(var(--spacing-unit) * 1.5);
 }
 
+/* RBAC: buttons */
 .rbac-container button {
-  margin-right: 8px;
-  padding: 6px 12px;
+  padding: 0.45rem 0.9rem;
+  border-radius: var(--radius-sm, 8px);
+  border: 1px solid var(--color-border);
+  background: color-mix(in srgb, var(--color-surface) 92%, transparent 8%);
+  color: var(--color-text);
+  font: inherit;
+  font-weight: 600;
   cursor: pointer;
+  transition: background-color var(--transition),
+              border-color var(--transition),
+              color var(--transition),
+              box-shadow var(--transition);
+  outline: none;
 }
 
+.rbac-container button:hover {
+  background: color-mix(in srgb, var(--color-accent) 12%, var(--color-surface) 88%);
+  border-color: color-mix(in srgb, var(--color-accent) 35%, var(--color-border) 65%);
+}
+
+.rbac-container button:focus-visible {
+  outline: 2px solid color-mix(in srgb, var(--color-accent) 60%, transparent 40%);
+  outline-offset: 2px;
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--color-accent) 25%, transparent 75%);
+}
+
+/* Active tab/button */
 .rbac-container button.active {
-  background-color: #007bff;
-  color: rgb(197, 78, 78);
-  border: none;
+  background: color-mix(in srgb, var(--color-accent) 65%, transparent 35%);
+  border-color: color-mix(in srgb, var(--color-accent) 55%, var(--color-border) 45%);
+  color: #fff; /* ensures contrast in both themes */
+}
+
+/* Disabled state */
+.rbac-container button:disabled {
+  opacity: .6;
+  cursor: not-allowed;
+}
+
+/* Small screens */
+@media (max-width: 640px) {
+  .rbac-container nav { gap: var(--spacing-unit); }
+  .rbac-container button { padding: 0.4rem 0.75rem; }
 }

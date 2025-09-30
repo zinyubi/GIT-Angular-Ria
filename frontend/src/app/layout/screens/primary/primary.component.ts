@@ -1,11 +1,11 @@
 import { Component } from '@angular/core';
-import { MapComponent } from '../../../map/map.component';
 import { CommonModule } from '@angular/common';
+import { MapComponentRia } from './../../../luciadmaps/components/map/map.component.ria';
 
 @Component({
   standalone: true,
   selector: 'app-primary',
-  imports: [CommonModule, MapComponent],
+  imports: [CommonModule, MapComponentRia],
   templateUrl: './primary.component.html',
   styleUrls: ['./primary.component.css']
 })

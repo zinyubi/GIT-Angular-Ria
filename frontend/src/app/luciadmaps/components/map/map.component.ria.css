@@ -1,0 +1,78 @@
+:host {
+  display: block;
+  inline-size: 100%;
+  block-size: 100%;
+}
+
+/* The wrapper must have height; parent should give it room */
+.mapwrap {
+  position: relative;
+  inline-size: 100%;
+  block-size: 100%;
+  min-block-size: 320px;
+  height: 100%;
+  background: #0f1623; /* just a dark backdrop */
+}
+
+.mapDiv {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  height: 100%;
+}
+
+.zoom-btn , .compass{
+  position: absolute;
+  left: 12px;
+
+  inline-size: 36px;
+  block-size: 36px;
+
+  display: inline-flex;            /* center content */
+  align-items: center;
+  justify-content: center;
+
+  padding: 0;                      /* no default padding */
+  line-height: 1;                  /* ignore font metrics */
+  font-weight: 600;
+  font-size: 20px;                 /* a bit larger looks nicer */
+
+  border-radius: 8px;
+  border: 1px solid rgba(255,255,255,.2);
+  background: rgba(0,0,0,.35);
+  color: #fff;
+  cursor: pointer;
+  z-index: 10;
+  backdrop-filter: blur(4px);
+}
+.zoom-btn:hover { background: rgba(0,0,0,.5); }
+.zoom-in  { top: 12px;  }
+.zoom-out { top: 56px; }
+.compass {top : 100px}
+.compass:hover { background: rgba(0,0,0,.5); }
+.compass img {
+  inline-size: 22px;
+  block-size: 22px;
+  transform-origin: 50% 50%;
+  transition: transform 120ms linear; /* smooth but responsive */
+}
+
+
+.proj-switch {
+  position: absolute;
+  inline-size: 36px;
+  block-size: 36px;
+  left: 56px;
+  top: 12px;
+  z-index: 10;
+  pointer-events: auto;
+}
+
+/* coords (bottom-center) */
+.coords-wrap {
+  position: absolute;
+  left: 50%;
+  bottom: 12px;
+  transform: translateX(-50%);
+  z-index: 10;
+}

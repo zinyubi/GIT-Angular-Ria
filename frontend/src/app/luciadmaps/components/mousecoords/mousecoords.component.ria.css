@@ -1,0 +1,21 @@
+:host { display: inline-block; }
+
+/* Matches your button aesthetics at 36px height */
+.coords-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+
+  block-size: 36px;
+  padding: 0 10px;
+
+  border-radius: 8px;
+  border: 1px solid rgba(255,255,255,.25);
+  background: rgba(0,0,0,.35);
+  color: #fff;
+  backdrop-filter: blur(4px);
+
+  font: 500 12px/1 system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+}
+.coords { white-space: nowrap; }
+.ref    { opacity: .75; }

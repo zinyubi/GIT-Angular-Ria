@@ -1,31 +1,54 @@
-.card {
-  padding: 1rem;
-  border: 1px solid #ccc;
-  border-radius: 8px;
+/* RBAC container nav */
+.rbac-container nav {
+  margin-block-end: calc(var(--spacing-unit) * 2);
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--spacing-unit);
 }
 
-table {
-  width: 100%;
-  border-collapse: collapse;
-  margin-bottom: 1rem;
-}
-
-th, td {
-  border: 1px solid #ddd;
-  padding: 0.5rem;
-}
-
-.btn {
-  padding: 0.3rem 0.7rem;
+/* RBAC buttons */
+.rbac-container button {
+  padding: 0.45rem 0.9rem;
+  border-radius: var(--radius-sm, 8px);
+  border: 1px solid var(--color-border);
+  background: color-mix(in srgb, var(--color-surface) 92%, transparent 8%);
+  color: var(--color-text);
+  font: inherit;
+  font-weight: 600;
   cursor: pointer;
+  transition: background-color var(--transition),
+              border-color var(--transition),
+              color var(--transition),
+              box-shadow var(--transition);
+  outline: none;
 }
-.btn-primary {
-  background: #007bff;
-  color: #fff;
-  border: none;
+
+.rbac-container button:hover {
+  background: color-mix(in srgb, var(--color-accent) 12%, var(--color-surface) 88%);
+  border-color: color-mix(in srgb, var(--color-accent) 35%, var(--color-border) 65%);
 }
-.btn-danger {
-  background: #dc3545;
-  color: #fff;
-  border: none;
+
+.rbac-container button:focus-visible {
+  outline: 2px solid color-mix(in srgb, var(--color-accent) 60%, transparent 40%);
+  outline-offset: 2px;
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--color-accent) 25%, transparent 75%);
+}
+
+/* Active button */
+.rbac-container button.active {
+  background: color-mix(in srgb, var(--color-accent) 65%, transparent 35%);
+  border-color: color-mix(in srgb, var(--color-accent) 55%, var(--color-border) 45%);
+  color: #fff; /* ensures readability across themes */
+}
+
+/* Disabled state */
+.rbac-container button:disabled {
+  opacity: .6;
+  cursor: not-allowed;
+}
+
+/* Responsive tweak */
+@media (max-width: 640px) {
+  .rbac-container nav { gap: calc(var(--spacing-unit) * 0.75); }
+  .rbac-container button { padding: 0.4rem 0.75rem; }
 }
