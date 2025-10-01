@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import AircraftType, RadarType, MissileType, AssetDeployment, DeployedAircraft
+from .models import AircraftType, RadarType, MissileType, AssetDeployment, DeployedAircraft , Scenario
 
 @admin.register(AircraftType)
 class AircraftTypeAdmin(admin.ModelAdmin):
@@ -22,3 +22,7 @@ class AssetDeploymentAdmin(admin.ModelAdmin):
 class DeployedAircraftAdmin(admin.ModelAdmin):
     list_display = ('name', 'aircraft_type', 'scenario', 'status', 'initial_latitude', 'initial_longitude')
     list_filter = ('status',)
+
+@admin.register(Scenario)
+class ScenarioAdmin(admin.ModelAdmin):
+    list_display = ('name', 'description', 'created_by')

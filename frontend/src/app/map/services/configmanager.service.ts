@@ -22,7 +22,7 @@ export class ConfigManager {
 
 
 
-  getDefaultKey(): string { return 'Web Mercator'; }
+  getDefaultKey(): string { return '3D Geocentric'; }
   getDefaultProjection() { return this.PROJECTION_CONFIGS[this.getDefaultKey()]; }
   getProjectionKeys(): string[] { return Object.keys(this.PROJECTION_CONFIGS); }
   getProjectionConfig(key: string) { return this.PROJECTION_CONFIGS[key]; }

@@ -1,0 +1,231 @@
+
+
+/* PANEL */
+.collapsable-panel {
+  inline-size: 320px;
+  color: var(--text);
+  background: var(--panel-bg);
+  border: 1px solid var(--border-hover);
+  border-color: var(--border-hover);
+  border-radius: 12px;
+  backdrop-filter: blur(8px);
+  box-shadow:
+    inset 0 0 0 1px rgba(255,255,255,.04),
+    0 1px 0 rgba(255,255,255,.06),
+    0 12px 36px rgba(0,0,0,.35);
+  overflow: hidden;
+  pointer-events: auto;
+}
+
+/* HEADER */
+.collapsable-panel-header {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding-inline: 8px 4px;
+  block-size: 40px;
+  background: var(--panel-header-bg);
+  user-select: none;
+}
+
+.collapsable-panel-title {
+  display: inline-block;
+  line-height: 40px;
+  font: 600 13px/40px system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+  letter-spacing: .4px;
+  text-transform: uppercase;
+  text-shadow: 0 1px 0 rgba(0,0,0,.25);
+  flex: 1 1 auto;
+}
+
+.collapsable-panel-header .lcd-icon {
+  display: inline-grid;
+  place-items: center;
+  inline-size: 40px;
+  block-size: 40px;
+  font-size: 18px;
+  color: var(--text-faded);
+}
+
+.collapsable-panel-collapse-button {
+
+  inline-size: 36px;
+  block-size: 36px;
+
+  display: inline-flex;            /* center content */
+  align-items: center;
+  justify-content: center;
+
+  padding: 0;                      /* no default padding */
+  line-height: 1;                  /* ignore font metrics */
+  font-weight: 600;
+  font-size: 20px;                 /* a bit larger looks nicer */
+
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.8);
+  border-color: var(--border-hover);
+  background: rgba(0,0,0,.35);
+  color: #fff;
+  cursor: pointer;
+  z-index: 10;
+  backdrop-filter: blur(4px);
+}
+.collapsable-panel-collapse-button:hover {
+  background: var(--panel-bg-hover);
+  border-color: var(--border-hover);
+}
+.collapsable-panel.collapsed .collapsable-panel-collapse-button .lcd-icon {
+  transform: rotate(90deg);
+  transition: transform .14s linear;
+}
+
+/* BODY */
+.collapsable-panel-body {
+  width: 100%;
+  max-height: 420px;
+  overflow: auto;
+  transition: max-height .28s ease;
+  position: relative;
+  background: linear-gradient(180deg, rgba(255,255,255,.02), rgba(255,255,255,0));
+}
+.collapsable-panel.collapsed .collapsable-panel-body {
+  max-height: 0;
+  padding-bottom: 0;
+  overflow: hidden;
+}
+
+/* Scrollbar (WebKit/Chromium) */
+.collapsable-panel-body::-webkit-scrollbar {
+  width: 10px;
+}
+.collapsable-panel-body::-webkit-scrollbar-track {
+  background: transparent;
+}
+.collapsable-panel-body::-webkit-scrollbar-thumb {
+  background: rgba(255,255,255,.12);
+  border-radius: 8px;
+  border: 2px solid transparent;
+  background-clip: padding-box;
+}
+.collapsable-panel-body::-webkit-scrollbar-thumb:hover {
+  background: rgba(255,255,255,.2);
+}
+
+/* ROW / NODE */
+.layer-tree-node {
+  position: relative;
+  background: transparent;
+}
+
+.layer-tree-node-row {
+  position: relative;
+  display: flex;
+  align-items: center;
+  block-size: 40px;
+  padding-inline: 0 6px;
+  transition: background .15s ease, border-color .12s linear;
+}
+
+.layer-tree-node-row:hover {
+  background: var(--panel-bg-hover);
+}
+
+/* Drag indicators */
+.layer-tree-node-row.drag-over-top {
+  box-shadow: inset 0 2px 0 var(--text);
+}
+.layer-tree-node-row.drag-over-bottom {
+  box-shadow: inset 0 -2px 0 var(--text);
+}
+
+/* ICONS & LABELS */
+.layer-tree-node .lcd-icon {
+  display: inline-grid;
+  place-items: center;
+  inline-size: 40px;
+  block-size: 40px;
+  font-size: 18px;
+  color: var(--text-faded);
+}
+
+.node-caret {
+  display: inline-block;
+  transition: transform .14s linear, opacity .14s ease;
+  opacity: .9;
+}
+.node-caret-open {
+  transform: rotate(90deg);
+}
+
+.layer-tree-node-icon {
+  color: var(--text-faded);
+}
+
+.layer-tree-node-label {
+  position: relative;
+  margin-left: 0;
+  padding-left: 4px;
+  max-inline-size: 165px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  user-select: none;
+  font: 500 13px/1.2 system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+  color: var(--text);
+}
+
+/* CHILDREN INDENT */
+.layer-tree-node-children {
+  padding-left: 40px;
+}
+
+/* BUTTONS ON RIGHT */
+.layer-tree-node-buttons {
+  margin-left: auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  block-size: 40px;
+  z-index: 1;
+}
+
+.layer-tree-node-button {
+  inline-size: 32px;
+  block-size: 32px;
+  display: inline-grid;
+  place-items: center;
+  border-radius: 8px;
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--text-faded);
+  cursor: pointer;
+  transition: background .15s ease, border-color .15s ease, color .15s ease;
+}
+.layer-tree-node-button:hover {
+  background: var(--panel-bg-hover);
+  border-color: var(--border);
+  color: var(--text);
+}
+.layer-tree-node-visibility-button {
+  color: rgba(255,255,255,.45);
+}
+.layer-tree-node-visibility-button.visible {
+  color: var(--primary);
+}
+
+/* HOVER-ONLY HELPERS */
+/* .only-show-on-hover { visibility: hidden; } */
+.layer-tree-node-row:hover .only-show-on-hover { visibility: visible; }
+
+/* ACCESSIBILITY */
+.collapsable-panel-collapse-button:focus-visible,
+.layer-tree-node-button:focus-visible {
+  outline: none;
+  border-color: rgba(96,165,250,.8);
+  box-shadow: 0 0 0 3px rgba(96,165,250,.25);
+}
+
+/* DRAGGING STATE FEEDBACK */
+.layer-tree-node[draggable="true"] {
+  user-select: none;
+}

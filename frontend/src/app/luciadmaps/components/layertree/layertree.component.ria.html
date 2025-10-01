@@ -1,0 +1,71 @@
+<div class="collapsable-panel" [class.collapsed]="collapsed">
+  <!-- header -->
+  <div class="collapsable-panel-header layer-tree-node-row">
+    <span class="lcd-icon">☰</span>
+    <span class="collapsable-panel-title">Layers</span>
+    <button
+      class="collapsable-panel-collapse-button layer-tree-node-button only-show-on-hover"
+      type="button"
+      (click)="toggleCollapse()"
+      title="Collapse/expand panel"
+    >
+      <span class="lcd-icon">▸</span>
+    </button>
+  </div>
+
+  <!-- body -->
+  <div class="collapsable-panel-body">
+    <ng-container *ngFor="let n of nodes; trackBy: trackNode">
+      <ng-template #renderNode let-node>
+        <div class="layer-tree-node"
+             draggable="true"
+             (dragstart)="dragStart(node, $event)"
+             (dragover)="dragOverNode(node, $event)"
+             (dragleave)="dragLeaveNode(node)"
+             (drop)="dropOnNode(node, $event)">
+
+          <div class="layer-tree-node-row"
+               [class.drag-over-top]="isDragTop(node.id)"
+               [class.drag-over-bottom]="isDragBottom(node.id)">
+
+            <!-- caret / open-close -->
+            <button
+              type="button"
+              class="layer-tree-node-button"
+              (click)="hasChildren(node) && toggleNodeExpand(node, $event)"
+              [attr.aria-expanded]="node.expanded"
+              title="Expand/collapse"
+            >
+              <span class="lcd-icon node-caret" [class.node-caret-open]="node.expanded">▸</span>
+            </button>
+
+            <!-- icon + label -->
+            <span class="lcd-icon layer-tree-node-icon" [title]="node.iconTitle">{{ node.iconEmoji }}</span>
+            <span class="layer-tree-node-label"
+                  [title]="node.label"
+                  (dblclick)="fitLayer(node, $event)">{{ node.label }}</span>
+
+            <!-- right-side buttons -->
+            <div class="layer-tree-node-buttons">
+              <button class="layer-tree-node-button only-show-on-hover" (click)="fitLayer(node, $event)" title="Fit to data">⤢</button>
+              <button class="layer-tree-node-button only-show-on-hover" (click)="deleteLayer(node, $event)" title="Delete">🗑</button>
+              <button class="layer-tree-node-button layer-tree-node-visibility-button"
+                      [class.visible]="node.visible"
+                      (click)="toggleVisible(node, $event)"
+                      title="Toggle visibility">👁</button>
+            </div>
+          </div>
+
+          <!-- children -->
+          <div class="layer-tree-node-children" *ngIf="node.expanded && hasChildren(node)">
+            <ng-container *ngFor="let c of node.children; trackBy: trackNode">
+              <ng-container *ngTemplateOutlet="renderNode; context: {$implicit: c}"></ng-container>
+            </ng-container>
+          </div>
+        </div>
+      </ng-template>
+
+      <ng-container *ngTemplateOutlet="renderNode; context: {$implicit: n}"></ng-container>
+    </ng-container>
+  </div>
+</div>

@@ -1,15 +1,24 @@
-:host { display: inline-block; }
 
 /* Wrapper to draw our own caret */
 .select-wrap {
   position: relative;
   display: inline-block;
+  background: color-mix(in srgb, var(--color-surface) 88%, transparent 12%);
+  backdrop-filter: var(--blur);
+  border: 1px solid var(--color-border);
+  color: var(--color-text);
+  border-radius: var(--radius);
+  
 }
 
 /* Closed control — matches your zoom buttons */
 .proj-select {
   /* make the UA use dark-themed form parts where possible */
-  color-scheme: dark;
+  background: color-mix(in srgb, var(--color-surface) 88%, transparent 12%);
+  backdrop-filter: var(--blur);
+  border: 1px solid var(--color-border);
+  color: var(--color-text);
+  border-radius: var(--radius);
 
   appearance: none;
   -webkit-appearance: none;
@@ -24,17 +33,10 @@
   padding: 0 10px;
 
   line-height: 1;
-  font: 500 13px/1.2 system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
-  color: #fff;
-
-  border-radius: 8px;
-  border: 1px solid rgba(255,255,255,.25);
-  background: rgba(0,0,0,.35);
-  backdrop-filter: blur(4px);
   cursor: pointer;
 }
-.proj-select:hover  { background: rgba(0,0,0,.45); }
-.proj-select:focus  { outline: none; border-color: rgba(255,255,255,.45); }
+.proj-select:hover  { border-color: var(--color-accent); }
+.proj-select:focus  { outline: none; border-color: var(--color-accent); }
 
 /* Hide old IE arrow if it ever appears */
 .proj-select::-ms-expand { display: none; }

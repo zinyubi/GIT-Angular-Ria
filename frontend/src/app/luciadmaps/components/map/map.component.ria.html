@@ -4,6 +4,8 @@
     <div class="proj-switch">
       <ria-projectionswitcher (choose)="onProjectionChoose($event)"></ria-projectionswitcher>
     </div>
+
+    
     <button id="zoom-in"  class="zoom-btn zoom-in"  (click)="zoomBy(1.25)">+</button>
     <button id="zoom-out" class="zoom-btn zoom-out" (click)="zoomBy(0.75)">-</button>
     <button id="compass" class="compass" (click)="rotateNorth()">
@@ -13,5 +15,17 @@
     <div class="coords-wrap">
       <ria-mousecoords [point]="modelPoint$ | async" [referenceLabel]="currentProjKey"></ria-mousecoords>
     </div>
+
+
+        <!-- layer tree (left side) -->
+    <div class="rightcard clickable">
+      <ria-layertree
+        [map]="map"
+        (panelCollapseToggled)="onPanelCollapseToggled($event)"
+        (nodeExpandToggled)="onNodeExpandToggled($event)"
+        (nodeVisibilityToggled)="onNodeVisibilityToggled($event)"
+      ></ria-layertree>
+    </div>
+
   </div>
 </div>

@@ -17,6 +17,9 @@ import { RiaProjectionswitcherComponent } from '../projectionswitcher/riaproject
 import { MouseCoordinateServiceRia } from '../../services/mouse-coordinate.ria.service';
 import { MousecoordsComponentRia } from '../mousecoords/mousecoords.component.ria';
 import { CompassServiceRia } from './../../services/compass.ria.service';
+import { LayertreeComponentRia } from './../layertree/layertree.component.ria';
+import { WMSTileSetModel } from '@luciad/ria/model/tileset/WMSTileSetModel.js';
+import { WMSTileSetLayer } from '@luciad/ria/view/tileset/WMSTileSetLayer.js';
 
 import { Observable } from 'rxjs';
 import { Point } from '@luciad/ria/shape/Point.js';
@@ -28,6 +31,7 @@ import { Point } from '@luciad/ria/shape/Point.js';
     CommonModule,
     RiaProjectionswitcherComponent,
     MousecoordsComponentRia,
+    LayertreeComponentRia,
   ],
   templateUrl: './map.component.ria.html',
   styleUrls: ['./map.component.ria.css'],
@@ -35,7 +39,7 @@ import { Point } from '@luciad/ria/shape/Point.js';
 })
 export class MapComponentRia implements AfterViewInit {
   @ViewChild('mapDiv', { static: true }) mapDiv!: ElementRef<HTMLDivElement>;
-  private map?: WebGLMap;
+  public map?: WebGLMap;
 
   compassTransform = 'rotateZ(0deg)';
   private mapChangeHandle: { remove(): void } | null = null;
@@ -77,6 +81,15 @@ export class MapComponentRia implements AfterViewInit {
     // Fit to the world so something obvious shows
     const world = createBounds(reference, [-180, -90, 180, 90]);
 
+
+
+    WMSTileSetModel.createFromURL("https://sampleservices.luciad.com/wms", [{layer: "rivers"}])
+    .then((model) => {
+      //Create a layer for the WMS model
+      const layer = new WMSTileSetLayer(model);
+      this.map?.layerTree.addChild(layer);
+    });
+
     // Add default base layers from config (WMS + optional elevation)
     await this.baseLayersRia.addBaseLayersFromConfigRia(
       this.map,
@@ -101,6 +114,21 @@ export class MapComponentRia implements AfterViewInit {
 
 
   }
+
+
+
+  onPanelCollapseToggled(e: { collapsed: boolean }) {
+  console.debug('[LayerTree] panelCollapseToggled', e);
+  }
+  onNodeExpandToggled(e: { id: string; label: string; expanded: boolean }) {
+    console.debug('[LayerTree] nodeExpandToggled', e);
+  }
+  onNodeVisibilityToggled(e: { id: string; label: string; visible: boolean }) {
+    console.debug('[LayerTree] nodeVisibilityToggled', e);
+  }
+
+
+
 
   rotateNorth(): void {
     if (!this.map) return;
