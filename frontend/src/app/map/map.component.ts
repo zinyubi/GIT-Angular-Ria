@@ -86,6 +86,8 @@ export class MapComponent implements AfterViewInit, OnDestroy {
     this.mapManager.stopPointPicking(this.mapContainerRef.nativeElement);
   }
 
+
+  
   // Pan controls
   panUp()    { this.mapManager.panByRatio( 0, -0.3); }
   panDown()  { this.mapManager.panByRatio( 0,  0.3); }

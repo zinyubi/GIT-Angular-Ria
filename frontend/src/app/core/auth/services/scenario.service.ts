@@ -1,3 +1,4 @@
+// src/app/core/auth/services/scenario.service.ts
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Observable, throwError } from 'rxjs';
@@ -9,7 +10,6 @@ export interface Scenario {
   id?: number;
   name: string;
   description?: string;
-  // add other fields relevant to your scenario entity
 }
 
 export interface AircraftType {
@@ -20,27 +20,54 @@ export interface AircraftType {
   max_speed_mps?: number;
 }
 
-interface Waypoint {
+export interface Waypoint {
   lat: number;
   lon: number;
-  alt: number;
+  alt?: number; // optional per your serializer
 }
 
+export type AircraftStatus = 'waiting' | 'moving' | 'paused' | 'arrived' | 'stopped';
 
 export interface DeployedAircraft {
   id?: number;
-  name?: string;
+
+  // Serializer returns numeric scenario id
   scenario: number;
-  aircraft_type: number;
-  initial_latitude: number;
-  initial_longitude: number;
-  initial_altitude_m: number;
-  planned_waypoints?: Waypoint[]; // For now, empty or later extended
+
+  // NOTE: list serializer returns nested aircraft_type (object),
+  // but create/update expects numeric id. Support both.
+  aircraft_type: number | AircraftType;
+
+  name?: string;
+  status?: AircraftStatus; // present on GET (list), not accepted on create/update
+
+  // Available on model, but list serializer may not include them; editor needs them.
+  initial_latitude?: number;
+  initial_longitude?: number;
+  initial_altitude_m?: number;
+
+  planned_waypoints?: Waypoint[];
+
+  // From DeployedAircraftListSerializer
+  position?: {
+    latitude: number;
+    longitude: number;
+    altitude_m: number;
+  };
+
+  velocity?: {
+    ground_speed_mps: number | null;
+    heading_deg: number | null;
+    vertical_rate_mps: number | null;
+    rate_of_turn_deg_per_sec: number | null;
+  };
+
+  last_updated?: string | null;
+  radar_asset?: any;
+  external_id?: string;
 }
 
-@Injectable({
-  providedIn: 'root',
-})
+@Injectable({ providedIn: 'root' })
 export class ScenarioService {
   constructor(private http: HttpClient, private authService: AuthService) {}
 
@@ -51,6 +78,12 @@ export class ScenarioService {
       : new HttpHeaders();
   }
 
+  private handleError(error: any) {
+    console.error('Scenario API error:', error);
+    return throwError(() => new Error(error.message || 'Server error'));
+  }
+
+  // ===== Scenarios =====
   getAllScenarios(): Observable<Scenario[]> {
     return this.http
       .get<Scenario[]>(API_URLS.SCENARIOS, { headers: this.getAuthHeaders() })
@@ -81,22 +114,20 @@ export class ScenarioService {
       .pipe(catchError(this.handleError));
   }
 
-  private handleError(error: any) {
-    console.error('Scenario API error:', error);
-    return throwError(() => new Error(error.message || 'Server error'));
-  }
-
+  // ===== Types =====
   getAircraftTypes(): Observable<AircraftType[]> {
     return this.http
       .get<AircraftType[]>(API_URLS.AIRCRAFT_TYPES, { headers: this.getAuthHeaders() })
       .pipe(catchError(this.handleError));
   }
 
+  // ===== Deployed aircraft =====
   getDeployedAircrafts(scenarioId: number): Observable<DeployedAircraft[]> {
     return this.http
-      .get<DeployedAircraft[]>(API_URLS.DEPLOYED_AIRCRAFT_BY_SCENARIO(scenarioId), {
-        headers: this.getAuthHeaders(),
-      })
+      .get<DeployedAircraft[]>(
+        API_URLS.DEPLOYED_AIRCRAFT_BY_SCENARIO(scenarioId),
+        { headers: this.getAuthHeaders() }
+      )
       .pipe(catchError(this.handleError));
   }
 
@@ -109,8 +140,16 @@ export class ScenarioService {
   }
 
   updateDeployedAircraft(id: number, data: Partial<DeployedAircraft>) {
-    return this.http.put<DeployedAircraft>(`/api/deployedaircrafts/${id}/`, data);
+    // Prefer API_URLS.DEPLOYED_AIRCRAFT_BY_ID if you have it; otherwise fallback.
+    const url = API_URLS.DEPLOYED_AIRCRAFT_BY_SCENARIO_ID(id);
+
+
+      // (API_URLS as any).DEPLOYED_AIRCRAFT_BY_ID
+      //   ? (API_URLS as any).DEPLOYED_AIRCRAFT_BY_ID(id)
+      //   : `${API_URLS.DEPLOYED_AIRCRAFT}${id}/`;
+
+    return this.http.put<DeployedAircraft>(url, data, {
+      headers: this.getAuthHeaders(),
+    });
   }
-
-
 }

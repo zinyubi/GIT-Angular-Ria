@@ -1,235 +1,78 @@
 <!-- ======= HEADER (auto height) ======= -->
-<div class="planning-header">
-</div>
+<div class="planning-header"></div>
 
 <!-- ======= WORKSPACE GRID (fills the rest of the screen) ======= -->
 <div class="planning-workspace" [class.is-collapsed]="sidebarCollapsed">
-  <!-- ============== LEFT: RAIL SIDEBAR ============== -->
-  <aside class="rail-sidebar" aria-label="Scenario sidebar">
-    <!-- Collapsed rail (icons) -->
-    <div class="rail-collapsed" *ngIf="sidebarCollapsed">
-      <button class="rail-btn" type="button" data-tip="Expand" (click)="expand()" aria-label="Expand sidebar">‹</button>
-      <button class="rail-btn" type="button" data-tip="Create scenario" (click)="expandAnd('create')" aria-label="Create scenario">＋</button>
-      <button class="rail-btn" type="button"
-              [class.disabled]="!selectedScenario"
-              [attr.data-tip]="selectedScenario ? 'Edit scenario' : 'Select a scenario'"
-              [disabled]="!selectedScenario"
-              (click)="expandAnd('edit')" aria-label="Edit selected scenario">✎</button>
-      <button class="rail-btn" type="button" data-tip="Scenarios list" (click)="expandAnd('list')" aria-label="Open scenarios list">≡</button>
-    </div>
 
-    <!-- Expanded rail header (collapse) -->
-    <div class="rail-expanded" *ngIf="!sidebarCollapsed">
-      <button class="rail-btn" type="button" data-tip="Collapse" (click)="sidebarCollapsed = true" aria-label="Collapse sidebar">›</button>
-    </div>
-
-    <!-- Expanded content -->
-    <div class="rail-content" *ngIf="!sidebarCollapsed">
-      <section class="rail-header">
-        <h3 id="scenarios-title">Scenarios</h3>
-        <button class="chip" type="button" (click)="handleCreateScenario()" aria-describedby="scenarios-title">+ New</button>
-      </section>
-
-      <!-- List -->
-      <ul #listBlock class="scenario-list" role="list" aria-labelledby="scenarios-title">
-        <li *ngFor="let s of scenarios; trackBy: trackByScenarioId"
-            class="scenario-row"
-            [class.active]="selectedScenario?.id === s.id">
-          <button type="button" class="row-icon" aria-hidden="true" tabindex="-1">🛰</button>
-          <button type="button" class="row-name"
-                  (click)="handleSelect(s)"
-                  [attr.aria-current]="selectedScenario?.id === s.id ? 'true' : null">
-            {{ s.name }}
-          </button>
-          <button class="row-del" type="button"
-                  (click)="$event.stopPropagation(); handleDeleteScenario(s)"
-                  [attr.aria-label]="'Delete ' + s.name">🗑</button>
-        </li>
-      </ul>
-
-      <!-- Detail / Edit -->
-      <section class="detail-card" aria-live="polite">
-        <ng-container *ngIf="editing; else detailView">
-          <form (ngSubmit)="handleSaveScenario()" class="form" novalidate>
-            <label for="scenarioName">
-              <span>Name</span>
-              <input id="scenarioName" [(ngModel)]="form.name" name="name" placeholder="Scenario Name" required autocomplete="off" />
-            </label>
-
-            <label for="scenarioDesc">
-              <span>Description</span>
-              <textarea id="scenarioDesc" [(ngModel)]="form.description" name="description" placeholder="Description (optional)" rows="2"></textarea>
-            </label>
-
-            <div class="form-actions">
-              <button type="submit" class="btn btn-success">Save</button>
-              <button type="button" class="btn btn-secondary" (click)="handleCancelEditScenario()">Cancel</button>
-            </div>
-
-            <div *ngIf="scenarioError" class="error" aria-live="assertive">{{ scenarioError }}</div>
-          </form>
-        </ng-container>
-
-        <ng-template #detailView>
-          <ng-container *ngIf="selectedScenario; else pickHint">
-            <div class="detail">
-              <h4>{{ selectedScenario.name }}</h4>
-              <p class="muted">{{ selectedScenario.description || 'No description' }}</p>
-              <button class="btn btn-light" type="button" (click)="handleEditScenario()">Edit Scenario</button>
-            </div>
-          </ng-container>
-          <ng-template #pickHint>
-            <div class="hint">Select a scenario or create a new one.</div>
-          </ng-template>
-        </ng-template>
-      </section>
-    </div>
-  </aside>
-  <!-- ============== END LEFT ============== -->
+  <!-- ============== LEFT: SIDEBAR ============== -->
+  <app-scenarios-rail
+    class="rail-sidebar"
+    [collapsed]="sidebarCollapsed"
+    [scenarios]="scenarios"
+    [selectedScenario]="selectedScenario"
+    [editing]="editing"
+    [form]="form"
+    [errorMessage]="scenarioError"
+    (collapseChange)="sidebarCollapsed = $event"
+    (createScenario)="handleCreateScenario()"
+    (editScenario)="handleEditScenario()"
+    (cancelEdit)="handleCancelEditScenario()"
+    (saveScenario)="handleSaveScenario()"
+    (deleteScenario)="handleDeleteScenario($event)"
+    (selectScenario)="handleSelect($event)"
+    (expandTo)="expandAnd($event)"
+  ></app-scenarios-rail>
 
   <!-- ============== CENTER: TOOLS ============== -->
   <section class="tools" aria-label="Tools" data-single-open>
-    <!-- Deployment -->
-    <section class="accordion">
-      <input class="acc-toggle" type="radio" name="tools-acc" id="acc-deploy"
-             [checked]="!editorOpen" (change)="deployOpen = true; editorOpen = false" />
 
-      <label class="acc-summary" for="acc-deploy" id="deploy-summary" [attr.aria-expanded]="(!editorOpen).toString()">
-        <span>Deployment</span><span class="chev" aria-hidden="true">▾</span>
-      </label>
+    <!-- ===== Group A: (2) List + (3) Deployment ===== -->
+    <div class="tools-group tools-planning" *ngIf="!editorOpen">
+      <!-- Deployment form -->
+      <app-deployment-form
+        [open]="deployOpen"
+        [aircraftTypes]="aircraftTypes"
+        [formValue]="newAircraftForm"
+        [deploying]="deploying"
+        (openChange)="onDeployOpenChange($event)"
+        (requestPick)="beginPick('deploy-latlon')"
+        (deploy)="handleDeployAircraft()"
+        (formValueChange)="newAircraftForm = $event"
+      ></app-deployment-form>
 
-      <div class="acc-content" id="deploy-panel" role="region" aria-labelledby="deploy-summary">
-        <form (ngSubmit)="handleDeployAircraft()" class="form grid2" novalidate>
-          <label for="acType">Aircraft Type
-            <select id="acType" [(ngModel)]="newAircraftForm.aircraft_type" name="aircraft_type" required>
-              <option value="" disabled>Select Type</option>
-              <option *ngFor="let type of aircraftTypes" [value]="type.id">
-                {{ type.name }} ({{ type.model }})
-              </option>
-            </select>
-          </label>
+      <!-- Deployed list (always visible within planning group if items exist) -->
+      <app-deployed-aircraft-list
+        *ngIf="deployedAircrafts?.length"
+        [aircrafts]="deployedAircrafts"
+        (edit)="startEditAircraft($event)"
+      ></app-deployed-aircraft-list>
+    </div>
 
-          <label for="acName">Name
-            <input id="acName" type="text" [(ngModel)]="newAircraftForm.name" name="name" autocomplete="off" />
-          </label>
+    <!-- ===== Group B: (1) Editor ===== -->
+    <div class="tools-group tools-editor" *ngIf="editorOpen">
+      <app-aircraft-editor
+        [open]="editorOpen"
+        [aircraft]="editingAircraft"
+        [waypointForm]="waypointForm"
+        [waypointEditIndex]="waypointEditIndex"
+        (openChange)="onEditorOpenChange($event)"
+        (saveAircraft)="saveAircraft()"
+        (cancelAircraft)="cancelEditAircraft()"
+        (requestPickWaypoint)="beginPick('waypoint')"
+        (editWaypoint)="editWaypoint($event)"
+        (deleteWaypoint)="deleteWaypoint($event)"
+        (saveWaypoint)="saveWaypoint()"
+        (waypointFormChange)="waypointForm = $event"
+        (requestPickInitial)="beginPick('edit-initial')"
+      ></app-aircraft-editor>
+    </div>
 
-          <label for="acLat">Latitude
-            <div class="inline-input">
-              <input id="acLat" type="number" step="any" inputmode="decimal"
-                     [(ngModel)]="newAircraftForm.initial_latitude" name="initial_latitude" required />
-
-            </div>
-          </label>
-
-          <label for="acLon">Longitude
-            <input id="acLon" type="number" step="any" inputmode="decimal"
-                   [(ngModel)]="newAircraftForm.initial_longitude" name="initial_longitude" required />
-          </label>
-
-          <label for="acAlt">Altitude (m)
-            <input id="acAlt" type="number" step="1" inputmode="numeric"
-                   [(ngModel)]="newAircraftForm.initial_altitude_m" name="initial_altitude_m" required />
-          </label>
-
-          <button type="button" class="btn btn-ghost" (click)="beginPick('deploy-latlon')" aria-label="Pick latitude/longitude on map">Pick on map</button>
-
-          <div class="form-actions push">
-            <button type="submit" class="btn btn-primary">Deploy Aircraft</button>
-          </div>
-        </form>
-
-        <div *ngIf="deployedAircrafts?.length" class="list-block">
-          <h4 class="subtle">Deployed Aircraft</h4>
-          <ul class="plain" role="list">
-            <li *ngFor="let ac of deployedAircrafts; trackBy: trackByAircraftId" class="row">
-              <div>
-                <strong>{{ ac.name || 'Unnamed' }}</strong>
-                <span class="muted">({{ ac.aircraft_type }})</span>
-                <span class="muted">[{{ ac.initial_latitude }}, {{ ac.initial_longitude }}] · Alt {{ ac.initial_altitude_m }}m</span>
-              </div>
-              <button class="btn btn-link" type="button" (click)="startEditAircraft(ac)">Edit</button>
-            </li>
-          </ul>
-        </div>
-      </div>
-    </section>
-
-    <!-- Aircraft Editor -->
-    <section class="accordion" *ngIf="selectedScenario">
-      <input class="acc-toggle" type="radio" name="tools-acc" id="acc-editor"
-             [checked]="editorOpen" (change)="editorOpen = true; deployOpen = false" />
-
-      <label class="acc-summary" for="acc-editor" id="editor-summary" [attr.aria-expanded]="editorOpen.toString()">
-        <span>Aircraft Editor</span><span class="chev" aria-hidden="true">▾</span>
-      </label>
-
-      <div class="acc-content" id="editor-panel" role="region" aria-labelledby="editor-summary">
-        <div *ngIf="editingAircraft; else noAircraft">
-          <form (ngSubmit)="saveAircraft()" class="form grid2" novalidate>
-            <label for="editName">Name
-              <input id="editName" [(ngModel)]="editingAircraft.name" name="editName" autocomplete="off" />
-            </label>
-            <label for="editLat">Initial Latitude
-              <input id="editLat" type="number" step="any" inputmode="decimal"
-                     [(ngModel)]="editingAircraft.initial_latitude" name="editLatitude" />
-            </label>
-            <label for="editLon">Initial Longitude
-              <input id="editLon" type="number" step="any" inputmode="decimal"
-                     [(ngModel)]="editingAircraft.initial_longitude" name="editLongitude" />
-            </label>
-            <label for="editAlt">Initial Altitude (m)
-              <input id="editAlt" type="number" step="1" inputmode="numeric"
-                     [(ngModel)]="editingAircraft.initial_altitude_m" name="editAltitude" />
-            </label>
-
-            <div class="divider" role="separator" aria-hidden="true"></div>
-
-            <h5>Waypoints</h5>
-            <ul class="plain" role="list">
-              <li *ngFor="let wp of editingAircraft.planned_waypoints; let i = index; trackBy: trackByWaypointIndex" class="row">
-                <span>Lat: {{ wp.lat }}, Lon: {{ wp.lon }}, Alt: {{ wp.alt }}</span>
-                <span>
-                  <button type="button" class="btn btn-link" (click)="editWaypoint(i)">Edit</button>
-                  <button type="button" class="btn btn-link" (click)="deleteWaypoint(i)">Delete</button>
-                </span>
-              </li>
-            </ul>
-
-            <div class="form grid3" aria-label="Waypoint editor">
-              <label for="wpLat">Latitude
-                <div class="inline-input">
-                  <input id="wpLat" type="number" step="any" inputmode="decimal" [(ngModel)]="waypointForm.lat" name="wpLat" />
-                  <button type="button" class="btn btn-ghost" (click)="beginPick('waypoint')" aria-label="Pick waypoint on map">Pick on map</button>
-                </div>
-              </label>
-              <label for="wpLon">Longitude
-                <input id="wpLon" type="number" step="any" inputmode="decimal" [(ngModel)]="waypointForm.lon" name="wpLon" />
-              </label>
-              <label for="wpAlt">Altitude (m)
-                <input id="wpAlt" type="number" step="1" inputmode="numeric" [(ngModel)]="waypointForm.alt" name="wpAlt" />
-              </label>
-              <div class="form-actions">
-                <button type="button" (click)="saveWaypoint()" class="btn btn-success">Save</button>
-                <button type="button" (click)="waypointEditIndex = null; waypointForm = { lat: 0, lon: 0, alt: 0 }" class="btn btn-secondary">Cancel</button>
-              </div>
-            </div>
-
-            <div class="form-actions push">
-              <button type="submit" class="btn btn-success">Save Aircraft</button>
-              <button type="button" (click)="cancelEditAircraft()" class="btn btn-secondary">Cancel</button>
-            </div>
-          </form>
-        </div>
-        <ng-template #noAircraft>
-          <div class="hint">Choose an aircraft from “Deployed Aircraft” to edit.</div>
-        </ng-template>
-      </div>
-    </section>
   </section>
 
   <!-- ============== RIGHT: MAP ============== -->
-  <section class="map-wrap" aria-label="Map">
-    <!-- NOTE: added (pointPicked) binding -->
-    <app-map class="map" (pointPicked)="handlePointPicked($event)"></app-map>
-  </section>
+  <app-map-panel
+    class="map-wrap"
+    (pointPicked)="handlePointPicked($event)"
+  ></app-map-panel>
+
 </div>

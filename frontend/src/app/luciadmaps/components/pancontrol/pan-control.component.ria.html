@@ -1,0 +1,38 @@
+<div class="pan-control" aria-label="Pan controls">
+  <!-- Use pointer events for press & hold (works for mouse/touch/pen) -->
+  <button class="pan-button pan-up"
+          type="button"
+          aria-label="Pan up"
+          (pointerdown)="startUp()"
+          (pointerup)="stopRepeat()"
+          (pointerleave)="stopRepeat()"
+          (pointercancel)="stopRepeat()"
+          (click)="clickUp()"></button>
+
+  <button class="pan-button pan-left"
+          type="button"
+          aria-label="Pan left"
+          (pointerdown)="startLeft()"
+          (pointerup)="stopRepeat()"
+          (pointerleave)="stopRepeat()"
+          (pointercancel)="stopRepeat()"
+          (click)="clickLeft()"></button>
+
+  <button class="pan-button pan-right"
+          type="button"
+          aria-label="Pan right"
+          (pointerdown)="startRight()"
+          (pointerup)="stopRepeat()"
+          (pointerleave)="stopRepeat()"
+          (pointercancel)="stopRepeat()"
+          (click)="clickRight()"></button>
+
+  <button class="pan-button pan-down"
+          type="button"
+          aria-label="Pan down"
+          (pointerdown)="startDown()"
+          (pointerup)="stopRepeat()"
+          (pointerleave)="stopRepeat()"
+          (pointercancel)="stopRepeat()"
+          (click)="clickDown()"></button>
+</div>

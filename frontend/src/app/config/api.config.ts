@@ -27,14 +27,15 @@ export const API_URLS = {
   SCENARIOS_BASE: `${BACKEND_BASE}/scenariosimulation/scenarios/`,
   // for convenience, individual:
   SCENARIOS: `${BACKEND_BASE}/scenariosimulation/scenarios/`, // list & create
-  SCENARIO_BY_ID: (id: number | string) =>
-    `${BACKEND_BASE}/scenariosimulation/scenarios/${id}/`, // get, update, delete
+  SCENARIO_BY_ID: (id: number | string) => `${BACKEND_BASE}/scenariosimulation/scenarios/${id}/`, // get, update, delete
 
   // Add these to your API_URLS
   AIRCRAFT_TYPES: `${BACKEND_BASE}/scenariosimulation/aircrafttypes/`,
+  DEPLOYED_AIRCRAFT_BY_ID: (id: number) => `/scenariosimulation/deployedaircrafts/${id}/`,
   DEPLOYED_AIRCRAFT: `${BACKEND_BASE}/scenariosimulation/deployedaircrafts/`,
-  DEPLOYED_AIRCRAFT_BY_SCENARIO: (scenarioId: number | string) =>
-    `${BACKEND_BASE}/scenariosimulation/deployedaircrafts/?scenario=${scenarioId}`,
+  DEPLOYED_AIRCRAFT_BY_SCENARIO: (scenarioId: number | string) => `${BACKEND_BASE}/scenariosimulation/deployedaircrafts/?scenario=${scenarioId}`,
+  DEPLOYED_AIRCRAFT_BY_SCENARIO_ID: (scenarioId: number | string) => `${BACKEND_BASE}/scenariosimulation/deployedaircrafts/${scenarioId}/`,
+  
 };
 
 /**

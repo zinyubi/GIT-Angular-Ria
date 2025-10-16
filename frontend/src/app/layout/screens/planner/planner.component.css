@@ -1,273 +1,70 @@
-/* =========================================================
-   Planner Workspace — header + 3 columns (rail | tools | map)
-   ========================================================= */
-
-/* ----- App frame: header + content ----- */
-:host {
-  /* tie to viewport reliably */
-  block-size: 100dvh;
-  min-block-size: 100dvh;
-
-  display: grid;
-  grid-template-rows: auto 1fr; /* header | workspace */
-  background: var(--color-bg);
-  color: var(--color-text);
-  overflow: clip;
-}
-
-/* ----- Header (your content can be anything) ----- */
-.planning-header {
-  background: var(--panel-strong, color-mix(in srgb, var(--color-surface) 88%, transparent 12%));
-  border-bottom: 1px solid var(--color-border);
-  padding: 8px 12px;
-  backdrop-filter: saturate(1.1) blur(6px);
-}
-
-/* ----- Workspace: 3 columns ----- */
+/* ===== Workspace grid (left rail | tools | map) ===== */
 .planning-workspace {
   display: grid;
-  grid-template-columns: var(--sidebarW, 300px) var(--toolsW, 380px) minmax(0, 1fr);
-  gap: var(--spacing-unit, 8px);
-  padding: 8px;
+  grid-template-columns: var(--rail-w, 320px)
+                         minmax(360px, clamp(380px, 42vw, 460px))
+                         1fr;
+  gap: 0;
   block-size: 100%;
-  min-block-size: 0;   /* allow children to scroll instead of pushing */
-  overflow: hidden;    /* only columns scroll */
+  min-block-size: 0;
 }
 
-/* collapsed rail variant */
-.planning-workspace.is-collapsed {
-  grid-template-columns: var(--sidebarWIcon, 72px) var(--toolsW, 380px) minmax(0, 1fr);
-}
+.planning-workspace.is-collapsed { --rail-w: 56px; }
+.planning-workspace:not(.is-collapsed) { --rail-w: 320px; }
 
-/* column base look */
 .planning-workspace > * {
-  box-sizing: border-box;
-  display: flex;
-  flex-direction: column;
-  min-inline-size: 0;
   min-block-size: 0;
   overflow: hidden;
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius, 12px);
-  background: var(--panel, color-mix(in srgb, var(--color-surface) 92%, transparent 8%));
-  box-shadow: var(--elev-1, 0 1px 2px rgba(0,0,0,.06), 0 1px 3px rgba(0,0,0,.1));
+}
+/* Tools column must allow children to control overflow */
+.planning-workspace > .tools {
+  display: flex;
+  flex-direction: column;
+  min-block-size: 0;   /* 🔑 allow inner scrollers */
+  overflow: hidden;    /* don't scroll the whole column; let children do it */
+  padding: 12px;
+  gap: 12px;
+  background: var(--tools-bg, color-mix(in srgb, var(--color-surface) 92%, transparent 8%));
+  border-inline: 1px solid var(--tools-divider, color-mix(in srgb, var(--color-surface) 84%, black 16%));
 }
 
-/* ===================== LEFT: RAIL SIDEBAR ===================== */
-.rail-sidebar {
-  background: linear-gradient(
-    180deg,
-    color-mix(in srgb, var(--color-accent) 16%, var(--panel) 84%),
-    color-mix(in srgb, var(--color-accent) 10%, color-mix(in srgb, var(--color-surface) 82%, transparent 18%) 90%)
-  );
-  padding: 8px;
-}
-
-/* collapsed buttons stack */
-.rail-collapsed {
-  display: grid;
-  gap: 8px;
-  align-content: start;
-  padding: 4px;
-}
-.rail-btn {
-  display: grid;
-  place-items: center;
-  inline-size: 100%;
-  block-size: 44px;
-  border: 1px solid var(--color-border);
-  border-radius: 10px;
-  background: var(--panel);
-  color: var(--color-text);
-  cursor: pointer;
-}
-.rail-btn.disabled,
-.rail-btn:disabled { opacity: .45; cursor: not-allowed; }
-
-/* expanded header + content */
-.rail-expanded { padding: 4px; display: flex; justify-content: flex-end; }
-.rail-content { flex: 1 1 auto; overflow: auto; min-block-size: 0; gap: 8px; display: flex; flex-direction: column; }
-
-.rail-header {
-  display: flex; align-items: center; justify-content: space-between;
-  gap: 8px; padding: 6px 8px;
-  background: var(--panel-strong, color-mix(in srgb, var(--color-surface) 88%, transparent 12%));
-  border: 1px solid var(--color-border);
-  border-radius: 10px;
-}
-
-.chip {
-  border: 1px dashed var(--color-border);
-  background: color-mix(in srgb, var(--color-accent) 12%, transparent);
-  color: var(--color-text);
-  padding: 4px 8px; border-radius: 999px; cursor: pointer;
-}
-
-/* scenarios list */
-.scenario-list {
-  list-style: none; margin: 0; padding: 6px;
-  background: var(--panel);
-  border: 1px solid var(--color-border);
-  border-radius: 10px;
-  max-block-size: 40vh; overflow: auto;
-}
-.scenario-row {
-  display: grid; grid-template-columns: 30px 1fr auto;
-  align-items: center; gap: 10px;
-  padding: 8px 10px;
-  border-radius: 10px;
-}
-.scenario-row:hover { background: color-mix(in srgb, var(--color-accent) 8%, transparent); }
-.scenario-row.active { outline: 2px solid color-mix(in srgb, var(--color-accent) 45%, transparent); }
-
-.row-icon,
-.row-del,
-.row-name {
-  border: 0; background: transparent; color: var(--color-text);
-}
-.row-name {
-  text-align: left; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; cursor: pointer;
-}
-.row-del { cursor: pointer; opacity: .9; }
-.row-del:hover { opacity: 1; }
-
-/* detail/edit card */
-.detail-card {
-  border: 1px solid var(--color-border);
-  border-radius: 10px;
-  background: var(--panel);
-  padding: 10px;
-}
-.muted { color: var(--color-muted); }
-.hint  { color: var(--color-muted); font-style: italic; }
-
-
-
-/* ===================== CENTER: TOOLS (accordion) ===================== */
-.tools { padding: 10px; gap: 10px; overflow: auto; }
-
-.accordion {
-  border: 1px solid var(--color-border);
-  border-radius: 12px;
-  background: var(--panel);
-  overflow: hidden;
-  display: flex; flex-direction: column;
-}
-.acc-toggle { position: absolute; inset: auto auto auto -9999px; } /* visually hidden but accessible */
-
-.acc-summary {
-  display: flex; align-items: center; justify-content: space-between;
-  gap: 8px; padding: 12px 14px;
-  background: var(--panel-strong);
-  cursor: pointer; user-select: none;
-}
-.acc-summary .chev { transition: transform .2s ease; }
-.acc-toggle:checked + .acc-summary .chev { transform: rotate(180deg); }
-
-.acc-content {
+/* Group wrappers must also allow shrinking */
+.tools-group {
+  display: flex;
+  flex-direction: column;
   flex: 1 1 auto;
-  min-block-size: 0;
-  max-block-size: 0;
+  min-block-size: 0;   /* 🔑 */
   overflow: hidden;
-  transition: max-block-size .25s ease;
-  padding: 0 14px;
-}
-.acc-toggle:checked ~ .acc-content {
-  max-block-size: 70vh;
-  overflow: auto;
-  padding: 12px 14px 14px;
+  gap: 12px;
 }
 
-
-/* ---------- Forms & utilities (fix) ---------- */
-
-/* Each label is a vertical stack: caption then control */
-.form label {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  min-inline-size: 0;   /* allow shrinking without overflow */
+/* The planning group contains the deployment form (auto height) + list (grows) */
+.tools-planning {
+  /* nothing special beyond .tools-group */
 }
 
-/* Generic controls */
-input, select, textarea {
-  inline-size: 100%;
-  min-inline-size: 0;
-  border: 1px solid var(--color-border);
-  border-radius: 8px;
-  padding: 8px 10px;
-  background: color-mix(in srgb, var(--color-surface) 96%, transparent 4%);
-  color: var(--color-text);
+/* Make the child component hosts obey our layout (no deep styles needed) */
+.tools-planning app-deployment-form {
+  flex: 0 0 auto;      /* header/form consumes only what it needs */
 }
 
-/* Caption styling works even if caption is bare text node */
-.form label::first-line { color: var(--color-muted); }
-
-/* Button hygiene so text never breaks letter-by-letter */
-.btn {
-  border: 1px solid var(--color-border);
-  border-radius: 8px;
-  padding: 8px 12px;
-  cursor: pointer;
-  white-space: nowrap;       /* <-- stops vertical letters */
-  inline-size: fit-content;
-  max-inline-size: 100%;
-}
-.btn-primary  { background: color-mix(in srgb, var(--color-accent) 22%, transparent); }
-.btn-success  { background: color-mix(in srgb, var(--color-success) 22%, transparent); }
-.btn-secondary{ background: color-mix(in srgb, var(--color-surface) 85%, black 15%); }
-.btn-light    { background: color-mix(in srgb, white 12%, transparent); }
-.btn-link     { background: transparent; border: 0; color: var(--color-accent); padding: 4px 6px; }
-.btn-ghost    { background: transparent; }
-
-/* Inline input (e.g., Latitude + “Pick on map”) */
-.inline-input {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;  /* input grows, button hugs */
-  gap: 8px;
-  align-items: center;
-}
-.inline-input > input { min-inline-size: 0; }   /* allow input to actually shrink */
-
-/* Grids for the forms */
-.form { display: grid; gap: 12px; }
-.form.grid2 { grid-template-columns: minmax(0,1fr) minmax(0,1fr); }
-.form.grid3 { grid-template-columns: minmax(0,1fr) minmax(0,1fr) minmax(0,1fr); }
-
-/* Waypoint action row */
-.form-actions { display: flex; gap: 8px; flex-wrap: wrap; }
-.form-actions.push { justify-content: flex-end; }
-
-/* Divider + list keep as-is */
-.divider { block-size: 1px; background: var(--color-border); margin: 8px 0; }
-.list-block .plain { list-style: none; padding: 0; margin: 6px 0 0 0; }
-.list-block .row {
-  display: flex; align-items: center; justify-content: space-between;
-  padding: 6px 0; border-bottom: 1px dashed var(--color-border);
-}
-/* ===================== RIGHT: MAP (fills column) ===================== */
-.map-wrap {
-  position: relative;
-  background: var(--panel-strong);
+.tools-planning app-deployed-aircraft-list {
+  flex: 1 1 auto;      /* the list fills the remaining height */
+  min-block-size: 0;   /* 🔑 so its internal UL can scroll */
+  overflow: auto;    /* scrolling happens inside the component */
 }
 
-/* let ANY child (your <app-map>) fill the area */
-.map-wrap > * {
-  position: absolute;
-  inset: 0;
+/* Optional: card look for each tool block */
+.planning-workspace > .tools :where(app-deployment-form,
+                                    app-deployed-aircraft-list,
+                                    app-aircraft-editor) {
+  --card-bg: var(--color-surface);
+  --card-border: color-mix(in srgb, var(--color-surface) 86%, black 14%);
+  --card-shadow: var(--elev-1, var(--elev-2));
   display: block;
-  inline-size: 100%;
-  block-size: 100%;
-}
-
-/* for safety if your map uses this class */
-.map { inline-size: 100%; block-size: 100%; }
-
-/* ========== Small screens ========== */
-@media (max-width: 1024px) {
-  .planning-workspace {
-    grid-template-columns: minmax(0, 1fr);  /* stack columns */
-  }
-  .tools { max-block-size: 40vh; }
-  .map-wrap { min-block-size: 40vh; }
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
+  border-radius: var(--radius, 12px);
+  padding: 12px;
+  box-shadow: var(--card-shadow);
 }

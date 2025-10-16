@@ -1,0 +1,105 @@
+<section class="accordion">
+  <input class="acc-toggle" type="radio" name="tools-acc" id="acc-editor"
+         [checked]="open" (change)="toggleOpen(true)" />
+  <label class="acc-summary" for="acc-editor" id="editor-summary" [attr.aria-expanded]="open.toString()">
+    <span>Aircraft Editor</span><span class="chev" aria-hidden="true">▾</span>
+  </label>
+
+  <div class="acc-content" id="editor-panel" role="region" aria-labelledby="editor-summary">
+    <div *ngIf="aircraft; else noAircraft">
+      <form (ngSubmit)="saveAircraft.emit()" class="form" novalidate>
+
+        <!-- ===== Initial position ===== -->
+        <h5>Initial Position</h5>
+        <div class="row3">
+          <label>
+            <span>Latitude</span>
+            <input type="number" step="any" inputmode="decimal"
+                   [(ngModel)]="aircraft!.initial_latitude" name="editLatitude" />
+          </label>
+          <label>
+            <span>Longitude</span>
+            <input type="number" step="any" inputmode="decimal"
+                   [(ngModel)]="aircraft!.initial_longitude" name="editLongitude" />
+          </label>
+          <label>
+            <span>Altitude (m)</span>
+            <input type="number" step="1" inputmode="numeric"
+                   [(ngModel)]="aircraft!.initial_altitude_m" name="editAltitude" />
+          </label>
+          <button type="button" class="btn btn-ghost row-btn" (click)="requestPickInitial.emit()" title="Set from map">
+            📍
+          </button>
+        </div>
+
+        <div class="divider"></div>
+
+        <!-- ===== Waypoints ===== -->
+        <h5>Waypoints</h5>
+
+        <div class="waypoint-list" *ngIf="aircraft!.planned_waypoints?.length; else noWp">
+          <div *ngFor="let wp of aircraft!.planned_waypoints; let i = index" class="waypoint-item">
+            <div class="waypoint-info">
+              <div class="wp-coord">
+                <span class="wp-label">Lat:</span> {{ wp.lat }}
+              </div>
+              <div class="wp-coord">
+                <span class="wp-label">Lon:</span> {{ wp.lon }}
+              </div>
+              <div class="wp-coord" *ngIf="wp.alt !== undefined">
+                <span class="wp-label">Alt:</span> {{ wp.alt }}
+              </div>
+            </div>
+
+            <div class="waypoint-actions">
+              <button type="button" class="btn btn-icon edit" (click)="editWaypoint.emit(i)" title="Edit waypoint">✎</button>
+              <button type="button" class="btn btn-icon delete" (click)="deleteWaypoint.emit(i)" title="Delete waypoint">🗑️</button>
+            </div>
+          </div>
+        </div>
+
+        <ng-template #noWp>
+          <div class="hint muted">No waypoints added yet.</div>
+        </ng-template>
+
+        <div class="row3">
+          <label>
+            <span>Latitude</span>
+            <input type="number" step="any" inputmode="decimal"
+                   [(ngModel)]="waypointForm.lat" name="wpLat"
+                   (ngModelChange)="waypointFormChange.emit(waypointForm)" />
+          </label>
+          <label>
+            <span>Longitude</span>
+            <input type="number" step="any" inputmode="decimal"
+                   [(ngModel)]="waypointForm.lon" name="wpLon"
+                   (ngModelChange)="waypointFormChange.emit(waypointForm)" />
+          </label>
+          <label>
+            <span>Altitude (m)</span>
+            <input type="number" step="1" inputmode="numeric"
+                   [(ngModel)]="waypointForm.alt" name="wpAlt"
+                   (ngModelChange)="waypointFormChange.emit(waypointForm)" />
+          </label>
+          <button type="button" class="btn btn-ghost row-btn" (click)="requestPickWaypoint.emit()">
+            Pick
+          </button>
+        </div>
+
+        <div class="form-actions">
+          <button type="button" (click)="saveWaypoint.emit()" class="btn btn-success">Save</button>
+          <button type="button" (click)="resetWpForm()" class="btn btn-secondary">Cancel</button>
+        </div>
+
+        <div class="form-actions push">
+          <button type="submit" class="btn btn-success">Save Aircraft</button>
+          <button type="button" (click)="cancelAircraft.emit()" class="btn btn-secondary">Cancel</button>
+        </div>
+      </form>
+    </div>
+
+    <ng-template #noAircraft>
+      <div class="hint">Choose an aircraft from “Deployed Aircraft” to edit.</div>
+    </ng-template>
+  </div>
+</section>

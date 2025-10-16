@@ -9,7 +9,7 @@
   position: relative;
   inline-size: 100%;
   block-size: 100%;
-  min-block-size: 320px;
+  min-block-size: 640px;
   height: 100%;
   background: #0f1623; /* just a dark backdrop */
 }
@@ -28,7 +28,6 @@
   color: var(--color-text);
   border-radius: var(--radius);
 
-
   position: absolute;
   left: 12px;
 
@@ -46,12 +45,11 @@
 
   cursor: pointer;
   z-index: 10;
-  
 }
 .zoom-btn:hover { border-color: var(--color-accent); }
 .zoom-in  { top: 12px;  }
 .zoom-out { top: 56px; }
-.compass {top : 100px}
+.compass { top: 100px; }
 .compass:hover { border-color: var(--color-accent); }
 .compass img {
   inline-size: 22px;
@@ -60,7 +58,6 @@
   transition: transform 120ms linear; /* smooth but responsive */
   color: var(--color-text);
 }
-
 
 .proj-switch {
   background: transparent;
@@ -75,7 +72,6 @@
   z-index: 10;
   pointer-events: auto;
   border-radius: var(--radius);
-
 }
 
 /* coords (bottom-center) */
@@ -90,7 +86,6 @@
   transform: translateX(-50%);
   z-index: 10;
   border-radius: var(--radius);
-
 }
 
 .rightcard {
@@ -101,6 +96,20 @@
   position: absolute;
   right: 12px;
   top: 12px;           /* leave space above coords if you like */
+  z-index: 100;
+  max-inline-size: 320px; /* your panel width */
+  pointer-events: auto;
+  border-radius: var(--radius);
+}
+
+.leftcard {
+  background: color-mix(in srgb, var(--color-surface) 88%, transparent 12%);
+  backdrop-filter: var(--blur);
+  border: 1px solid var(--color-border);
+  color: var(--color-text);
+  position: absolute;
+  left: 0px;
+  top: 0px;           /* leave space above coords if you like */
   z-index: 100;
   max-inline-size: 320px; /* your panel width */
   pointer-events: auto;

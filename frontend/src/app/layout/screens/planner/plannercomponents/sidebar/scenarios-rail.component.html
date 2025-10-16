@@ -1,0 +1,73 @@
+<aside class="rail-sidebar" aria-label="Scenario sidebar">
+  <!-- Collapsed rail -->
+  <div class="rail-collapsed" *ngIf="collapsed">
+    <button class="rail-btn" type="button" data-tip="Expand" (click)="expand()" aria-label="Expand sidebar">‹</button>
+  </div>
+
+  <!-- Expanded rail header -->
+  <div class="rail-expanded" *ngIf="!collapsed">
+    <button class="rail-btn" type="button" data-tip="Collapse" (click)="collapse()" aria-label="Collapse sidebar">›</button>
+  </div>
+
+  <!-- Expanded content -->
+  <div class="rail-content" *ngIf="!collapsed">
+    <section class="rail-header">
+      <h3 id="scenarios-title">Scenarios</h3>
+      <button class="chip" type="button" (click)="createScenario.emit()" aria-describedby="scenarios-title">+ New</button>
+    </section>
+
+    <!-- List -->
+    <ul #listBlock class="scenario-list" role="list" aria-labelledby="scenarios-title">
+      <li *ngFor="let s of scenarios; trackBy: trackByScenarioId"
+          class="scenario-row"
+          [class.active]="selectedScenario?.id === s.id">
+        <button type="button" class="row-icon" aria-hidden="true" tabindex="-1">🛰</button>
+        <button type="button" class="row-name"
+                (click)="selectScenario.emit(s)"
+                [attr.aria-current]="selectedScenario?.id === s.id ? 'true' : null">
+          {{ s.name }}
+        </button>
+        <button class="row-del" type="button"
+                (click)="$event.stopPropagation(); deleteScenario.emit(s)"
+                [attr.aria-label]="'Delete ' + s.name">🗑</button>
+      </li>
+    </ul>
+
+    <!-- Detail / Edit -->
+    <section class="detail-card" aria-live="polite">
+      <ng-container *ngIf="editing; else detailView">
+        <form (ngSubmit)="saveScenario.emit()" class="form" novalidate>
+          <label for="scenarioName">
+            <span>Name</span>
+            <input id="scenarioName" [(ngModel)]="form.name" name="name" placeholder="Scenario Name" required autocomplete="off" />
+          </label>
+
+          <label for="scenarioDesc">
+            <span>Description</span>
+            <textarea id="scenarioDesc" [(ngModel)]="form.description" name="description" placeholder="Description (optional)" rows="2"></textarea>
+          </label>
+
+          <div class="form-actions">
+            <button type="submit" class="btn btn-success">Save</button>
+            <button type="button" class="btn btn-secondary" (click)="cancelEdit.emit()">Cancel</button>
+          </div>
+
+          <div *ngIf="errorMessage" class="error" aria-live="assertive">{{ errorMessage }}</div>
+        </form>
+      </ng-container>
+
+      <ng-template #detailView>
+        <ng-container *ngIf="selectedScenario; else pickHint">
+          <div class="detail">
+            <h4>{{ selectedScenario.name }}</h4>
+            <p class="muted">{{ selectedScenario.description || 'No description' }}</p>
+            <button class="btn btn-light" type="button" (click)="editScenario.emit()">Edit Scenario</button>
+          </div>
+        </ng-container>
+        <ng-template #pickHint>
+          <div class="hint">Select a scenario or create a new one.</div>
+        </ng-template>
+      </ng-template>
+    </section>
+  </div>
+</aside>

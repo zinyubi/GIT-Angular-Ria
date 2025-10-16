@@ -1,0 +1,53 @@
+<!-- src/app/layout/screens/planner/plannercomponents/tools/deployment-form.component.html -->
+<section class="accordion">
+  <input class="acc-toggle" type="radio" name="tools-acc" id="acc-deploy"
+         [checked]="open" (change)="toggleOpen(true)" />
+  <label class="acc-summary" for="acc-deploy" id="deploy-summary" [attr.aria-expanded]="open.toString()">
+    <span>Deployment</span><span class="chev" aria-hidden="true">▾</span>
+  </label>
+
+  <div class="acc-content" id="deploy-panel" role="region" aria-labelledby="deploy-summary">
+    <form (ngSubmit)="deploy.emit()" class="form grid2" novalidate>
+      <label for="acType">Aircraft Type
+        <select id="acType" [(ngModel)]="formValue.aircraft_type" name="aircraft_type" required
+                (ngModelChange)="formValueChange.emit(formValue)">
+          <option value="" disabled>Select Type</option>
+          <option *ngFor="let type of aircraftTypes" [value]="type.id">
+            {{ type.name }} ({{ type.model }})
+          </option>
+        </select>
+      </label>
+
+      <!-- Keep Name ONLY here to avoid duplication with editor -->
+      <label for="acName">Name
+        <input id="acName" type="text" [(ngModel)]="formValue.name" name="name" autocomplete="off"
+               (ngModelChange)="formValueChange.emit(formValue)" />
+      </label>
+
+      <label for="acLat">Latitude
+        <div class="inline-input">
+          <input id="acLat" type="number" step="any" inputmode="decimal"
+                 [(ngModel)]="formValue.initial_latitude" name="initial_latitude" required
+                 (ngModelChange)="formValueChange.emit(formValue)" />
+          <button type="button" class="btn btn-ghost" (click)="requestPick.emit()" aria-label="Pick latitude/longitude on map">📍</button>
+        </div>
+      </label>
+
+      <label for="acLon">Longitude
+        <input id="acLon" type="number" step="any" inputmode="decimal"
+               [(ngModel)]="formValue.initial_longitude" name="initial_longitude" required
+               (ngModelChange)="formValueChange.emit(formValue)" />
+      </label>
+
+      <label for="acAlt">Altitude (m)
+        <input id="acAlt" type="number" step="1" inputmode="numeric"
+               [(ngModel)]="formValue.initial_altitude_m" name="initial_altitude_m" required
+               (ngModelChange)="formValueChange.emit(formValue)" />
+      </label>
+
+      <div class="form-actions push">
+        <button type="submit" class="btn btn-primary" [disabled]="deploying">Deploy Aircraft</button>
+      </div>
+    </form>
+  </div>
+</section>

@@ -1,521 +1,68 @@
-I have this model.py from django i had created previously , Can you suggest better things : from django.db import models
-from django.conf import settings
-from django.utils import timezone
-from django.core.validators import MinValueValidator, MaxValueValidator
-from datetime import datetime
-import uuid
-from django.db.models import Q, F
-
-
-# ------------------------------
-# Scenario-related Models
-# ------------------------------
-
-class Scenario(models.Model):
-    name = models.CharField(max_length=100)
-    description = models.TextField(blank=True)
-    created_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
-    created_at = models.DateTimeField(auto_now_add=True)
-
-    def __str__(self):
-        return self.name
-
-
-class Aircraft(models.Model):
-    name = models.CharField(max_length=64)
-    model = models.CharField(max_length=64)
-    color = models.CharField(max_length=32, default="blue")
-    max_speed = models.FloatField(default=200)  # m/s or appropriate unit
-
-    def __str__(self):
-        return self.name
-
-
-class MissileType(models.Model):
-    name = models.CharField(max_length=100, unique=True)
-    description = models.TextField(blank=True)
-    max_speed = models.FloatField()
-    range = models.FloatField()
-    seeker_type = models.CharField(max_length=50)
-    warhead_type = models.CharField(max_length=50)
-    weight = models.FloatField()
-    length = models.FloatField()
-    diameter = models.FloatField()
-    rotation_speed = models.FloatField(default=30.0)
-    detection_angle = models.FloatField(default=60.0)
-    detection_range = models.FloatField(default=25.0)
-
-    def __str__(self):
-        return self.name
-
-
-class RadarType(models.Model):
-    name = models.CharField(max_length=100, unique=True)
-    description = models.TextField(blank=True)
-
-    # Technical/spec fields (type-level)
-    frequency = models.FloatField(help_text="GHz or MHz depending on convention")
-    range = models.FloatField(help_text="Nominal max detection range (km)")
-    azimuth_coverage = models.FloatField(help_text="Degrees, e.g., 360")
-    elevation_coverage = models.FloatField(help_text="Degrees")
-    power = models.FloatField(help_text="Watts or kW, per convention")
-    rotation_speed = models.FloatField(default=30.0, help_text="RPM")
-    detection_angle = models.FloatField(default=45.0, help_text="Beamwidth or similar metric")
-
-    def __str__(self):
-        return self.name
-
-    # Handy aliases
-    @property
-    def max_range_km(self) -> float:
-        return self.range
-
-    @property
-    def scan_period_s(self) -> float:
-        # If rotation_speed is RPM, period (s) = 60 / RPM
-        try:
-            return 60.0 / float(self.rotation_speed) if self.rotation_speed else 0.0
-        except Exception:
-            return 0.0
-
-class AircraftInstance(models.Model):
-    scenario = models.ForeignKey("Scenario", related_name="aircraft_instances", on_delete=models.CASCADE)
-    aircraft = models.ForeignKey("Aircraft", on_delete=models.CASCADE)
-
-    # Selected deployed radar (site). All static radar info comes from this FK.
-    radar_asset = models.ForeignKey(
-        "AssetDeployment",
-        null=True,
-        blank=True,
-        on_delete=models.SET_NULL,
-        related_name="aircraft_instances",
-        limit_choices_to={"category": "Radar"},
-        help_text="Deployed radar used for this plan",
-    )
-
-    # User-defined
-    name = models.CharField(max_length=128, blank=True, default="")
-    status = models.CharField(
-        max_length=15,
-        default="waiting",
-        help_text="waiting / moving / paused / arrived / stopped",
-        db_index=True,
-    )
-
-    # Planning
-    initial_lat = models.FloatField(
-        validators=[MinValueValidator(-90.0), MaxValueValidator(90.0)]
-    )
-    initial_lon = models.FloatField(
-        validators=[MinValueValidator(-180.0), MaxValueValidator(180.0)]
-    )
-    planned_waypoints = models.JSONField(default=list, help_text="[{lat, lon, altFt?}, ...]")
-    sim_waypoints = models.JSONField(default=list, blank=True)
-
-    # External correlation
-    external_id = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
-
-    # Dynamic radar snapshot (latest)
-    last_contact_at = models.DateTimeField(blank=True, null=True, help_text="Timestamp of latest radar message")
-    track_id = models.BigIntegerField(blank=True, null=True, db_index=True)
-    icao_address = models.CharField(max_length=8, blank=True, null=True, db_index=True, help_text="Hex ICAO24 or ID (e.g., ABC123)")
-    mode3a_code = models.CharField(max_length=8, blank=True, null=True)
-
-    # Kinematics (latest)
-    current_lat = models.FloatField(blank=True, null=True)
-    current_lon = models.FloatField(blank=True, null=True)
-    altitude_ft = models.IntegerField(blank=True, null=True)
-    ground_speed_kts = models.FloatField(blank=True, null=True)
-    heading_deg = models.FloatField(blank=True, null=True)
-    vertical_rate_fpm = models.FloatField(blank=True, null=True)
-    rate_of_turn_deg_per_sec = models.FloatField(blank=True, null=True)
-
-    # Detection geometry (latest)
-    time_of_detection = models.DateTimeField(blank=True, null=True)
-    range_km = models.FloatField(blank=True, null=True)
-    azimuth_deg = models.FloatField(blank=True, null=True)
-    elevation_deg = models.FloatField(blank=True, null=True)
-
-    # Audit
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
-
-    class Meta:
-        indexes = [
-            models.Index(fields=["scenario", "track_id"]),
-            models.Index(fields=["icao_address"]),
-            models.Index(fields=["status"]),
-            models.Index(fields=["radar_asset"]),
-        ]
-
-    def __str__(self):
-        return f"{self.aircraft.name} in {self.scenario.name}"
-
-    # Read-only properties sourced from the deployed radar
-    @property
-    def radar_code(self):
-        return getattr(self.radar_asset, "radar_code", None)
-
-    @property
-    def radar_sac(self):
-        return getattr(self.radar_asset, "sac", None)
-
-    @property
-    def radar_sic(self):
-        return getattr(self.radar_asset, "sic", None)
-
-    @property
-    def radar_lat(self):
-        return getattr(self.radar_asset, "latitude", None)
-
-    @property
-    def radar_lon(self):
-        return getattr(self.radar_asset, "longitude", None)
-
-    @property
-    def radar_min_range_km(self):
-        # effective_* comes from AssetDeployment (override or type)
-        return getattr(self.radar_asset, "effective_min_range_km", None)
-
-    @property
-    def radar_max_range_km(self):
-        return getattr(self.radar_asset, "effective_max_range_km", None)
-
-    # Helper to apply a radar message; auto-link radar_asset from radarId (radar_code)
-    def apply_radar_instruction(self, instruction: dict):
-        # Link deployed radar by radarId if provided
-        radar_id = instruction.get("radarId")
-        if radar_id and not self.radar_asset_id:
-            try:
-                AssetDeployment = apps.get_model("scenariomanagement", "AssetDeployment")
-            except LookupError:
-                AssetDeployment = apps.get_model(self._meta.app_label, "AssetDeployment")
-            radar = (
-                AssetDeployment.objects.filter(category="Radar", radar_code=radar_id).first()
-                if AssetDeployment else None
-            )
-            if radar:
-                self.radar_asset = radar
-
-        ts = instruction.get("timestamp")
-        if ts:
-            try:
-                self.last_contact_at = timezone.make_aware(
-                    datetime.fromisoformat(ts.replace("Z", "+00:00"))
-                )
-            except Exception:
-                self.last_contact_at = timezone.now()
-
-        tracks = instruction.get("tracks") or []
-        if not tracks:
-            return
-
-        # If multiple tracks are present, pick your correlation rule; for now first track
-        t = tracks[0]
-        self.track_id = t.get("trackId")
-        self.icao_address = t.get("icaoAddress")
-        self.mode3a_code = t.get("mode3ACode")
-
-        pos = (t.get("position") or {})
-        self.current_lat = pos.get("latitude")
-        self.current_lon = pos.get("longitude")
-        self.altitude_ft = pos.get("altitudeFt")
-
-        vel = (t.get("velocity") or {})
-        self.ground_speed_kts = vel.get("groundSpeedKts")
-        self.heading_deg = vel.get("headingDeg")
-        self.vertical_rate_fpm = vel.get("verticalRateFpm")
-
-        self.rate_of_turn_deg_per_sec = t.get("rateOfTurnDegPerSec")
-
-        src = (t.get("source") or {})
-        tod = src.get("timeOfDetection")
-        if tod:
-            try:
-                self.time_of_detection = timezone.make_aware(
-                    datetime.fromisoformat(tod.replace("Z", "+00:00"))
-                )
-            except Exception:
-                self.time_of_detection = None
-        self.range_km = src.get("rangeKm")
-        self.azimuth_deg = src.get("azimuthDeg")
-        self.elevation_deg = src.get("elevationDeg")
-
-
-
-
-
-# ------------------------------
-# Simulation Models
-# ------------------------------
-
-class Simulation(models.Model):
-        STATUS_CHOICES = [
-            ("pending", "Pending"),
-            ("running", "Running"),
-            ("paused", "Paused"),
-            ("stopped", "Stopped"),
-            # Add more if needed
-        ]
-        
-        scenario = models.ForeignKey(Scenario, on_delete=models.CASCADE)
-        started_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True)
-        status = models.CharField(max_length=20, choices=STATUS_CHOICES, default="pending")
-        started_at = models.DateTimeField(auto_now_add=True)
-        finished_at = models.DateTimeField(null=True, blank=True)
-
-        result_summary = models.JSONField(default=dict, blank=True)
-        error = models.TextField(blank=True, null=True)
-        live_state = models.ForeignKey(
-            'SimulationState',
-            null=True,
-            blank=True,
-            on_delete=models.SET_NULL,
-            related_name='+'
-        )
-
-        def __str__(self):
-            return f"Simulation of {self.scenario.name} [{self.id}]"
-
-
-class SimulationState(models.Model):
-    """
-    Single state for a simulation at a particular point in time.
-    """
-    simulation = models.ForeignKey(Simulation, on_delete=models.CASCADE, related_name="states")
-    time_sec = models.FloatField(default=0)
-    aircraft_state = models.JSONField(default=dict)
-    radar_state = models.JSONField(default=dict)
-    missile_state = models.JSONField(default=dict)
-    events = models.JSONField(default=list, blank=True)
-    updated_at = models.DateTimeField(auto_now=True)
-
-    def __str__(self):
-        return f"State t={self.time_sec} for sim {self.simulation.id}"
-
-
-CATEGORY_RADAR = "Radar"
-CATEGORY_MISSILE = "Missile"
-
-
-class AssetDeployment(models.Model):
-    CATEGORY_CHOICES = [
-        (CATEGORY_RADAR, "Radar"),
-        (CATEGORY_MISSILE, "Missile"),
-    ]
-
-    # Identity and classification
-    external_id = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
-    name = models.CharField(max_length=128, db_index=True)
-    category = models.CharField(max_length=16, choices=CATEGORY_CHOICES, db_index=True)
-    sub_category = models.CharField(max_length=64, blank=True)
-
-    # Link to equipment types (type-level capability lives there)
-    radar_type = models.ForeignKey(
-        "RadarType",
-        null=True,
-        blank=True,
-        on_delete=models.SET_NULL,
-        related_name="deployments",
-        help_text="Required when category=Radar",
-    )
-    missile_type = models.ForeignKey(
-        "MissileType",
-        null=True,
-        blank=True,
-        on_delete=models.SET_NULL,
-        related_name="deployments",
-        help_text="Required when category=Missile",
-    )
-
-    # Deployment-specific attributes (site/installation/ops)
-    latitude = models.FloatField(
-        validators=[MinValueValidator(-90.0), MaxValueValidator(90.0)]
-    )
-    longitude = models.FloatField(
-        validators=[MinValueValidator(-180.0), MaxValueValidator(180.0)]
-    )
-    elevation = models.FloatField(null=True, blank=True, help_text="Site elevation (m AMSL)")
-    site = models.CharField(max_length=128, blank=True)
-    deployment_zone = models.CharField(max_length=128, blank=True)
-    status = models.CharField(max_length=32, default="Active", db_index=True)
-    deployment_date = models.DateField(null=True, blank=True)
-
-    # Operational identifiers (deployment-level, not type-level)
-    radar_code = models.CharField(
-        max_length=64,
-        blank=True,
-        null=True,
-        help_text="Operational code/id for this deployed radar; use as radarId in messages",
-    )
-    sac = models.CharField(max_length=4, blank=True, null=True, help_text="System Area Code (site)")
-    sic = models.CharField(max_length=4, blank=True, null=True, help_text="System Identification Code (site)")
-
-    # Installation-specific orientation/adjustments (deployment-level)
-    azimuth_offset_deg = models.FloatField(
-        blank=True,
-        null=True,
-        validators=[MinValueValidator(0.0), MaxValueValidator(360.0)],
-        help_text="Boresight/installation azimuth (0–360), if applicable",
-    )
-    elevation_offset_deg = models.FloatField(blank=True, null=True, help_text="Antenna tilt (deg)")
-
-    # Optional operational overrides (deployment-level)
-    min_range_override_km = models.FloatField(
-        null=True, blank=True, validators=[MinValueValidator(0.0)],
-        help_text="If set, overrides radar type min range"
-    )
-    max_range_override_km = models.FloatField(
-        null=True, blank=True, validators=[MinValueValidator(0.0)],
-        help_text="If set, overrides radar type max range"
-    )
-    rotation_speed_override = models.FloatField(
-        null=True, blank=True, validators=[MinValueValidator(0.0)],
-        help_text="RPM override if operated differently from type spec",
-    )
-
-    is_mobile = models.BooleanField(default=False)
-    notes = models.TextField(blank=True)
-
-    # ACL
-    roles = models.ManyToManyField(
-        "communications.Role",
-        related_name="asset_deployments",
-        blank=True,
-        help_text="Roles that can access/see this deployment",
-    )
-    users = models.ManyToManyField(
-        settings.AUTH_USER_MODEL,
-        related_name="asset_deployments",
-        blank=True,
-        help_text="Users that can access/see this deployment",
-    )
-
-    # Audit
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
-    created_by = models.ForeignKey(
-        settings.AUTH_USER_MODEL,
-        null=True,
-        blank=True,
-        on_delete=models.SET_NULL,
-        related_name="created_asset_deployments",
-    )
-    updated_by = models.ForeignKey(
-        settings.AUTH_USER_MODEL,
-        null=True,
-        blank=True,
-        on_delete=models.SET_NULL,
-        related_name="updated_asset_deployments",
-    )
-
-    class Meta:
-        verbose_name = "Asset Deployment"
-        verbose_name_plural = "Asset Deployments"
-        constraints = [
-            # Require the relevant type for the selected category
-            models.CheckConstraint(
-                name="radar_type_required_for_radar",
-                check=Q(category=CATEGORY_RADAR, radar_type__isnull=False)
-                | ~Q(category=CATEGORY_RADAR),
-            ),
-            models.CheckConstraint(
-                name="missile_type_required_for_missile",
-                check=Q(category=CATEGORY_MISSILE, missile_type__isnull=False)
-                | ~Q(category=CATEGORY_MISSILE),
-            ),
-            # Ensure min <= max when both overrides present
-            models.CheckConstraint(
-                name="min_le_max_override_range",
-                check=Q(min_range_override_km__isnull=True)
-                | Q(max_range_override_km__isnull=True)
-                | Q(min_range_override_km__lte=F("max_range_override_km")),
-            ),
-        ]
-        indexes = [
-            models.Index(fields=["category", "status"]),
-            models.Index(fields=["site"]),
-            models.Index(fields=["deployment_zone"]),
-        ]
-        constraints += [
-            models.UniqueConstraint(
-                fields=["radar_code"],
-                condition=Q(category=CATEGORY_RADAR, radar_code__isnull=False),
-                name="uniq_radar_code_per_radar_deployment",
-            )
-        ]
-
-    def __str__(self):
-        return self.name
-
-    # Effective capabilities for API/map (fall back to type if no override)
-    @property
-    def effective_max_range_km(self):
-        if self.max_range_override_km is not None:
-            return self.max_range_override_km
-        return self.radar_type.max_range_km if (self.category == self.CATEGORY_RADAR and self.radar_type) else None
-
-    @property
-    def effective_min_range_km(self):
-        return self.min_range_override_km
-
-    @property
-    def effective_rotation_speed(self):
-        if self.rotation_speed_override is not None:
-            return self.rotation_speed_override
-        return self.radar_type.rotation_speed if (self.category == self.CATEGORY_RADAR and self.radar_type) else None
-
-    @property
-    def effective_scan_period_s(self):
-        # If override RPM provided, compute period; else use type’s period
-        if self.rotation_speed_override:
-            try:
-                return 60.0 / float(self.rotation_speed_override)
-            except Exception:
-                return None
-        return self.radar_type.scan_period_s if (self.category == self.CATEGORY_RADAR and self.radar_type) else None
-
-    def dropdown_dict(self):
-        # Shape useful for the frontend dropdown and map
-        d = {
-            "id": self.id,
-            "name": self.name,
-            "category": self.category,
-            "lat": self.latitude,
-            "lon": self.longitude,
-            "elevation": self.elevation,
-            "site": self.site,
-            "status": self.status,
-            "radar_code": self.radar_code,
-            "sac": self.sac,
-            "sic": self.sic,
-            "azimuth_offset_deg": self.azimuth_offset_deg,
-            "elevation_offset_deg": self.elevation_offset_deg,
-            "min_range_km": self.effective_min_range_km,
-            "max_range_km": self.effective_max_range_km,
-            "scan_period_s": self.effective_scan_period_s,
-        }
-        if self.category == self.CATEGORY_RADAR and self.radar_type:
-            d["radar_type"] = {
-                "id": self.radar_type.id,
-                "name": self.radar_type.name,
-                "frequency": self.radar_type.frequency,
-                "max_range_km_spec": self.radar_type.max_range_km,
-                "azimuth_coverage": self.radar_type.azimuth_coverage,
-                "elevation_coverage": self.radar_type.elevation_coverage,
-                "power": self.radar_type.power,
-                "rotation_speed_spec": self.radar_type.rotation_speed,
-                "detection_angle": self.radar_type.detection_angle,
-            }
-        return d
-
-    # ===============================
-    # Radar-centric detection geometry
-    # ===============================
-
-# ------------------------------
-# End of Scenario Models
-# ------------------------------                
-
-  
-is there any better way to do this and what all suggestion do you tell . The shared above is a draft version without any proper guidance or exper advice so can you make it better as per your knowledge and advice ?
+Starting ASGI/Daphne version 4.2.1 development server at http://127.0.0.1:8000/
+Quit the server with CONTROL-C.
+/mnt/sda/home/kunj/jay/angular_ria/GIT-Angular-Ria-main/venv/lib/python3.12/site-packages/hyperlink/_url.py changed, reloading.
+Watching for file changes with StatReloader
+Performing system checks...
+
+System check identified no issues (0 silenced).
+October 14, 2025 - 10:59:26
+Django version 5.1.6, using settings 'backend.settings'
+Starting ASGI/Daphne version 4.2.1 development server at http://127.0.0.1:8000/
+Quit the server with CONTROL-C.
+^C^C(venv) kunj@kunj-HP-Z4-G4-Workstation:~/jay/angular_ria/GIT-Angular-Ria-main/backend$ ^C
+(venv) kunj@kunj-HP-Z4-G4-Workstation:~/jay/angular_ria/GIT-Angular-Ria-main/backend$ ^C
+(venv) kunj@kunj-HP-Z4-G4-Workstation:~/jay/angular_ria/GIT-Angular-Ria-main/backend$ python manage.py runserver
+Watching for file changes with StatReloader
+Performing system checks...
+
+System check identified no issues (0 silenced).
+October 14, 2025 - 10:59:56
+Django version 5.1.6, using settings 'backend.settings'
+Starting ASGI/Daphne version 4.2.1 development server at http://127.0.0.1:8000/
+Quit the server with CONTROL-C.
+
+
+
+Internal Server Error: /api/token/
+Traceback (most recent call last):
+  File "/home/kunj/.local/lib/python3.10/site-packages/asgiref/sync.py", line 518, in thread_handler
+    raise exc_info[1]
+  File "/home/kunj/.local/lib/python3.10/site-packages/django/core/handlers/exception.py", line 42, in inner
+    response = await get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/kunj/.local/lib/python3.10/site-packages/asgiref/sync.py", line 518, in thread_handler
+    raise exc_info[1]
+  File "/home/kunj/.local/lib/python3.10/site-packages/django/core/handlers/base.py", line 253, in _get_response_async
+    response = await wrapped_callback(
+               ^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/kunj/.local/lib/python3.10/site-packages/asgiref/sync.py", line 468, in __call__
+    ret = await asyncio.shield(exec_coro)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/concurrent/futures/thread.py", line 58, in run
+    result = self.fn(*self.args, **self.kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/kunj/.local/lib/python3.10/site-packages/asgiref/sync.py", line 522, in thread_handler
+    return func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^
+  File "/home/kunj/.local/lib/python3.10/site-packages/django/views/decorators/csrf.py", line 65, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/kunj/.local/lib/python3.10/site-packages/django/views/generic/base.py", line 104, in view
+    return self.dispatch(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/kunj/.local/lib/python3.10/site-packages/rest_framework/views.py", line 509, in dispatch
+    response = self.handle_exception(exc)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/kunj/.local/lib/python3.10/site-packages/rest_framework/views.py", line 469, in handle_exception
+    self.raise_uncaught_exception(exc)
+  File "/home/kunj/.local/lib/python3.10/site-packages/rest_framework/views.py", line 480, in raise_uncaught_exception
+    raise exc
+  File "/home/kunj/.local/lib/python3.10/site-packages/rest_framework/views.py", line 506, in dispatch
+    response = handler(request, *args, **kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/mnt/sda/home/kunj/jay/angular_ria/GIT-Angular-Ria-main/venv/lib/python3.12/site-packages/rest_framework_simplejwt/views.py", line 44, in post
+    serializer.is_valid(raise_exception=True)
+  File "/home/kunj/.local/lib/python3.10/site-packages/rest_framework/serializers.py", line 223, in is_valid
+    self._validated_data = self.run_validation(self.initial_data)
+                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/kunj/.local/lib/python3.10/site-packages/rest_framework/serial

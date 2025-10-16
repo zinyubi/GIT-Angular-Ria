@@ -1,0 +1,15 @@
+<div class="list-block" role="region" aria-label="Deployed aircraft">
+  <h4 class="subtle">Deployed Aircraft</h4>
+  <!-- Make THIS UL the scroller -->
+  <ul class="plain" role="list">
+    <li *ngFor="let ac of aircrafts; trackBy: trackByAircraftId" class="row">
+      <div>
+        <strong>{{ ac.name || 'Unnamed' }}</strong>
+        <span class="muted">
+          [{{ getLat(ac) }}, {{ getLon(ac) }}] · Alt {{ getAlt(ac) }}m
+        </span>
+      </div>
+      <button class="btn btn-link" type="button" (click)="edit.emit(ac)">Edit</button>
+    </li>
+  </ul>
+</div>

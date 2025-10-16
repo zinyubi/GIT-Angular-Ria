@@ -1,0 +1,18 @@
+/* map-panel.component.css */
+
+/* Make the custom element fill the grid track and allow shrinking */
+:host {
+  display: block;
+  inline-size: 100%;
+  block-size: 100%;
+  min-block-size: 0;  /* 🔑 lets it shrink inside grid/flex parents */
+  overflow: hidden;   /* avoid nested scrollbars here */
+}
+
+/* Make the inner riamap expand to fill the host */
+.map {
+  display: block;
+  inline-size: 100%;
+  block-size: 100%;
+  min-block-size: 0;
+}

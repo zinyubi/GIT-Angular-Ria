@@ -28,6 +28,8 @@ router.register(r'missiletypes', MissileTypeViewSet, basename='missiletype')
 router.register(r'radartypes', RadarTypeViewSet, basename='radartype')
 router.register(r'assetdeployments', AssetDeploymentViewSet, basename='assetdeployment')
 
+
+
 urlpatterns = [
     path('', include(router.urls)),
 ]
