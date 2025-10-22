@@ -8,15 +8,16 @@ import {
   OnDestroy
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
+
 import { WebGLMap } from '@luciad/ria/view/WebGLMap.js';
 import { getReference } from '@luciad/ria/reference/ReferenceProvider.js';
 import { createBounds, createPoint } from '@luciad/ria/shape/ShapeFactory.js';
 import { createTransformation } from '@luciad/ria/transformation/TransformationFactory.js';
 import { LocationMode } from '@luciad/ria/transformation/LocationMode.js';
 import { OutOfBoundsError } from '@luciad/ria/error/OutOfBoundsError.js';
+import { SelectController } from "@luciad/ria/view/controller/SelectController.js";
 
-import { RiaMapConfigService } from '../../ria-map-config.service';
-import { DEFAULT_BASELAYER_CONFIG_RIA } from './../../ria-map-config.service';
+import { RiaMapConfigService , DEFAULT_BASELAYER_CONFIG_RIA } from '../../riamapconfig.service';
 import { BaseLayerServiceRia } from '../../services/base-layer.ria.service';
 import { RiaProjectionswitcherComponent } from '../projectionswitcher/riaprojectionswitcher.component';
 import { MouseCoordinateServiceRia } from '../../services/mouse-coordinate.ria.service';
@@ -25,13 +26,20 @@ import { CompassServiceRia } from './../../services/compass.ria.service';
 import { LayertreeComponentRia } from './../layertree/layertree.component.ria';
 import { PanControlComponentRia } from '../pancontrol/pan-control.component.ria';
 
-import { Visualizer } from "../../components/Visualizer"; // adjust the path to your folder
-import type { MeshSpec } from "../../components/Visualizer";
+// Your mesh/shape helper
+import { Visualizer } from "../util/Visualizer";
 
+// --- Gizmo editing additions ---
+import {MemoryStore} from "@luciad/ria/model/store/MemoryStore.js";
+import {FeatureModel} from "@luciad/ria/model/feature/FeatureModel.js";
+import {FeatureLayer} from "@luciad/ria/view/feature/FeatureLayer.js";
+import {Feature} from "@luciad/ria/model/feature/Feature.js";
+import {createPolygon} from "@luciad/ria/shape/ShapeFactory.js";
+import {FeatureGizmoController} from "./../util/gizmo/FeatureGizmoController";
+// --------------------------------
 
 import { Observable } from 'rxjs';
 import { Point } from '@luciad/ria/shape/Point.js';
-import { point } from '@luciad/ria/util/expression/ExpressionFactory.js';
 
 @Component({
   standalone: true,
@@ -65,6 +73,11 @@ export class MapComponentRia implements AfterViewInit, OnDestroy {
   modelPoint$!: Observable<Point | null>;
   currentProjKey: string;
 
+  // --- Gizmo editing state ---
+  private featureLayer!: FeatureLayer;
+  private defaultController: any;
+  // ---------------------------
+
   constructor(
     private cfg: RiaMapConfigService,
     private baseLayersRia: BaseLayerServiceRia,
@@ -93,16 +106,12 @@ export class MapComponentRia implements AfterViewInit, OnDestroy {
 
     this.map = new WebGLMap(this.mapDiv.nativeElement, { reference });
 
-
     this.map.on("ReferenceChanged",(reference)=> {
-      console.log(reference)
-    })
+      // eslint-disable-next-line no-console
+      console.log(reference);
+    });
 
-
-    // this.map.on("MapChange", ()=>{
-    //     console.log(this.map?.layerTree.children)
-    // })
-    // optional: world fit (kept from your code, not strictly needed)
+    // optional: world fit
     const world = createBounds(reference, [-180, -90, 180, 90]); // eslint-disable-line @typescript-eslint/no-unused-vars
 
     await this.baseLayersRia.addBaseLayersFromConfigRia(this.map, DEFAULT_BASELAYER_CONFIG_RIA);
@@ -110,13 +119,11 @@ export class MapComponentRia implements AfterViewInit, OnDestroy {
     // show mouse coords in WGS84
     this.mouseCoordsRia.start(this.map, getReference('CRS:84'));
 
-
-
-    // points.addPoint(77.5946, 12.9716 , 16);    // optional: programmatic add
-    // // To temporarily disable click-to-add without separate start/stop:
-    // // points.setInteractive(false);
-
+    // Your demo visual shapes/meshes
     const viz = new Visualizer({ map: this.map! });
+
+    // this.map!.defaultController = new SelectController();
+
     // Sphere
     viz.add({
       type: "ellipsoid",
@@ -143,9 +150,197 @@ export class MapComponentRia implements AfterViewInit, OnDestroy {
       color: "rgba(201,253,201,0.35)"
     });
 
+    viz.add({
+      type: "point",
+      lon: 77.59, lat: 12.965, alt : 0 ,
+      color: "rgba(0,150,255,1)",
+      size: 12,
+      outlineColor: "white",
+      outlineWidth: 2
+    });
+
+    viz.add({
+      type: "point",
+      lon: 77.60, lat: 12.972 , alt: 0,
+      color: "rgba(39, 114, 32, 1)",
+    });
+
+    // 2D LINE (polyline)
+    viz.add({
+      type: "line",
+      positions: [
+        77.585, 12.968,
+        77.595, 12.972,
+        77.605, 12.976,
+        77.615, 12.980
+      ],
+      color: "rgba(255,215,0,1)",
+      width: 3,
+      opacity: 0.9
+    });
+
+    // 3D polyline
+    viz.add({
+      type: "line3D",
+      positions: [
+        77.59, 12.965, 2000 ,
+        77.61, 12.975, 7000 ,
+        77.63, 12.985, 5000,
+      ],
+      color: "rgba(18, 51, 235, 0.97)",
+      width: 6
+    });
+
+    // 2D POLYGON
+    viz.add({
+      type: "polygon",
+      positions: [
+        77.588, 12.968,
+        77.610, 12.968,
+        77.610, 12.982,
+        77.588, 12.982
+      ],
+      color: "rgba(0,200,120,1)",
+      fillOpacity: 0.35,
+      outlineColor: "#00A070",
+      outlineWidth: 2
+    });
+
+    viz.add({
+      type: "polygon",
+      positions: [
+        77.585, 12.965,
+        77.615, 12.965,
+        77.615, 12.985,
+        77.585, 12.985
+      ],
+      color: "rgba(80,120,255,1)",
+      fillOpacity: 0.18,
+      outlineColor: "rgba(80,120,255,0.8)",
+      outlineWidth: 1
+    });
+
+    viz.add({
+      type: "polygon",
+      positions: [
+        78.585, 12.965, 2000,
+        78.615, 12.965, 2000,
+        78.615, 12.985, 2000,
+        78.585, 12.985 , 2000
+      ],
+      color: "rgba(80, 255, 80, 1)",
+      fillOpacity: 0.18,
+      outlineColor: "rgba(218, 231, 32, 0.8)",
+      outlineWidth: 1
+    });
+
+    // 3D point (sphere)
+    // viz.add({
+    //   type: "point3D",
+    //   lon: 77.60, lat: 12.972 , alt: 2000,
+    //   color: "rgba(255, 83, 30, 1)",
+    //   sizeMeters : 20,
+    // });
+
+    // Billboard circle
+    // viz.add({
+    //   type: "point3D",
+    //   mode: "billboard",
+    //   lon: 77.60, lat: 12.972 , alt: 3000,
+    //   billboardDiameterMeters: 12000,
+    //   color: "rgba(0,180,255,0.9)",
+    //   outlineColor: "white",
+    //   outlineWidth: 2,
+    //   opacity: 1
+    // });
+
+    // 3D polyline A->B->C
+    // viz.add({
+    //   type: "line",
+    //   positions: [
+    //     77.58, 12.97, 2000,
+    //     77.60, 12.98, 8000,
+    //     77.62, 12.99, 3000
+    //   ],
+    //   color: "rgba(71, 214, 14, 0.95)",
+    //   width: 4
+    // });
+
+
+    
+
+    const wireLayer = (layer: FeatureLayer) => {
+      layer.on("SelectionChanged", () => {
+        const sel = layer;
+        const f = sel && (sel as any).first ? (sel as any).first() : null;
+        if (!f) { this.map!.controller = null; return; }
+        if (!layer.editable) { this.map!.controller = null; return; }
+
+        // start the gizmo editor for the selected feature
+        this.map!.controller = new FeatureGizmoController(layer, f, {
+          handleSizeMeters: 80, // tweak as you like
+          snapMeters: 1
+        });
+      });
+    };
+
+        // wire both layers from Visualizer
+    wireLayer(viz.get2DLayer());
+    wireLayer(viz.get3DLayer());
 
 
 
+
+
+
+
+    // ---------- Gizmo: Editable FeatureLayer setup ----------
+    const store  = new MemoryStore<Feature>({ data: [] });
+    const model  = new FeatureModel(store, { reference: this.map.reference });
+    this.featureLayer = new FeatureLayer(model, {
+      id:"Shapes",
+      label:"Shapes",
+      selectable:true,
+      editable:true
+    });
+    this.map.layerTree.addChild(this.featureLayer, "top");
+
+    // Demo polygon you can select & edit with gizmo
+    const editPoly = createPolygon(this.map.reference!, [
+      [77.58, 12.965, 0],
+      [77.60, 12.965, 0],
+      [77.60, 12.980, 0],
+      [77.58, 12.980, 0],
+      [77.58, 12.965, 0],
+    ]);
+    store.add(new Feature(editPoly));
+
+    // Fit to area
+    await this.map.mapNavigator.fit({
+      bounds: createBounds(this.map.reference!, [77.57, 0.05, 12.95, 0.05])
+    });
+
+    // Keep current controller as "default" (navigation)
+    this.defaultController = this.map.controller;
+
+    // Selection → swap to gizmo controller; clearing → revert to default
+    this.map.on("SelectionChanged", (ev: any) => {
+    
+      const sel = ev.selectionChanges?.[0]?.selected ?? [];
+      const f = sel[0] as Feature | undefined;
+      console.log(sel)
+
+      if (!f || !this.featureLayer?.editable) {
+        this.map!.controller = this.defaultController;
+        return;
+      }
+
+      this.map!.controller = new FeatureGizmoController(this.featureLayer, f, {
+        handleSizeMeters: 80,
+        snapMeters: 1
+      });
+    });
+    // --------------------------------------------------------
 
     // @ts-ignore map.on returns a handle with remove()
     this.mapChangeHandle = this.map.on('MapChange', () => {

@@ -1,6 +1,6 @@
 import { Component, EventEmitter, Output, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RiaMapConfigService } from './../../ria-map-config.service';
+import { RiaMapConfigService } from './../../riamapconfig.service';
 
 @Component({
   standalone: true,
