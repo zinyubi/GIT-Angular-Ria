@@ -1,0 +1,211 @@
+<div class="locationstyle-overlay">
+  <div class="locationstyle-panel" [class.collapsed]="collapsed">
+    <!-- HEADER -->
+    <div class="locationstyle-header">
+      <span class="locationstyle-icon">📍</span>
+      <div class="locationstyle-title">Location & Mesh Editor</div>
+      <button class="locationstyle-toggle" type="button" (click)="toggleCollapsed()">
+        <span class="locationstyle-icon">▸</span>
+      </button>
+    </div>
+
+    <!-- BODY -->
+    <div class="locationstyle-body">
+      <ng-container *ngIf="map; else notReady">
+        <ng-container *ngIf="selected as s; else noSel">
+          <div class="locationstyle-row info">
+            <span class="locationstyle-icon">🧱</span>
+            <div class="locationstyle-label" [title]="s.layerLabel">
+              Layer: <b>{{ s.layerLabel }}</b> — Kind: <b>{{ s.kind }}</b> — Feature: <b>{{ s.featureId }}</b>
+            </div>
+          </div>
+
+          <!-- POINT -->
+          <ng-container *ngIf="s.kind==='point'">
+            <div class="locationstyle-section">
+              <div class="row">
+                <label>{{ s.coordMode === 'LLH' ? 'Lon' : 'X' }}</label>
+                <input type="number" [(ngModel)]="point.x" [step]="point.stepXY">
+                <div class="locationstyle-nudge">
+                  <button type="button" (click)="nudgePoint(-point.stepXY, 0)">◀</button>
+                  <button type="button" (click)="nudgePoint(+point.stepXY, 0)">▶</button>
+                </div>
+              </div>
+              <div class="row">
+                <label>{{ s.coordMode === 'LLH' ? 'Lat' : 'Y' }}</label>
+                <input type="number" [(ngModel)]="point.y" [step]="point.stepXY">
+                <div class="locationstyle-nudge">
+                  <button type="button" (click)="nudgePoint(0, +point.stepXY)">▲</button>
+                  <button type="button" (click)="nudgePoint(0, -point.stepXY)">▼</button>
+                </div>
+              </div>
+              <div class="row">
+                <label>{{ s.coordMode === 'LLH' ? 'Alt' : 'Z' }}</label>
+                <input type="number" [(ngModel)]="point.z" [step]="point.stepZ">
+                <div class="locationstyle-nudge">
+                  <button type="button" (click)="nudgePoint(0, 0, +point.stepZ)">▲</button>
+                  <button type="button" (click)="nudgePoint(0, 0, -point.stepZ)">▼</button>
+                </div>
+              </div>
+            </div>
+
+            <div class="locationstyle-actions">
+              <button (click)="applyPoint()">Apply Point</button>
+            </div>
+          </ng-container>
+
+          <!-- LINE / POLYGON -->
+          <ng-container *ngIf="s.kind==='polyline' || s.kind==='polygon'">
+            <div class="locationstyle-section">
+              <div class="row">
+                <label>ΔX / ΔLon</label>
+                <input type="number" [(ngModel)]="delta.dx" [step]="delta.stepXY">
+                <div class="locationstyle-nudge">
+                  <button type="button" (click)="nudgeDelta(-delta.stepXY, 0)">◀</button>
+                  <button type="button" (click)="nudgeDelta(+delta.stepXY, 0)">▶</button>
+                </div>
+              </div>
+              <div class="row">
+                <label>ΔY / ΔLat</label>
+                <input type="number" [(ngModel)]="delta.dy" [step]="delta.stepXY">
+                <div class="locationstyle-nudge">
+                  <button type="button" (click)="nudgeDelta(0, +delta.stepXY)">▲</button>
+                  <button type="button" (click)="nudgeDelta(0, -delta.stepXY)">▼</button>
+                </div>
+              </div>
+              <div class="row">
+                <label>ΔZ / Alt</label>
+                <input type="number" [(ngModel)]="delta.dz" [step]="delta.stepZ">
+                <div class="locationstyle-nudge">
+                  <button type="button" (click)="nudgeDelta(0, 0, +delta.stepZ)">▲</button>
+                  <button type="button" (click)="nudgeDelta(0, 0, -delta.stepZ)">▼</button>
+                </div>
+              </div>
+            </div>
+
+            <div class="locationstyle-actions">
+              <button (click)="applyTranslate()">Translate {{ s.kind === 'polyline' ? 'Line' : 'Polygon' }}</button>
+            </div>
+          </ng-container>
+
+          <!-- MESH EDITOR (NEW) -->
+          <ng-container *ngIf="hasMeshSpec(s)">
+            <div class="locationstyle-section">
+              <div class="row">
+                <label>Shape</label>
+                <select [(ngModel)]="mesh.shape">
+                  <option value="ellipsoid">Ellipsoid</option>
+                  <option value="ellipsoidalDome">Dome</option>
+                  <option value="cone">Cone</option>
+                  <option value="cylinder">Cylinder</option>
+                  <option value="arrow">Arrow</option>
+                </select>
+              </div>
+
+              <div class="row">
+                <label>Color</label>
+                <input type="text" [(ngModel)]="mesh.color" placeholder="#rrggbb or rgba(...)">
+              </div>
+
+              <div class="row">
+                <label>Transparency</label>
+                <input type="checkbox" [(ngModel)]="mesh.transparency">
+              </div>
+
+              <div class="row">
+                <label>Light Intensity</label>
+                <input type="number" [(ngModel)]="mesh.lightIntensity" step="0.1" min="0">
+              </div>
+
+              <div class="row triple">
+                <label>Scale (x,y,z)</label>
+                <input type="number" [(ngModel)]="mesh.scale.x" step="0.1">
+                <input type="number" [(ngModel)]="mesh.scale.y" step="0.1">
+                <input type="number" [(ngModel)]="mesh.scale.z" step="0.1">
+                <div class="locationstyle-nudge">
+                  <button type="button" (click)="nudgeMeshScale(+0.1,+0.1,+0.1)">＋</button>
+                  <button type="button" (click)="nudgeMeshScale(-0.1,-0.1,-0.1)">－</button>
+                </div>
+              </div>
+
+              <div class="row triple">
+                <label>Rotation° (x,y,z)</label>
+                <input type="number" [(ngModel)]="mesh.rotation.x" step="1">
+                <input type="number" [(ngModel)]="mesh.rotation.y" step="1">
+                <input type="number" [(ngModel)]="mesh.rotation.z" step="1">
+                <div class="locationstyle-nudge">
+                  <button type="button" (click)="nudgeMeshRotation(0,0,+5)">↻</button>
+                  <button type="button" (click)="nudgeMeshRotation(0,0,-5)">↺</button>
+                </div>
+              </div>
+
+              <div class="row triple">
+                <label>Translate (x,y,z)</label>
+                <input type="number" [(ngModel)]="mesh.translation.x" step="1">
+                <input type="number" [(ngModel)]="mesh.translation.y" step="1">
+                <input type="number" [(ngModel)]="mesh.translation.z" step="1">
+                <div class="locationstyle-nudge">
+                  <button type="button" (click)="nudgeMeshTranslation(+1,0,0)">→</button>
+                  <button type="button" (click)="nudgeMeshTranslation(-1,0,0)">←</button>
+                  <button type="button" (click)="nudgeMeshTranslation(0,+1,0)">↑</button>
+                  <button type="button" (click)="nudgeMeshTranslation(0,-1,0)">↓</button>
+                  <button type="button" (click)="nudgeMeshTranslation(0,0,+5)">z＋</button>
+                  <button type="button" (click)="nudgeMeshTranslation(0,0,-5)">z－</button>
+                </div>
+              </div>
+
+              <!-- Shape params -->
+              <div class="row" *ngIf="mesh.shape==='ellipsoid' || mesh.shape==='ellipsoidalDome'">
+                <label>Radii (X,Y,Z)</label>
+                <input type="number" [(ngModel)]="mesh.params['radiusX']" step="1">
+                <input type="number" [(ngModel)]="mesh.params['radiusY']" step="1">
+                <input type="number" [(ngModel)]="mesh.params['radiusZ']" step="1">
+              </div>
+              <div class="row" *ngIf="mesh.shape==='ellipsoid' || mesh.shape==='ellipsoidalDome'">
+                <label>Slices (V,H)</label>
+                <input type="number" [(ngModel)]="mesh.params['verticalSlices']" step="1" min="3">
+                <input type="number" [(ngModel)]="mesh.params['horizontalSlices']" step="1" min="2">
+              </div>
+
+              <div class="row" *ngIf="mesh.shape==='cone' || mesh.shape==='cylinder'">
+                <label>Radius / Height</label>
+                <input type="number" [(ngModel)]="mesh.params['radius']" step="1" min="1">
+                <input type="number" [(ngModel)]="mesh.params['height']" step="1" min="1">
+              </div>
+              <div class="row" *ngIf="mesh.shape==='cone' || mesh.shape==='cylinder' || mesh.shape==='arrow'">
+                <label>Slices</label>
+                <input type="number" [(ngModel)]="mesh.params['slices']" step="1" min="3">
+              </div>
+
+              <div class="row" *ngIf="mesh.shape==='arrow'">
+                <label>Arrow (shaft, tip)</label>
+                <input type="number" [(ngModel)]="mesh.params['stickRadius']" step="1" min="1">
+                <input type="number" [(ngModel)]="mesh.params['stickLength']" step="1" min="1">
+                <input type="number" [(ngModel)]="mesh.params['tipBaseRadius']" step="1" min="1">
+                <input type="number" [(ngModel)]="mesh.params['tipLength']" step="1" min="1">
+              </div>
+            </div>
+
+            <div class="locationstyle-actions">
+              <button (click)="applyMesh()">Apply Mesh</button>
+            </div>
+          </ng-container>
+        </ng-container>
+
+        <ng-template #noSel>
+          <div class="locationstyle-row info">
+            <span class="locationstyle-icon">🖱️</span>
+            <div class="locationstyle-label">Select a feature to edit its location / mesh.</div>
+          </div>
+        </ng-template>
+      </ng-container>
+
+      <ng-template #notReady>
+        <div class="locationstyle-row info">
+          <span class="locationstyle-icon">⌛</span>
+          <div class="locationstyle-label">Waiting for map…</div>
+        </div>
+      </ng-template>
+    </div>
+  </div>
+</div>

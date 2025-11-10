@@ -55,7 +55,19 @@ export class LayertreeComponentRia implements OnDestroy {
   @Output() nodeExpandToggled   = new EventEmitter<{ id: string; label: string; expanded: boolean }>();
   @Output() nodeVisibilityToggled = new EventEmitter<{ id: string; label: string; visible: boolean }>();
 
-  collapsed = false;
+
+  private _collapsed = false;
+  @Input() set collapsed(v: boolean) {
+    const nv = !!v;
+    if (nv !== this._collapsed) {
+      this._collapsed = nv;
+      this.cdr.markForCheck();
+    }
+  }
+  get collapsed() { return this._collapsed; }
+
+  @Output() collapsedChange = new EventEmitter<boolean>();         // NEW
+
   nodes: LayerTreeNodeVM[] = [];
 
   private handles: Array<{ remove(): void } | (() => void)> = [];

@@ -12,24 +12,47 @@
       <img [style.transform]="compassTransform" src="assets/img/compass.svg" alt="Compass" />
   </button>
 
+
     <div class="coords-wrap">
       <ria-mousecoords [point]="modelPoint$ | async" [referenceLabel]="currentProjKey"></ria-mousecoords>
     </div>
 
 
-        <!-- layer tree (left side) -->
     <div class="rightcard clickable">
       <ria-layertree
         [map]="map"
+        [collapsed]="!isLayerTreeOpen"                
+        (collapsedChange)="onLayertreeCollapsedChange($event)"
         (panelCollapseToggled)="onPanelCollapseToggled($event)"
         (nodeExpandToggled)="onNodeExpandToggled($event)"
-        (nodeVisibilityToggled)="onNodeVisibilityToggled($event)"
-      ></ria-layertree>
+        (nodeVisibilityToggled)="onNodeVisibilityToggled($event)">
+      </ria-layertree>
+
+      <ria-style-editor
+        *ngIf="map && vizFacade"
+        [map]="map!"
+        [viz]="vizFacade"
+        [collapsed]="!isEditorOpen"                  
+        (collapsedChange)="onEditorCollapsedChange($event)">
+      </ria-style-editor>
+
+      <ria-location-editor
+        *ngIf="map && vizFacade"
+        [map]="map!"
+        [viz]="vizFacade"
+        [collapsed]="!isLocationOpen"
+        (collapsedChange)="onLocationCollapsed($event)">
+      </ria-location-editor>
+      
+
+
     </div>
 
 
+
+
     <div class="leftcard clickable">
-      <ria-pancontrol [map]="map"></ria-pancontrol>
+      <ria-pancontrol [map]="map!"></ria-pancontrol>
     </div>
 
   </div>

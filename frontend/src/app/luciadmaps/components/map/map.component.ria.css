@@ -91,15 +91,18 @@
 .rightcard {
   background: color-mix(in srgb, var(--color-surface) 88%, transparent 12%);
   backdrop-filter: var(--blur);
-  border: 1px solid var(--color-border);
+  border: 0px solid var(--color-border);
   color: var(--color-text);
   position: absolute;
   right: 12px;
-  top: 12px;           /* leave space above coords if you like */
+  top: 12px;  
+  padding: 2px;  
+  height: auto ;       /* leave space above coords if you like */
   z-index: 100;
-  max-inline-size: 320px; /* your panel width */
+  max-inline-size: 380px; /* your panel width */
   pointer-events: auto;
   border-radius: var(--radius);
+  overflow-y: auto;
 }
 
 .leftcard {

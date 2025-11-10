@@ -1,0 +1,218 @@
+<div class="stylepanel-overlay">
+  <div class="stylepanel-panel" [class.collapsed]="collapsed">
+    <!-- HEADER -->
+    <div class="stylepanel-header">
+      <span class="stylepanel-icon">🎨</span>
+      <div class="stylepanel-title">Style & Symbology</div>
+      <button class="stylepanel-toggle" type="button" (click)="toggleCollapsed()">
+        <span class="stylepanel-icon">▸</span>
+      </button>
+    </div>
+
+    <!-- BODY -->
+    <div class="stylepanel-body">
+      <ng-container *ngIf="map; else notReady">
+        <ng-container *ngIf="selected as s; else noSel">
+          <div class="stylepanel-row info">
+            <span class="stylepanel-icon">🧱</span>
+            <div class="stylepanel-label" [title]="s.layerLabel">
+              Layer: <b>{{ s.layerLabel }}</b> — Kind: <b>{{ s.kind }}</b> — Feature: <b>{{ s.featureId }}</b>
+              <span *ngIf="s.kind==='point' && s.meshMode==='mesh3d'"> — <i>3D Mesh</i></span>
+            </div>
+          </div>
+
+          <!-- POINT (2D circle) -->
+          <ng-container *ngIf="s.kind==='point' && s.meshMode==='none'">
+            <div class="stylepanel-section">
+              <div class="stylepanel-row"><label>Size</label>
+                <input type="range" min="2" max="40" [(ngModel)]="point.size">
+                <input type="number" min="2" max="200" [(ngModel)]="point.size">
+              </div>
+
+              <div class="stylepanel-row"><label>Fill</label>
+                <input type="color" [(ngModel)]="point.fill">
+                <input type="text" [(ngModel)]="point.fill" placeholder="rgba(...) or #RRGGBBAA">
+              </div>
+              <div class="stylepanel-row"><label>Fill Opacity</label>
+                <input type="range" min="0" max="1" step="0.01" [(ngModel)]="point.fillA">
+                <input type="number" min="0" max="1" step="0.01" [(ngModel)]="point.fillA">
+              </div>
+
+              <div class="stylepanel-row"><label>Outline</label>
+                <input type="color" [(ngModel)]="point.outline">
+                <input type="text" [(ngModel)]="point.outline" placeholder="rgba(...) or #RRGGBBAA">
+              </div>
+              <div class="stylepanel-row"><label>Outline Opacity</label>
+                <input type="range" min="0" max="1" step="0.01" [(ngModel)]="point.outlineA">
+                <input type="number" min="0" max="1" step="0.01" [(ngModel)]="point.outlineA">
+              </div>
+
+              <div class="stylepanel-row"><label>Outline Width</label>
+                <input type="range" min="0" max="12" [(ngModel)]="point.outlineWidth">
+                <input type="number" min="0" max="99" [(ngModel)]="point.outlineWidth">
+              </div>
+
+              <div class="stylepanel-row"><label>Layer Opacity</label>
+                <input type="range" min="0" max="1" step="0.05" [(ngModel)]="point.opacity">
+                <input type="number" min="0" max="1" step="0.05" [(ngModel)]="point.opacity">
+              </div>
+            </div>
+          </ng-container>
+
+          <!-- POINT (3D mesh) -->
+          <ng-container *ngIf="s.kind==='point' && s.meshMode==='mesh3d'">
+            <div class="stylepanel-section">
+              <!-- color + opacity -->
+              <div class="stylepanel-row"><label>Mesh Color</label>
+                <input type="color" [(ngModel)]="mesh.color">
+                <input type="text" [(ngModel)]="mesh.color" placeholder="rgba(...) or #RRGGBBAA">
+              </div>
+              <div class="stylepanel-row"><label>Mesh Opacity</label>
+                <input type="range" min="0" max="1" step="0.01" [(ngModel)]="mesh.alpha">
+                <input type="number" min="0" max="1" step="0.01" [(ngModel)]="mesh.alpha">
+              </div>
+
+              <!-- transparency + light -->
+              <div class="stylepanel-row"><label>Transparency</label>
+                <label class="stylepanel-switch">
+                  <input type="checkbox" [(ngModel)]="mesh.transparency"> <span>Enable</span>
+                </label>
+              </div>
+              <div class="stylepanel-row"><label>Light Intensity</label>
+                <input type="range" min="0" max="3" step="0.1" [(ngModel)]="mesh.lightIntensity">
+                <input type="number" min="0" max="10" step="0.1" [(ngModel)]="mesh.lightIntensity">
+              </div>
+
+              <!-- shape -->
+              <div class="stylepanel-row"><label>Mesh Shape</label>
+                <select [(ngModel)]="mesh.shape">
+                  <option value="ellipsoid">Ellipsoid</option>
+                  <option value="ellipsoidalDome">Ellipsoidal Dome</option>
+                  <option value="cone">Cone</option>
+                  <option value="cylinder">Cylinder</option>
+                </select>
+              </div>
+
+              <!-- params: ellipsoid/dome -->
+              <div class="stylepanel-subgrid" *ngIf="mesh.shape==='ellipsoid' || mesh.shape==='ellipsoidalDome'">
+                <div class="stylepanel-row"><label>Radii (X/Y/Z)</label>
+                  <input type="number" [(ngModel)]="mesh.params['radiusX']" step="1000">
+                  <input type="number" [(ngModel)]="mesh.params['radiusY']" step="1000">
+                  <input type="number" [(ngModel)]="mesh.params['radiusZ']" step="1000">
+                </div>
+                <div class="stylepanel-row"><label>Slices (V/H)</label>
+                  <input type="number" [(ngModel)]="mesh.params['verticalSlices']" min="4" step="1">
+                  <input type="number" [(ngModel)]="mesh.params['horizontalSlices']" min="3" step="1">
+                </div>
+              </div>
+
+              <!-- params: cone/cylinder -->
+              <div class="stylepanel-subgrid" *ngIf="mesh.shape==='cone' || mesh.shape==='cylinder'">
+                <div class="stylepanel-row"><label>Radius / Height</label>
+                  <input type="number" [(ngModel)]="mesh.params['radius']" step="1000">
+                  <input type="number" [(ngModel)]="mesh.params['height']" step="1000">
+                </div>
+                <div class="stylepanel-row"><label>Slices</label>
+                  <input type="number" [(ngModel)]="mesh.params['slices']" min="3" step="1">
+                </div>
+              </div>
+
+              <!-- scale -->
+              <div class="stylepanel-row"><label>Uniform Scale</label>
+                <input type="number" min="0.1" max="10" step="0.1" [(ngModel)]="mesh.scale"
+                       (ngModelChange)="mesh.scaleX=mesh.scaleY=mesh.scaleZ=mesh.scale">
+              </div>
+              <div class="stylepanel-row"><label>Scale (X/Y/Z)</label>
+                <input type="number" min="0.1" max="10" step="0.1" [(ngModel)]="mesh.scaleX">
+                <input type="number" min="0.1" max="10" step="0.1" [(ngModel)]="mesh.scaleY">
+                <input type="number" min="0.1" max="10" step="0.1" [(ngModel)]="mesh.scaleZ">
+              </div>
+
+              <!-- transforms -->
+              <div class="stylepanel-row"><label>Rotation (deg X/Y/Z)</label>
+                <input type="number" step="1" [(ngModel)]="mesh.rotationX">
+                <input type="number" step="1" [(ngModel)]="mesh.rotationY">
+                <input type="number" step="1" [(ngModel)]="mesh.rotationZ">
+              </div>
+              <div class="stylepanel-row"><label>Translation (m X/Y/Z)</label>
+                <input type="number" step="100" [(ngModel)]="mesh.transX">
+                <input type="number" step="100" [(ngModel)]="mesh.transY">
+                <input type="number" step="100" [(ngModel)]="mesh.transZ">
+              </div>
+            </div>
+          </ng-container>
+
+          <!-- LINE -->
+          <ng-container *ngIf="s.kind==='polyline'">
+            <div class="stylepanel-section">
+              <div class="stylepanel-row"><label>Color</label>
+                <input type="color" [(ngModel)]="line.color">
+                <input type="text" [(ngModel)]="line.color" placeholder="rgba(...) or #RRGGBBAA">
+              </div>
+              <div class="stylepanel-row"><label>Color Opacity</label>
+                <input type="range" min="0" max="1" step="0.01" [(ngModel)]="line.colorA">
+                <input type="number" min="0" max="1" step="0.01" [(ngModel)]="line.colorA">
+              </div>
+              <div class="stylepanel-row"><label>Width</label>
+                <input type="range" min="1" max="24" [(ngModel)]="line.width">
+                <input type="number" min="1" max="99" [(ngModel)]="line.width">
+              </div>
+              <div class="stylepanel-row"><label>Dash</label>
+                <input type="text" [(ngModel)]="line.dash" placeholder="e.g. 10,4">
+              </div>
+            </div>
+          </ng-container>
+
+          <!-- POLYGON -->
+          <ng-container *ngIf="s.kind==='polygon'">
+            <div class="stylepanel-section">
+              <div class="stylepanel-row"><label>Fill</label>
+                <input type="color" [(ngModel)]="polygon.fill">
+                <input type="text" [(ngModel)]="polygon.fill" placeholder="rgba(...) or #RRGGBBAA">
+              </div>
+              <div class="stylepanel-row"><label>Fill Opacity</label>
+                <input type="range" min="0" max="1" step="0.01" [(ngModel)]="polygon.fillA">
+                <input type="number" min="0" max="1" step="0.01" [(ngModel)]="polygon.fillA">
+              </div>
+              <div class="stylepanel-row"><label>Outline</label>
+                <input type="color" [(ngModel)]="polygon.outline">
+                <input type="text" [(ngModel)]="polygon.outline" placeholder="rgba(...) or #RRGGBBAA">
+              </div>
+              <div class="stylepanel-row"><label>Outline Opacity</label>
+                <input type="range" min="0" max="1" step="0.01" [(ngModel)]="polygon.outlineA">
+                <input type="number" min="0" max="1" step="0.01" [(ngModel)]="polygon.outlineA">
+              </div>
+              <div class="stylepanel-row"><label>Outline Width</label>
+                <input type="range" min="0" max="12" [(ngModel)]="polygon.outlineWidth">
+                <input type="number" min="0" max="99" [(ngModel)]="polygon.outlineWidth">
+              </div>
+              <div class="stylepanel-row"><label>Layer Opacity</label>
+                <input type="range" min="0" max="1" step="0.05" [(ngModel)]="polygon.opacity">
+                <input type="number" min="0" max="1" step="0.05" [(ngModel)]="polygon.opacity">
+              </div>
+            </div>
+          </ng-container>
+
+          <div class="stylepanel-buttons">
+            <button (click)="applyFeature()">Apply Feature</button>
+            <button (click)="applyLayer()">Apply Layer</button>
+          </div>
+        </ng-container>
+
+        <ng-template #noSel>
+          <div class="stylepanel-row info">
+            <span class="stylepanel-icon">🖱️</span>
+            <div class="stylepanel-label">Select a feature on the map to edit its style.</div>
+          </div>
+        </ng-template>
+      </ng-container>
+
+      <ng-template #notReady>
+        <div class="stylepanel-row info">
+          <span class="stylepanel-icon">⌛</span>
+          <div class="stylepanel-label">Waiting for map…</div>
+        </div>
+      </ng-template>
+    </div>
+  </div>
+</div>
