@@ -2,7 +2,7 @@
 <div class="planning-header"></div>
 
 <!-- ======= WORKSPACE GRID (fills the rest of the screen) ======= -->
-<div class="planning-workspace" [class.is-collapsed]="sidebarCollapsed">
+<div class="planning-workspace" [class.is-collapsed]="sidebarCollapsed"  [class.no-tools]="!selectedScenario" >
 
   <!-- ============== LEFT: SIDEBAR ============== -->
   <app-scenarios-rail
@@ -24,10 +24,10 @@
   ></app-scenarios-rail>
 
   <!-- ============== CENTER: TOOLS ============== -->
-  <section class="tools" aria-label="Tools" data-single-open>
+  <section class="tools" aria-label="Tools" data-single-open *ngIf="selectedScenario">
 
     <!-- ===== Group A: (2) List + (3) Deployment ===== -->
-    <div class="tools-group tools-planning" *ngIf="!editorOpen">
+    <div class="tools-group tools-planning" *ngIf="!editorOpen ">
       <!-- Deployment form -->
       <app-deployment-form
         [open]="deployOpen"
@@ -62,7 +62,8 @@
         (editWaypoint)="editWaypoint($event)"
         (deleteWaypoint)="deleteWaypoint($event)"
         (saveWaypoint)="saveWaypoint()"
-        (waypointFormChange)="waypointForm = $event"
+        (waypointFormChange)="waypointForm = { lat: $event.lat ?? null, lon: $event.lon ?? null, alt: $event.alt ?? null }"
+
         (requestPickInitial)="beginPick('edit-initial')"
       ></app-aircraft-editor>
     </div>
@@ -70,9 +71,12 @@
   </section>
 
   <!-- ============== RIGHT: MAP ============== -->
-  <app-map-panel
+    <app-map-panel
     class="map-wrap"
+    [scenario]="selectedScenario"
     (pointPicked)="handlePointPicked($event)"
   ></app-map-panel>
+
+
 
 </div>

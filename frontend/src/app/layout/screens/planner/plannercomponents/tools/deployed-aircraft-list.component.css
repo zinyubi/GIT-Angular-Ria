@@ -1,60 +1,130 @@
-/* Allow this component to shrink inside the tools column */
 :host {
   display: block;
-  inline-size: 100%;
-  min-block-size: 0; /* 🔑 enables inner overflow to work */
-  overflow-y: auto;
+  color: var(--color-text, #e7ecf6);
+  font-family: var(--font-sans, system-ui, sans-serif);
+
+  /* Derive local palette from global tokens */
+  --tool-surface: var(--color-surface, #10131a);
+  --tool-panel: color-mix(in srgb, var(--color-surface, #10131a) 94%, transparent);
+  --tool-header: color-mix(in srgb, var(--color-surface, #10131a) 86%, black 14%);
+  --tool-border: var(--color-border, #242938);
+  --tool-accent: var(--color-accent, #0d6efd);
+  --tool-muted: var(--color-muted, #a9b3cc);
+  --tool-tile: color-mix(in srgb, var(--color-surface, #10131a) 92%, black 8%);
 }
 
-/* The card container uses flex so the UL can take remaining height */
-.list-block {
+/* ===== Shared card container ===== */
+.tool-card {
   display: flex;
   flex-direction: column;
-  gap: .5rem;
-  min-block-size: 0;       /* 🔑 */
-  /* Optional cap if you want an inner scrollbar even in tall columns: */
-  /* max-block-size: min(40vh, 420px); */
+  overflow: hidden;
+  background: var(--tool-surface);
+  border: 1px solid var(--tool-border);
+  border-radius: var(--radius, 10px);
+  transition: box-shadow 0.2s ease, border-color 0.2s ease;
+}
+.tool-card.open {
+  border-color: color-mix(in srgb, var(--tool-accent) 40%, var(--tool-border) 60%);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--tool-accent) 25%, transparent);
 }
 
-/* Make THIS the scroller */
-.plain {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  flex: 1 1 auto;          /* take remaining height in .list-block */
-  min-block-size: 0;       /* 🔑 */
-  overflow: auto;          /* show scrollbar when needed */
-}
-
-/* You had a wrong selector; remove .plain > ul entirely */
-
-/* Rows */
-.row {
+/* ===== Header ===== */
+.tool-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  gap: .5rem;
-  padding: .25rem 0;
-  min-inline-size: 0;
+  background: var(--tool-header);
+  padding: 0.65rem 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  border-bottom: 1px solid var(--tool-border);
+  transition: background-color 0.2s ease;
+}
+.tool-header:hover {
+  background: color-mix(in srgb, var(--tool-header) 88%, var(--tool-accent) 12%);
+}
+.chev {
+  transition: transform 0.25s ease;
+}
+.chev.rotated {
+  transform: rotate(180deg);
 }
 
-.row > div {
+/* ===== Scrollable body ===== */
+.tool-body {
+  flex: 1;
+  overflow: auto;
+  padding: 0.6rem 1rem;
+  background: var(--tool-panel);
+  border-top: 1px solid var(--tool-border);
+}
+
+/* ===== List styling ===== */
+.list-scroll ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
   display: flex;
-  flex-wrap: wrap;
-  gap: .25rem .5rem;
-  min-inline-size: 0;
+  flex-direction: column;
+  gap: 0.4rem;
 }
 
-.muted { color: #666; }
+.list-scroll li {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: var(--tool-tile);
+  border: 1px solid color-mix(in srgb, var(--tool-border) 80%, transparent);
+  border-radius: 8px;
+  padding: 0.5rem 0.75rem;
+  transition: border-color 0.2s ease, background-color 0.2s ease;
+}
+.list-scroll li:hover {
+  border-color: var(--tool-accent);
+  background: color-mix(in srgb, var(--tool-tile) 88%, var(--tool-accent) 12%);
+}
 
-/* Link-styled button */
+/* ===== Info block ===== */
+.info {
+  display: flex;
+  flex-direction: column;
+}
+.coords {
+  font-size: 0.85rem;
+  color: var(--tool-muted);
+}
+
+/* ===== Button link ===== */
 .btn-link {
+  appearance: none;
   background: none;
   border: none;
-  color: var(--color-accent, #0a66c2);
+  color: var(--tool-accent);
+  font-weight: 600;
+  font-size: 0.9rem;
   cursor: pointer;
   padding: 0;
-  text-decoration: none;
+  transition: opacity 0.15s ease;
 }
-.btn-link:hover { text-decoration: underline; }
-.btn-link:focus-visible { outline: 2px solid var(--color-accent, #0a66c2); outline-offset: 2px; }
+.btn-link:hover {
+  text-decoration: underline;
+  opacity: 0.85;
+}
+
+/* ===== Scrollbar (optional) ===== */
+.tool-body::-webkit-scrollbar {
+  width: 8px;
+}
+.tool-body::-webkit-scrollbar-thumb {
+  background: color-mix(in srgb, var(--tool-accent) 40%, transparent 60%);
+  border-radius: 4px;
+}
+.tool-body::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+/* ===== Focus-visible (accessibility) ===== */
+:where(.tool-header, .btn-link):focus-visible {
+  outline: 2px solid color-mix(in srgb, var(--tool-accent) 55%, transparent);
+  outline-offset: 2px;
+}

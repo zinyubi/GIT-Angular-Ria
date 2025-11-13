@@ -20,10 +20,15 @@ from .models import (
 
 # -------------- Basic Serializers ------------------
 
+
 class ScenarioSerializer(serializers.ModelSerializer):
+    created_by = serializers.HiddenField(default=serializers.CurrentUserDefault())
+    created_at = serializers.DateTimeField(read_only=True)
+
     class Meta:
         model = Scenario
-        fields = ['id', 'name', 'description', 'created_by', 'created_at']
+        fields = ["id", "name", "description", "created_by", "created_at"]
+        read_only_fields = ["id", "created_at"]
 
 
 class AircraftTypeSerializer(serializers.ModelSerializer):

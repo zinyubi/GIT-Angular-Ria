@@ -1,105 +1,126 @@
-<section class="accordion">
-  <input class="acc-toggle" type="radio" name="tools-acc" id="acc-editor"
-         [checked]="open" (change)="toggleOpen(true)" />
-  <label class="acc-summary" for="acc-editor" id="editor-summary" [attr.aria-expanded]="open.toString()">
-    <span>Aircraft Editor</span><span class="chev" aria-hidden="true">▾</span>
-  </label>
+<article class="ae-card" role="region" aria-label="Aircraft Editor">
+  <!-- Header -->
+  <header class="ae-header">
+    <div class="ae-title">
+      <h3>Aircraft Editor</h3>
+      <small *ngIf="aircraft?.name" class="ae-subtle">Editing: {{ aircraft.name }}</small>
+    </div>
+    <div class="ae-header-actions"><!-- reserved --></div>
+  </header>
 
-  <div class="acc-content" id="editor-panel" role="region" aria-labelledby="editor-summary">
-    <div *ngIf="aircraft; else noAircraft">
-      <form (ngSubmit)="saveAircraft.emit()" class="form" novalidate>
+  <!-- Body (scrolls) -->
+  <div class="ae-body" *ngIf="aircraft; else pickAircraft">
 
-        <!-- ===== Initial position ===== -->
-        <h5>Initial Position</h5>
-        <div class="row3">
-          <label>
-            <span>Latitude</span>
-            <input type="number" step="any" inputmode="decimal"
-                   [(ngModel)]="aircraft!.initial_latitude" name="editLatitude" />
-          </label>
-          <label>
-            <span>Longitude</span>
-            <input type="number" step="any" inputmode="decimal"
-                   [(ngModel)]="aircraft!.initial_longitude" name="editLongitude" />
-          </label>
-          <label>
-            <span>Altitude (m)</span>
-            <input type="number" step="1" inputmode="numeric"
-                   [(ngModel)]="aircraft!.initial_altitude_m" name="editAltitude" />
-          </label>
-          <button type="button" class="btn btn-ghost row-btn" (click)="requestPickInitial.emit()" title="Set from map">
-            📍
+    <!-- ========== Section: Initial Position ========== -->
+    <section class="ae-section">
+      <div class="ae-section-head"><h4>Initial Position</h4></div>
+
+      <div class="ae-grid ae-grid-2">
+        <label class="ae-field">
+          <span class="ae-label">Latitude</span>
+          <input class="ae-input" type="number" step="any"
+                 [(ngModel)]="aircraft!.initial_latitude" name="editLatitude" placeholder="e.g. 23.0219" />
+        </label>
+
+        <label class="ae-field">
+          <span class="ae-label">Longitude</span>
+          <input class="ae-input" type="number" step="any"
+                 [(ngModel)]="aircraft!.initial_longitude" name="editLongitude" placeholder="e.g. 72.5797" />
+        </label>
+
+        <label class="ae-field">
+          <span class="ae-label">Altitude (m)</span>
+          <input class="ae-input" type="number" step="1"
+                 [(ngModel)]="aircraft!.initial_altitude_m" name="editAltitude" placeholder="e.g. 2500" />
+        </label>
+
+        <div class="ae-field ae-align-end">
+          <button type="button" class="ae-btn ae-btn-ghost ae-btn-map"
+                  (click)="requestPickInitial.emit()" aria-label="Pick initial position from map">
+            📍 Pick from map
           </button>
         </div>
+      </div>
+    </section>
 
-        <div class="divider"></div>
+    <hr class="ae-divider" />
 
-        <!-- ===== Waypoints ===== -->
-        <h5>Waypoints</h5>
+    <!-- ========== Section: Waypoints ========== -->
+    <section class="ae-section">
+      <div class="ae-section-head"><h4>Waypoints</h4></div>
 
-        <div class="waypoint-list" *ngIf="aircraft!.planned_waypoints?.length; else noWp">
-          <div *ngFor="let wp of aircraft!.planned_waypoints; let i = index" class="waypoint-item">
-            <div class="waypoint-info">
-              <div class="wp-coord">
-                <span class="wp-label">Lat:</span> {{ wp.lat }}
-              </div>
-              <div class="wp-coord">
-                <span class="wp-label">Lon:</span> {{ wp.lon }}
-              </div>
-              <div class="wp-coord" *ngIf="wp.alt !== undefined">
-                <span class="wp-label">Alt:</span> {{ wp.alt }}
-              </div>
-            </div>
-
-            <div class="waypoint-actions">
-              <button type="button" class="btn btn-icon edit" (click)="editWaypoint.emit(i)" title="Edit waypoint">✎</button>
-              <button type="button" class="btn btn-icon delete" (click)="deleteWaypoint.emit(i)" title="Delete waypoint">🗑️</button>
-            </div>
+      <!-- List of existing waypoints -->
+      <div class="ae-wp-list" *ngIf="aircraft!.planned_waypoints?.length; else noWp">
+        <div class="ae-wp-item" *ngFor="let wp of aircraft!.planned_waypoints; let i = index">
+          <div class="ae-wp-values">
+            <span class="ae-chip">Lat <code>{{ wp.lat | number:'1.5-5' }}</code></span>
+            <span class="ae-chip">Lon <code>{{ wp.lon | number:'1.5-5' }}</code></span>
+            <span class="ae-chip">
+              Alt
+              <code>{{ wp.alt == null ? '—' : (wp.alt | number:'1.0-0') }}<span *ngIf="wp.alt != null"> m</span></code>
+            </span>
+          </div>
+          <div class="ae-wp-actions">
+            <button type="button" class="ae-icon" (click)="editWaypoint.emit(i)" title="Edit waypoint">✎</button>
+            <button type="button" class="ae-icon ae-danger" (click)="deleteWaypoint.emit(i)" title="Delete waypoint">🗑️</button>
           </div>
         </div>
+      </div>
+      <ng-template #noWp>
+        <p class="ae-hint">No waypoints added yet.</p>
+      </ng-template>
 
-        <ng-template #noWp>
-          <div class="hint muted">No waypoints added yet.</div>
-        </ng-template>
-
-        <div class="row3">
-          <label>
-            <span>Latitude</span>
-            <input type="number" step="any" inputmode="decimal"
+      <!-- Clean, collision-proof add/edit row -->
+      <form class="ae-wp-editor" (submit)="$event.preventDefault()">
+        <!-- Row 1: Lat | Lon -->
+        <div class="ae-grid ae-grid-2 ae-wp-grid">
+          <label class="ae-field">
+            <span class="ae-label">Latitude</span>
+            <input class="ae-input" type="number" step="any"
                    [(ngModel)]="waypointForm.lat" name="wpLat"
                    (ngModelChange)="waypointFormChange.emit(waypointForm)" />
           </label>
-          <label>
-            <span>Longitude</span>
-            <input type="number" step="any" inputmode="decimal"
+
+          <label class="ae-field">
+            <span class="ae-label">Longitude</span>
+            <input class="ae-input" type="number" step="any"
                    [(ngModel)]="waypointForm.lon" name="wpLon"
                    (ngModelChange)="waypointFormChange.emit(waypointForm)" />
           </label>
-          <label>
-            <span>Altitude (m)</span>
-            <input type="number" step="1" inputmode="numeric"
+        </div>
+
+        <!-- Row 2: Alt (m) -->
+        <div class="ae-grid ae-grid-2 ae-wp-grid">
+          <label class="ae-field">
+            <span class="ae-label">Altitude (m)</span>
+            <input class="ae-input" type="number" step="1"
                    [(ngModel)]="waypointForm.alt" name="wpAlt"
                    (ngModelChange)="waypointFormChange.emit(waypointForm)" />
           </label>
-          <button type="button" class="btn btn-ghost row-btn" (click)="requestPickWaypoint.emit()">
-            Pick
-          </button>
+          <div><!-- empty to keep symmetry --></div>
         </div>
 
-        <div class="form-actions">
-          <button type="button" (click)="saveWaypoint.emit()" class="btn btn-success">Save</button>
-          <button type="button" (click)="resetWpForm()" class="btn btn-secondary">Cancel</button>
-        </div>
-
-        <div class="form-actions push">
-          <button type="submit" class="btn btn-success">Save Aircraft</button>
-          <button type="button" (click)="cancelAircraft.emit()" class="btn btn-secondary">Cancel</button>
+        <!-- Row 3: actions (full width, right aligned) -->
+        <div class="ae-wp-actions-row">
+          <button type="button" class="ae-btn ae-btn-ghost ae-btn-map"
+                  (click)="requestPickWaypoint.emit()" title="Pick waypoint on map">📍 Pick</button>
+          <button type="button" class="ae-btn ae-btn-primary" (click)="saveWaypoint.emit()">Save</button>
+          <button type="button" class="ae-btn ae-btn-secondary" (click)="resetWpForm()">Cancel</button>
         </div>
       </form>
-    </div>
-
-    <ng-template #noAircraft>
-      <div class="hint">Choose an aircraft from “Deployed Aircraft” to edit.</div>
-    </ng-template>
+    </section>
   </div>
-</section>
+
+  <!-- Empty state -->
+  <ng-template #pickAircraft>
+    <div class="ae-empty"><p>Select a deployed aircraft from the list to start editing.</p></div>
+  </ng-template>
+
+  <!-- Footer (sticky) -->
+  <footer class="ae-footer">
+    <div class="ae-footer-actions">
+      <button type="button" class="ae-btn ae-btn-secondary" (click)="cancelAircraft.emit()">Cancel</button>
+      <button type="button" class="ae-btn ae-btn-primary" (click)="saveAircraft.emit()">Save Aircraft</button>
+    </div>
+  </footer>
+</article>

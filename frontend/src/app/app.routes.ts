@@ -3,7 +3,6 @@ import { inject } from '@angular/core';
 
 import { LoginComponent } from './core/auth/login/login.component';
 import { DashboardComponent } from './dashboard/dashboard.component';
-import { MapComponent } from './map/map.component';
 import { AuthService } from './core/auth/services/auth.service';
 import { LayoutComponent } from './layout/layout.component'; 
 import { InventoryManagerComponent } from './layout/screens/inventorymanager/inventorymanager.component';
@@ -35,7 +34,6 @@ export const appRoutes: Routes = [
     canActivate: [authGuard],
     children: [
       { path: 'dashboard', component: DashboardComponent, canActivate: [screenAccessGuard] },
-      { path: 'map', component: MapComponent, canActivate: [screenAccessGuard] },
       { path: 'inventorymanager', component: InventoryManagerComponent, canActivate: [screenAccessGuard] },
       { path: 'primary', component: PrimaryComponent, canActivate: [screenAccessGuard] },
       { path: 'secondary', component: SecondaryComponent, canActivate: [screenAccessGuard] },

@@ -1,15 +1,21 @@
-<div class="list-block" role="region" aria-label="Deployed aircraft">
-  <h4 class="subtle">Deployed Aircraft</h4>
-  <!-- Make THIS UL the scroller -->
-  <ul class="plain" role="list">
-    <li *ngFor="let ac of aircrafts; trackBy: trackByAircraftId" class="row">
-      <div>
-        <strong>{{ ac.name || 'Unnamed' }}</strong>
-        <span class="muted">
-          [{{ getLat(ac) }}, {{ getLon(ac) }}] · Alt {{ getAlt(ac) }}m
-        </span>
-      </div>
-      <button class="btn btn-link" type="button" (click)="edit.emit(ac)">Edit</button>
-    </li>
-  </ul>
-</div>
+<section class="tool-card" [class.open]="open">
+  <header class="tool-header" (click)="toggleOpen(!open)">
+    <h3>Deployed Aircraft</h3>
+    <span class="chev" [class.rotated]="open">▾</span>
+  </header>
+
+  <div class="tool-body list-scroll" *ngIf="open">
+    <ul>
+      <li *ngFor="let ac of aircrafts; trackBy: trackByAircraftId">
+        <div class="info">
+          <strong>{{ ac.name || 'Unnamed' }}</strong>
+          <small class="muted">{{ getTypeName(ac) }}</small>
+          <span class="coords">
+            [{{ getLat(ac) }}, {{ getLon(ac) }}] · Alt {{ getAlt(ac) }}m
+          </span>
+        </div>
+        <button class="btn-link" (click)="edit.emit(ac)">Edit</button>
+      </li>
+    </ul>
+  </div>
+</section>

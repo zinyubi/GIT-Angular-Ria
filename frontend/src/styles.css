@@ -1,51 +1,47 @@
+
 /* ===============================
-   Global type + assets
+   Fonts 
    =============================== */
 
-/* PP Neue Montreal — make weights map to actual files */
-@font-face {
-  font-family: 'PPNeueMontreal';
-  src:
-    local('PPNeueMontreal-Regular'),
-    url('assets/fonts/PPNeueMontreal-Medium.woff2') format('woff2');
+/* PP Neue Montreal */
+@font-face{
+  font-family: "PPNeueMontreal";
+  src: local("PPNeueMontreal-Regular"),
+       url("assets/fonts/PPNeueMontreal-Medium.woff2") format("woff2");
   font-weight: 400;
   font-style: normal;
   font-display: swap;
 }
-@font-face {
-  font-family: 'PPNeueMontreal';
-  src:
-    local('PPNeueMontreal-Medium'),
-    url('assets/fonts/PPNeueMontreal-Medium.woff2') format('woff2');
+@font-face{
+  font-family: "PPNeueMontreal";
+  src: local("PPNeueMontreal-Medium"),
+       url("assets/fonts/PPNeueMontreal-Medium.woff2") format("woff2");
   font-weight: 500;
   font-style: normal;
   font-display: swap;
 }
-@font-face {
-  font-family: 'PPNeueMontreal';
-  src:
-    local('PPNeueMontreal-SemiBold'),
-    url('assets/fonts/PPNeueMontreal-Medium.woff2') format('woff2');
+@font-face{
+  font-family: "PPNeueMontreal";
+  src: local("PPNeueMontreal-SemiBold"),
+       url("assets/fonts/PPNeueMontreal-Medium.woff2") format("woff2");
   font-weight: 600;
   font-style: normal;
   font-display: swap;
 }
 
-/* JetBrains Mono — correct 400 / 600 mapping */
-@font-face {
-  font-family: 'JetBrainsMono';
-  src:
-    local('JetBrains Mono Regular'),
-    url('assets/fonts/JetBrainsMono-Regular.woff2') format('woff2');
+/* JetBrains Mono */
+@font-face{
+  font-family: "JetBrainsMono";
+  src: local("JetBrains Mono Regular"),
+       url("assets/fonts/JetBrainsMono-Regular.woff2") format("woff2");
   font-weight: 400;
   font-style: normal;
   font-display: swap;
 }
-@font-face {
-  font-family: 'JetBrainsMono';
-  src:
-    local('JetBrains Mono SemiBold'),
-    url('assets/fonts/JetBrainsMono-Regular.woff2') format('woff2');
+@font-face{
+  font-family: "JetBrainsMono";
+  src: local("JetBrains Mono SemiBold"),
+       url("assets/fonts/JetBrainsMono-Regular.woff2") format("woff2");
   font-weight: 600;
   font-style: normal;
   font-display: swap;
@@ -55,52 +51,52 @@
    Design tokens (base)
    =============================== */
 
-:root {
+:root{
   color-scheme: light;
 
   /* Fonts */
-  --font-sans: 'PPNeueMontreal', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
-  --font-mono: 'JetBrainsMono', ui-monospace, 'SFMono-Regular', Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace;
+  --font-sans: "PPNeueMontreal", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+  --font-mono: "JetBrainsMono", ui-monospace, "SFMono-Regular", Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
   --font-family: var(--font-sans);
 
-  /* Rhythm & motion */
-  --spacing-unit: 0.5rem;
-  --radius-sm: 8px;
-  --radius: 12px;
-  --radius-lg: 16px;
-  --blur: blur(18px);
+  /* Rhythm & motion (denser) */
+  --spacing-unit: 0.4rem;
+  --radius-sm: 6px;
+  --radius: 10px;
+  --radius-lg: 14px;
+  --blur: blur(16px);
   --elev-1: 0 1px 2px rgba(0,0,0,.06), 0 1px 3px rgba(0,0,0,.1);
-  --elev-2: 0 8px 24px rgba(0,0,0,.12);
-  --elev-3: 0 20px 45px rgba(58, 47, 40, 0.16);
-  --transition: 220ms cubic-bezier(0.4, 0, 0.2, 1);
+  --elev-2: 0 8px 20px rgba(0,0,0,.12);
+  --elev-3: 0 20px 45px rgba(58, 47, 40, .16);
+  --transition: 200ms cubic-bezier(.4,0,.2,1);
 
   /* Optikka (light) */
-  --color-soft-sand: #f4ede6;
-  --color-cloud-haze: #f9f4ed;
-  --color-warm-stone: #e6d8c8;
-  --color-deep-umber: #3a2f28;
-  --color-muted-cedar: #6f6259;
-  --color-vivid-ember: #ff6b3d;
-  --color-emerald-foam: #2ca58d;
-  --color-citrine-glow: #f4c45d;
-  --color-rose-flare: #e4575d;
+  --color-soft-sand:#f4ede6;
+  --color-cloud-haze:#f9f4ed;
+  --color-warm-stone:#e6d8c8;
+  --color-deep-umber:#3a2f28;
+  --color-muted-cedar:#6f6259;
+  --color-vivid-ember:#ff6b3d;
+  --color-emerald-foam:#2ca58d;
+  --color-citrine-glow:#f4c45d;
+  --color-rose-flare:#e4575d;
 
   /* Neverhack (dark) */
-  --color-neverhack-void: #05030d;
-  --color-neverhack-deep: #0f172a;
-  --color-neverhack-panel: #16213f;
-  --color-neverhack-border: rgba(120, 144, 198, 0.45);
-  --color-neverhack-text: #ecf3ff;
-  --color-neverhack-muted: #94a6d1;
-  --color-neverhack-ember: #ff5470;
-  --color-neverhack-emerald: #53ffa8;
-  --color-neverhack-warning: #f3b23b;
-  --color-neverhack-error: #ff7aa2;
+  --color-neverhack-void:#05030d;
+  --color-neverhack-deep:#0f172a;
+  --color-neverhack-panel:#16213f;
+  --color-neverhack-border:rgba(120,144,198,.45);
+  --color-neverhack-text:#ecf3ff;
+  --color-neverhack-muted:#94a6d1;
+  --color-neverhack-ember:#ff5470;
+  --color-neverhack-emerald:#53ffa8;
+  --color-neverhack-warning:#f3b23b;
+  --color-neverhack-error:#ff7aa2;
 
   /* Semantic (light default) */
   --color-bg: var(--color-soft-sand);
-  --color-surface: #eadfcd; /* fallback */
-  --color-border: rgba(58, 47, 40, 0.18);
+  --color-surface:#eadfcd; /* fallback; refined via @supports below */
+  --color-border: rgba(58,47,40,.18);
   --color-text: var(--color-deep-umber);
   --color-muted: var(--color-muted-cedar);
   --color-accent: var(--color-vivid-ember);
@@ -108,21 +104,23 @@
   --color-warning: var(--color-citrine-glow);
   --color-error: var(--color-rose-flare);
   --color-canvas:
-    radial-gradient(circle at 20% -10%, rgba(255, 188, 150, 0.3), transparent 55%),
+    radial-gradient(circle at 20% -10%, rgba(255,188,150,.3), transparent 55%),
     linear-gradient(180deg, var(--color-cloud-haze), var(--color-soft-sand));
+}
 
-  /* Prefer color-mix when supported */
-  @supports (background: color-mix(in srgb, white 10%, black 90%)) {
+/* Prefer color-mix when supported (moved out of :root) */
+@supports (background: color-mix(in srgb, white 10%, black 90%)){
+  :root{
     --color-surface: color-mix(in srgb, var(--color-warm-stone) 75%, white 25%);
   }
 }
 
-/* Auto-dark if no explicit [data-theme] is set */
-@media (prefers-color-scheme: dark) {
-  :root:not([data-theme]) {
+/* Auto-dark if no explicit [data-theme] */
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme]){
     color-scheme: dark;
     --color-bg: var(--color-neverhack-void);
-    --color-surface: #11182f;
+    --color-surface:#11182f;
     --color-border: var(--color-neverhack-border);
     --color-text: var(--color-neverhack-text);
     --color-muted: var(--color-neverhack-muted);
@@ -131,22 +129,19 @@
     --color-warning: var(--color-neverhack-warning);
     --color-error: var(--color-neverhack-error);
     --color-canvas:
-      radial-gradient(circle at top left, rgba(255, 84, 112, 0.15), transparent 55%),
-      radial-gradient(circle at 80% 120%, rgba(69, 178, 255, 0.12), transparent 60%),
+      radial-gradient(circle at top left, rgba(255,84,112,.15), transparent 55%),
+      radial-gradient(circle at 80% 120%, rgba(69,178,255,.12), transparent 60%),
       linear-gradient(180deg, var(--color-neverhack-deep), var(--color-neverhack-void));
-    --elev-3: 0 28px 60px rgba(5, 3, 13, 0.65);
+    --elev-3: 0 28px 60px rgba(5,3,13,.65);
   }
 }
 
 /* Theme hooks (explicit) */
-[data-theme="light"] {
+[data-theme="light"]{
   color-scheme: light;
   --color-bg: var(--color-soft-sand);
-  --color-surface: #eadfcd;
-  @supports (background: color-mix(in srgb, white 10%, black 90%)) {
-    --color-surface: color-mix(in srgb, var(--color-warm-stone) 75%, white 25%);
-  }
-  --color-border: rgba(58, 47, 40, 0.18);
+  --color-surface:#eadfcd;
+  --color-border: rgba(58,47,40,.18);
   --color-text: var(--color-deep-umber);
   --color-muted: color-mix(in srgb, var(--color-muted-cedar) 70%, white 30%);
   --color-accent: var(--color-vivid-ember);
@@ -154,17 +149,17 @@
   --color-warning: var(--color-citrine-glow);
   --color-error: var(--color-rose-flare);
   --color-canvas:
-    radial-gradient(circle at 20% -10%, rgba(255, 188, 150, 0.3), transparent 55%),
+    radial-gradient(circle at 20% -10%, rgba(255,188,150,.3), transparent 55%),
     linear-gradient(180deg, var(--color-cloud-haze), var(--color-soft-sand));
-  --elev-3: 0 20px 45px rgba(58, 47, 40, 0.16);
+  --elev-3: 0 20px 45px rgba(58,47,40,.16);
 }
-[data-theme="dark"] {
+@supports (background: color-mix(in srgb, white 10%, black 90%)){
+  [data-theme="light"]{ --color-surface: color-mix(in srgb, var(--color-warm-stone) 75%, white 25%); }
+}
+[data-theme="dark"]{
   color-scheme: dark;
   --color-bg: var(--color-neverhack-void);
-  --color-surface: #11182f;
-  @supports (background: color-mix(in srgb, white 10%, black 90%)) {
-    --color-surface: color-mix(in srgb, var(--color-neverhack-panel) 85%, black 15%);
-  }
+  --color-surface:#11182f;
   --color-border: var(--color-neverhack-border);
   --color-text: var(--color-neverhack-text);
   --color-muted: var(--color-neverhack-muted);
@@ -172,110 +167,92 @@
   --color-success: var(--color-neverhack-emerald);
   --color-warning: var(--color-neverhack-warning);
   --color-error: var(--color-neverhack-error);
-  --color-canvas:
-    radial-gradient(circle at top left, rgba(255, 84, 112, 0.15), transparent 55%),
-    radial-gradient(circle at 80% 120%, rgba(69, 178, 255, 0.12), transparent 60%),
-    linear-gradient(180deg, var(--color-neverhack-deep), var(--color-neverhack-void));
-  --elev-3: 0 28px 60px rgba(5, 3, 13, 0.65);
+  --color-canvas: var(--color-neverhack-panel);
+}
+@supports (background: color-mix(in srgb, white 10%, black 90%)){
+  [data-theme="dark"]{ --color-surface: color-mix(in srgb, var(--color-neverhack-panel) 85%, black 15%); }
 }
 
 /* ===============================
-   Reset & base elements
+   Reset & base
    =============================== */
-html, body {
-  height: 100vh;           /* make html and body exactly viewport height */
-  margin: 0;               /* remove default margin */
-  padding: 0;              /* remove default padding */
-  overflow: hidden;        /* prevent scrollbars */
+html, body{
+  height: 100%;
+  min-height: 100%;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;                 /* app shell manages scroll */
   box-sizing: border-box;
-  font-size: clamp(15px, 0.75vw + 12px, 18px);
+  font-size: clamp(14px, 0.7vw + 11px, 17px); /* slightly denser */
   text-size-adjust: 100%;
   font-family: var(--font-family);
   font-variant-numeric: tabular-nums;
-  line-height: 1.6;
-  background: var(--color-canvas);
+  line-height: 1;
+  /* background: var(--color-canvas); */
   background-color: var(--color-bg);
   color: var(--color-text);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  transition: background-color var(--transition), color var(--transition);
-
-  display: flex;           /* flex container to manage child scaling */
+  /* transition: background-color var(--transition), color var(--transition); */
+  display: flex;
   flex-direction: column;
+  font-synthesis-weight: none;       /* crisp type */
 }
 
-*, *::before, *::after {
-  box-sizing: inherit;
-}
+/* keep inheritance tight */
+*,*::before,*::after{ box-sizing: inherit; }
+*{ margin:0; padding:0; }
 
-* {
-  margin: 0;
-  padding: 0;
-}
+:where(img,svg,video,canvas){ display:block; max-width:100%; height:auto; }
+:where(ul,ol){ padding-inline-start: 1.1rem; }
+:where(table){ border-collapse: collapse; width: 100%; }
 
-:where(img, svg, video, canvas) {
-  display: block;
-  max-width: 100%;
-  height: auto;            /* maintain aspect ratio */
-}
-
-:where(ul, ol) {
-  padding-inline-start: 1.25rem;
-}
-
-:where(table) {
-  border-collapse: collapse;
-  width: 100%;
-}
-
-/* Make sure body’s direct children fit inside flex container */
-body > * {
-  flex-shrink: 1;
-  flex-grow: 1;
-  min-height: 0;           /* important for flex children to allow shrinking */
-  overflow: auto;          /* allow internal scrolling if needed inside children */
+/* App shell owns scrolling; children can scroll internally */
+body > *{
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: auto;
   box-sizing: border-box;
-  /* padding: calc(var(--spacing-unit) * 1); */
 }
 
-/* Type scale */
-h1 { font-weight: 600; line-height: 1.1; font-size: clamp(1.75rem, 2.4vw, 2.5rem); }
-h2 { font-weight: 600; line-height: 1.15; font-size: clamp(1.4rem, 1.8vw, 2rem); }
-h3 { font-weight: 600; line-height: 1.2; font-size: clamp(1.2rem, 1.4vw, 1.5rem); }
-h4, h5, h6 { font-weight: 600; }
-p { color: var(--color-muted); }
+/* Type scale (compact) */
+h1{ font-weight:600; line-height:1.1;  font-size:clamp(1.6rem,2.2vw,2.3rem); }
+h2{ font-weight:600; line-height:1.15; font-size:clamp(1.3rem,1.7vw,1.8rem); }
+h3{ font-weight:600; line-height:1.2;  font-size:clamp(1.1rem,1.25vw,1.35rem); }
+h4,h5,h6{ font-weight:600; }
+p{ color: var(--color-muted); }
 
 /* Links */
-a { color: inherit; text-decoration: none; transition: color var(--transition); }
-a:hover, a:focus { text-decoration: underline; }
+a{ color:inherit; text-decoration:none; transition: color var(--transition); }
+a:hover,a:focus{ text-decoration: underline; }
 
 /* Code */
-pre, code, kbd, samp { font-family: var(--font-mono); }
-pre {
+pre,code,kbd,samp{ font-family: var(--font-mono); }
+pre{
   background: color-mix(in srgb, var(--color-surface) 88%, transparent 12%);
   border: 1px solid var(--color-border);
   border-radius: var(--radius);
-  padding: 1rem;
+  padding: .8rem;
   overflow: auto;
 }
 
-/* Forms */
-input, button, select, textarea {
+/* Forms (tighter paddings) */
+input,button,select,textarea{
   font: inherit;
   border-radius: var(--radius);
   border: 1px solid var(--color-border);
   background-color: color-mix(in srgb, var(--color-surface) 88%, transparent 12%);
   color: var(--color-text);
-  padding: 0.55rem 0.8rem;
+  padding: .5rem .7rem;
   outline: none;
   transition: border-color var(--transition), box-shadow var(--transition), background-color var(--transition), transform var(--transition);
 }
-input::placeholder, textarea::placeholder { color: color-mix(in srgb, var(--color-muted) 70%, transparent 30%); }
-button { cursor: pointer; }
-button:hover { background-color: color-mix(in srgb, var(--color-accent) 12%, var(--color-surface) 88%); }
+input::placeholder,textarea::placeholder{ color: color-mix(in srgb, var(--color-muted) 70%, transparent 30%); }
+button{ cursor: pointer; }
+button:hover{ background-color: color-mix(in srgb, var(--color-accent) 12%, var(--color-surface) 88%); }
 
 /* Focus visibility */
-:where(a, button, input, select, textarea, [tabindex]:not([tabindex="-1"])):focus-visible {
+:where(a,button,input,select,textarea,[tabindex]:not([tabindex="-1"])):focus-visible{
   outline: 2px solid color-mix(in srgb, var(--color-accent) 60%, transparent 40%);
   outline-offset: 2px;
   box-shadow: 0 0 0 4px color-mix(in srgb, var(--color-accent) 25%, transparent 75%);
@@ -283,79 +260,68 @@ button:hover { background-color: color-mix(in srgb, var(--color-accent) 12%, var
 }
 
 /* Cards */
-.card {
+.card{
   background: color-mix(in srgb, var(--color-surface) 88%, transparent 12%);
   backdrop-filter: var(--blur);
   border: 1px solid var(--color-border);
   border-radius: var(--radius);
   box-shadow: var(--elev-3);
-  padding: 1.5rem;
-  margin: 1rem 0;
+  padding: 1.1rem;       /* denser */
+  margin: .8rem 0;
   transition: box-shadow var(--transition), transform var(--transition);
   will-change: transform;
 }
-.card:hover { box-shadow: var(--elev-2); transform: translateY(-2px); }
+.card:hover{ box-shadow: var(--elev-2); transform: translateY(-2px); }
 
 /* Utilities */
-.sr-only {
-  position: absolute !important;
-  width: 1px; height: 1px;
-  padding: 0; margin: -1px;
-  overflow: hidden; clip: rect(0 0 0 0);
-  border: 0; white-space: nowrap;
+.sr-only{
+  position:absolute!important; width:1px;height:1px; padding:0;margin:-1px;
+  overflow:hidden; clip:rect(0 0 0 0); border:0; white-space:nowrap;
 }
-.container { width: min(1200px, 100% - 2rem); margin-inline: auto; }
-.stack > * + * { margin-top: var(--spacing-unit); }
-.grid { display: grid; gap: calc(var(--spacing-unit) * 2); }
+.container{ width:min(1200px,100% - 2rem); margin-inline:auto; }
+.stack > * + *{ margin-top: var(--spacing-unit); }
+.grid{ display:grid; gap: calc(var(--spacing-unit) * 1); }
 
-/* Primitive component tokens (opt-in) */
-.btn {
+/* Primitive components */
+.btn{
   --_bg: color-mix(in srgb, var(--color-accent) 14%, var(--color-surface) 86%);
   --_bg-hover: color-mix(in srgb, var(--color-accent) 24%, var(--color-surface) 76%);
   --_fg: var(--color-text);
   background: var(--_bg);
   color: var(--_fg);
   border: 1px solid color-mix(in srgb, var(--color-accent) 35%, var(--color-border) 65%);
-  padding: 0.6rem 0.9rem;
+  padding: 8px;
   border-radius: var(--radius);
+  font-weight: 600;
 }
-.btn:hover { background: var(--_bg-hover); }
+.btn:hover{ background: var(--_bg-hover); }
 
-.input {
+.input{
   background: color-mix(in srgb, var(--color-surface) 88%, transparent 12%);
   border: 1px solid var(--color-border);
   border-radius: var(--radius);
-  padding: 0.55rem 0.8rem;
+  padding: .5rem .7rem;
 }
 
-/* Selection + scrollbar polish */
-::selection {
-  background: color-mix(in srgb, var(--color-accent) 30%, transparent 70%);
-}
-* {
-  scrollbar-width: thin;
-  scrollbar-color: color-mix(in srgb, var(--color-accent) 35%, transparent 65%) transparent;
-}
-*::-webkit-scrollbar { height: 10px; width: 10px; }
-*::-webkit-scrollbar-thumb {
-  background: color-mix(in srgb, var(--color-accent) 35%, transparent 65%);
-  border-radius: 999px;
-}
-*::-webkit-scrollbar-track { background: transparent; }
+/* Selection + scrollbar */
+::selection{ background: color-mix(in srgb, var(--color-accent) 30%, transparent 70%); }
+*{ scrollbar-width: thin; scrollbar-color: color-mix(in srgb, var(--color-accent) 35%, transparent 65%) transparent; }
+*::-webkit-scrollbar{ height: 8px; width: 8px; }
+*::-webkit-scrollbar-thumb{ background: color-mix(in srgb, var(--color-accent) 35%, transparent 65%); border-radius: 999px; }
+*::-webkit-scrollbar-track{ background: transparent; }
 
 /* Motion safety */
-@media (prefers-reduced-motion: reduce) {
-  * { animation-duration: 0.001ms !important; animation-iteration-count: 1 !important; transition-duration: 0.001ms !important; scroll-behavior: auto !important; }
+@media (prefers-reduced-motion: reduce){
+  *{ animation-duration:.001ms!important; animation-iteration-count:1!important; transition-duration:.001ms!important; scroll-behavior:auto!important; }
 }
 
 /* Responsive paddings */
-@media (max-width: 600px) {
-  body { padding: calc(var(--spacing-unit) * 1.5); }
-  .card { padding: 1rem; margin: 0.5rem 0; }
+@media (max-width: 600px){
+  .card{ padding: .9rem; margin: .5rem 0; }
 }
 
 /* Print-friendly */
-@media print {
-  body { background: #fff !important; color: #000 !important; }
-  .card { box-shadow: none !important; background: #fff !important; }
+@media print{
+  body{ background:#fff!important; color:#000!important; }
+  .card{ box-shadow:none!important; background:#fff!important; }
 }

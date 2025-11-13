@@ -3,44 +3,64 @@
   display: flex;
   flex-direction: column;
   inline-size: 100%;
+  min-block-size: 0; /* allow inner scrollers */
   background: var(--color-canvas, var(--color-bg));
   background-color: var(--color-bg);
 }
-/* :host *, :host *::before, :host *::after { box-sizing: inherit; } */
 
-/* Prefer smaller “svh” on mobile when available */
-@supports (min-height: 100svh) {
-  :host { min-height: 100svh; }
+/* Prefer modern viewport units when available */
+:host { block-size: 100vh; }                    /* fallback */
+@supports (height: 100dvh) {
+  :host { block-size: 100dvh; }
+}
+@supports (height: 100svh) {
+  /* iOS Safari stable viewport on scroll */
+  :host { block-size: 100svh; }
 }
 
+/* ====== BODY WRAPPER ====== */
 .layout-body {
   display: flex;
   flex-direction: column;
-  flex-shrink: 1;
-  height: 100vh;                /* fill host height */
-  min-height: 0;               /* important for flex shrinking */
-  overflow: hidden;
+  flex: 1 1 auto;
+  min-block-size: 0;              /* 🔑 lets children shrink/scroll */
+  overflow: hidden;               /* app shell owns scroll */
   border-radius: var(--radius);
-  padding: 0.5rem;
+  /* respect notches / safe areas (iOS) */
+  padding-top: 12px;
+  padding-left: 6px;
+  padding-right: 6px;
+  padding-bottom: 8px;
+  gap: clamp(2px, 2px, 2px);   /* optional inter-section spacing */
+  background: transparent;
 }
 
+/* ====== SCROLLING CONTENT ====== */
 .layout-content {
-  flex: 1 1 auto;              /* fill available space */
-  min-height: 0;               /* crucial for flex child shrink */
-  overflow-y: auto;            /* scroll inside if content overflows */
-  padding: .5rem;
+  flex: 1 1 auto;                 /* fill available space */
+  min-block-size: 0;              /* 🔑 enables scrolling */
+  overflow: auto;                 /* only this scrolls */
   border-radius: var(--radius);
-  background: color-mix(in srgb, var(--color-surface) 88%, transparent 12%);
-  
-  /* Remove height: 100%; to avoid conflicts */
+  background: color-mix(in srgb, var(--color-surface) 90%, transparent 10%);
+  /* border: 1px solid var(--color-border); */
+  box-shadow: var(--elev-1);
+  will-change: scroll-position;
 }
 
-/* Avoid hover “lift” moving the box outside bounds */
+/* Optional: if you have a header/footer inside .layout-body */
+.layout-header,
+.layout-footer {
+  flex: 0 0 auto;                 /* fixed height rows */
+  min-block-size: 0;
+}
+
+/* Avoid hover “lift” moving the box (keep it steady) */
 @media (hover:hover) and (pointer:fine) {
   .layout-content:hover { box-shadow: var(--elev-2); transform: none; }
 }
 
-/* Small screens: keep everything tight without changing total height */
+/* Compact on small screens */
 @media (max-width: 600px) {
-  .layout-content { padding: .5rem; }
+  .layout-body   { padding: 12px; gap: 2px; }
+  .layout-content{ padding: 8px; }
 }

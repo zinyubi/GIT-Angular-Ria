@@ -1,5 +1,6 @@
 import {
-  Component, Input, OnDestroy, ChangeDetectionStrategy, ChangeDetectorRef, Output, EventEmitter
+  Component, Input, OnDestroy, ChangeDetectionStrategy, ChangeDetectorRef,
+  Output, EventEmitter
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { WebGLMap } from '@luciad/ria/view/WebGLMap.js';
@@ -21,9 +22,9 @@ interface LayerTreeNodeVM {
   visible: boolean;
   expanded: boolean;
   iconTitle: string;
-  iconEmoji: string;          // simple fallback icon
+  iconEmoji: string;
   children: LayerTreeNodeVM[];
-  ref: AnyNode;               // original node/layer
+  ref: AnyNode;
 }
 
 type DragOverPart = 'NONE' | 'TOP' | 'BOTTOM';
@@ -37,7 +38,6 @@ type DragOverPart = 'NONE' | 'TOP' | 'BOTTOM';
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class LayertreeComponentRia implements OnDestroy {
-  // map arrives after parent creates it → use setter
   private _map?: WebGLMap;
   @Input() set map(value: WebGLMap | undefined) {
     if (value && value !== this._map) {
@@ -54,7 +54,7 @@ export class LayertreeComponentRia implements OnDestroy {
   @Output() panelCollapseToggled = new EventEmitter<{ collapsed: boolean }>();
   @Output() nodeExpandToggled   = new EventEmitter<{ id: string; label: string; expanded: boolean }>();
   @Output() nodeVisibilityToggled = new EventEmitter<{ id: string; label: string; visible: boolean }>();
-
+  @Output() collapsedChange = new EventEmitter<boolean>();
 
   private _collapsed = false;
   @Input() set collapsed(v: boolean) {
@@ -66,10 +66,7 @@ export class LayertreeComponentRia implements OnDestroy {
   }
   get collapsed() { return this._collapsed; }
 
-  @Output() collapsedChange = new EventEmitter<boolean>();         // NEW
-
   nodes: LayerTreeNodeVM[] = [];
-
   private handles: Array<{ remove(): void } | (() => void)> = [];
   private rafQueued = false;
 
@@ -77,18 +74,21 @@ export class LayertreeComponentRia implements OnDestroy {
   draggingId: string | null = null;
   dragOver: Record<string, DragOverPart> = {};
 
+  // unique-id fallback counter
+  private uid = 0;
+
   constructor(private cdr: ChangeDetectorRef) {}
 
   ngOnDestroy(): void { this.disposeListeners(); }
 
-  // ── Panel ─────────────────────────────────────────────────────────────────
+  // Panel
   toggleCollapse(): void {
     this.collapsed = !this.collapsed;
     this.panelCollapseToggled.emit({ collapsed: this.collapsed });
     this.cdr.markForCheck();
   }
 
-  // ── Node actions ─────────────────────────────────────────────────────────
+  // Node actions
   toggleNodeExpand(n: LayerTreeNodeVM, ev?: MouseEvent): void {
     ev?.stopPropagation();
     n.expanded = !n.expanded;
@@ -115,9 +115,7 @@ export class LayertreeComponentRia implements OnDestroy {
     if (!this._map) return;
     const bounds = await this.getNodeFitBounds(n.ref);
     if (bounds) {
-      try {
-        await this._map.mapNavigator.fit({ bounds, animate: true });
-      } catch { /* no-op */ }
+      try { await this._map.mapNavigator.fit({ bounds, animate: true }); } catch {}
     }
   }
 
@@ -135,14 +133,14 @@ export class LayertreeComponentRia implements OnDestroy {
     }
   }
 
-  // ── Drag & Drop reorder ───────────────────────────────────────────────────
+  // DnD
   dragStart(n: LayerTreeNodeVM, ev: DragEvent) {
     this.draggingId = n.id;
     ev.dataTransfer?.setData('text/plain', n.id);
-    ev.dataTransfer?.setDragImage?.(new Image(), 0, 0); // invisible drag image
+    ev.dataTransfer?.setDragImage?.(new Image(), 0, 0);
   }
   dragOverNode(n: LayerTreeNodeVM, ev: DragEvent) {
-    ev.preventDefault(); // allow drop
+    ev.preventDefault();
     const target = ev.currentTarget as HTMLElement;
     const rect = target.getBoundingClientRect();
     const midY = rect.top + rect.height / 2;
@@ -183,21 +181,18 @@ export class LayertreeComponentRia implements OnDestroy {
     }
   }
 
-  // ── Template helpers ──────────────────────────────────────────────────────
+  // Template helpers
   hasChildren(n: LayerTreeNodeVM) { return (n.children?.length ?? 0) > 0; }
   isDragTop(id: string) { return this.dragOver[id] === 'TOP'; }
   isDragBottom(id: string) { return this.dragOver[id] === 'BOTTOM'; }
   trackNode = (_: number, n: LayerTreeNodeVM) => n.id;
 
-  // ── Internals ─────────────────────────────────────────────────────────────
+  // Internals
   private disposeListeners() {
     for (const h of this.handles) {
       try {
-        if (typeof h === 'function') {
-          h();
-        } else if (h && typeof (h as any).remove === 'function') {
-          (h as any).remove();
-        }
+        if (typeof h === 'function') h();
+        else if (h && typeof (h as any).remove === 'function') (h as any).remove();
       } catch {}
     }
     this.handles = [];
@@ -214,12 +209,10 @@ export class LayertreeComponentRia implements OnDestroy {
       });
     };
 
-    // Fallback: refresh on any map change
     // @ts-ignore
     const mapChange = map.on('MapChange', refresh);
     this.handles.push(mapChange);
 
-    // Prefer layer-tree specific events if available
     const lt: any = map.layerTree;
     if (lt?.on) {
       for (const e of ['StructureChanged','ChildAdded','ChildRemoved','NodeMoved','LayerVisibilityChanged','LabelChanged']) {
@@ -239,7 +232,6 @@ export class LayertreeComponentRia implements OnDestroy {
   }
 
   private extractChildren(node: AnyNode): LayerTreeNodeVM[] {
-    // reverse so newest-on-top like sample
     return this.getChildren(node).slice().reverse().map((c) => this.toVM(c));
   }
 
@@ -248,7 +240,7 @@ export class LayertreeComponentRia implements OnDestroy {
     const label = this.getLabel(node);
     const visible = this.getVisible(node);
     const { iconEmoji, iconTitle } = this.getIcon(node, /*open*/ true);
-    const id = this.getId(node, label);
+    const id = this.getId(node);
     const children = kids.map((c: AnyNode) => this.toVM(c));
     const expanded = kids.length > 0;
     return { id, label, visible, expanded, iconEmoji, iconTitle, children, ref: node };
@@ -276,8 +268,15 @@ export class LayertreeComponentRia implements OnDestroy {
     if (typeof n?.layer?.visible === 'boolean') return n.layer.visible;
     return true;
   }
-  private getId(n: AnyNode, fallback: string): string {
-    return (n?.id ?? n?.uuid ?? n?.hashCode ?? fallback).toString();
+
+  // Ensure unique/stable id; NEVER fall back to label
+  private getId(n: AnyNode): string {
+    const cand =
+      n?.id ?? n?.uuid ?? n?.hashCode ??
+      n?.layer?.id ?? n?.layer?.uuid ?? n?.layer?.hashCode;
+    if (cand !== undefined && cand !== null) return String(cand);
+    this.uid += 1;
+    return `node_${Date.now()}_${this.uid}`;
   }
 
   private getIcon(node: AnyNode, open: boolean): { iconEmoji: string; iconTitle: string } {
@@ -318,7 +317,13 @@ export class LayertreeComponentRia implements OnDestroy {
     return null;
   }
 
-  // Try common ways to get bounds; fallback to first child
+  // Public API — MapComponent/MapPanel can call to force a refresh
+  public refreshNow(): void {
+    this.rebuild();
+    this.cdr.markForCheck();
+  }
+
+  // Bounds helper
   private async getNodeFitBounds(node: AnyNode): Promise<any | null> {
     try {
       const cand = node?.bounds ?? node?.layer?.bounds

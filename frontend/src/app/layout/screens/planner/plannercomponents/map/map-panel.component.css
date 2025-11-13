@@ -16,3 +16,9 @@
   block-size: 100%;
   min-block-size: 0;
 }
+
+/* map panel column */
+.map-wrap {
+
+  width: 100%;
+}

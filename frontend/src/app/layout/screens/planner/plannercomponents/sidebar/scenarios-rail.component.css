@@ -1,80 +1,258 @@
-/* Make the custom element fill its grid cell and allow shrink */
-:host {
+/* ===== Scenarios Rail — Compact, Professional ===== */
+:host,
+.rail-sidebar {
   display: flex;
   flex-direction: column;
-  inline-size: 100%;
-  block-size: 100%;
-  min-block-size: 0;
-  background: var(--color-surface);
+  inline-size: var(--rail-w); /* workspace grid sets --rail-w */
+  min-block-size: 0;                 /* allow inner scrollers */
+  background: var(--color-surface, #0f1216);
+  color: var(--color-text, #e7ecf6);
+  border-inline-end: 1px solid color-mix(in srgb, var(--color-surface, #0f1216) 85%, black 15%);
 }
 
-/* Header bars don’t grow */
-.rail-expanded,
+/* Collapsed = skinny vertical rail (only the toggle) */
 .rail-collapsed {
-  flex: 0 0 auto;
-}
-
-/* Collapsed rail: narrow vertical stack of icon buttons */
-.rail-collapsed {
-  inline-size: var(--rail-w, 56px);
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: .5rem;
-  padding: .5rem 0;
-  background: var(--color-surface);
-  border-inline-end: 1px solid color-mix(in srgb, var(--color-surface) 84%, black 16%);
+  gap: 6px;
+  padding: 6px ;
 }
 
-/* Expanded header (just the collapse button) */
+/* Expanded header: sticky, ultra-compact */
 .rail-expanded {
   display: flex;
   align-items: center;
-  gap: .5rem;
-  padding: .5rem .5rem .25rem;
+  gap: 6px;
+  padding: 6px;
+  border-block-end: 1px solid color-mix(in srgb, var(--color-surface, #0f1216) 80%, black 20%);
+  position: sticky;
+  inset-block-start: 0;
+  background: inherit;
+  z-index: 1;
 }
 
-/* The main content becomes the ONLY scroller */
+/* Main content: the only scroller */
 .rail-content {
   flex: 1 1 auto;
-  min-block-size: 0;
-  overflow: auto;
-  padding: .75rem;
+  min-block-size: 0;   /* 🔑 */
+  overflow: auto;      /* 🔑 */
+  padding: 8px;
 }
 
-/* Buttons */
+/* ===== Buttons ===== */
 .rail-btn {
   inline-size: 36px;
   block-size: 36px;
   display: grid;
   place-items: center;
-  border-radius: 10px;
-  border: 1px solid color-mix(in srgb, var(--color-surface) 86%, black 14%);
-  background: var(--color-surface);
-  color: var(--color-fg, #e5e7eb);
+  border-radius: 8px;
+  border: 1px solid var(--color-border);
+  background: color-mix(in srgb, var(--color-surface, #0f1216) 95%, white 5%);
+  color: var(--color-text, #e7ecf6);
   cursor: pointer;
-  font-size: 16px;
+  font-size: 14px;
   line-height: 1;
-  transition: background .15s ease, transform .05s ease, border-color .15s ease;
+  transition: background .15s ease, transform .05s ease, border-color .15s ease, opacity .15s ease;
 }
-
-.rail-btn:hover { background: color-mix(in srgb, var(--color-surface) 92%, black 8%); }
+.rail-btn:hover { background: color-mix(in srgb, var(--color-surface, #0f1216) 88%, white 12%); }
 .rail-btn:active { transform: translateY(1px); }
-.rail-btn.disabled { opacity: .4; cursor: not-allowed; }
-.rail-btn--primary {
+.rail-btn[disabled] { opacity: .45; cursor: not-allowed; }
+
+/* Small pill “+ New” */
+.chip {
+  padding: 4px 4px;
+  border-radius: 999px;
+  border: 1px solid color-mix(in srgb, var(--color-accent, #22d3ee) 40%, black 60%);
+  background: color-mix(in srgb, var(--color-accent, #22d3ee) 16%, var(--color-surface, #0f1216));
+  color: var(--color-text, #e7ecf6);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.chip:hover { filter: brightness(1.08); }
+
+/* ===== Header row inside content (sticky + tiny) ===== */
+.rail-header {
+  position: sticky;
+  inset-block-start: 0;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+  padding: 4px 2px 6px;
+  background: inherit;
+  border-block-end: 1px dashed color-mix(in srgb, var(--color-surface, #0f1216) 75%, black 25%);
+}
+.rail-header h3 {
+  margin: 0;
+  font-size: 13px;
+  letter-spacing: .2px;
   font-weight: 700;
-  border-color: color-mix(in srgb, var(--color-accent, #22d3ee) 60%, black 40%);
+  color: var(--color-text, #e7ecf6);
 }
 
-/* Expanded content layout */
-.rail-sidebar { inline-size: 100%; }
-.rail-header { display: flex; justify-content: space-between; align-items: center; }
-.scenario-list { list-style: none; padding: 0; margin: .5rem 0 1rem; display: grid; gap: .25rem; }
-.scenario-row { display: grid; grid-template-columns: auto 1fr auto; gap: .5rem; align-items: center; }
-.scenario-row.active .row-name { font-weight: 600; }
-.row-name { text-align: left; }
-.row-del { color: #b00; }
-.detail-card { border: 1px solid #ddd; border-radius: .5rem; padding: .75rem; background: var(--color-surface); }
-.form { display: grid; gap: .5rem; }
-.form-actions { display: flex; gap: .5rem; justify-content: flex-end; }
-.error { color: #b00; }
+/* ===== List ===== */
+.scenario-list {
+  list-style: none;
+  margin: 6px 0 8px;
+  padding: 0;
+  display: grid;
+  gap: 4px;
+}
+.scenario-row {
+  display: grid;
+  grid-template-columns: 22px 1fr 22px;
+  align-items: center;
+  gap: 6px;
+  min-inline-size: 0;
+  padding: 4px 6px;
+  border-radius: 8px;
+  transition: background .12s ease, border-color .12s ease;
+  border: 1px solid transparent;
+}
+.scenario-row:hover {
+  background: color-mix(in srgb, var(--color-surface, #0f1216) 86%, white 14%);
+}
+.scenario-row.active {
+  border-color: color-mix(in srgb, var(--color-accent, #22d3ee) 55%, black 45%);
+  background: color-mix(in srgb, var(--color-accent, #22d3ee) 10%, var(--color-surface, #0f1216));
+}
+
+/* row parts */
+.row-icon,
+.row-name,
+.row-del {
+  appearance: none;
+  border: none;
+  background: none;
+  color: inherit;
+  padding: 0;
+  cursor: pointer;
+  min-inline-size: 0;
+}
+
+.row-icon {
+  inline-size: 22px;
+  block-size: 22px;
+  display: grid;
+  place-items: center;
+  opacity: .9;
+}
+
+.row-name {
+  text-align: start;
+  font-size: 12.5px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.scenario-row.active .row-name { font-weight: 700; }
+
+.row-del {
+  inline-size: 22px;
+  block-size: 22px;
+  display: grid;
+  place-items: center;
+  color: #ef6a6a;
+  border-radius: 6px;
+}
+.row-del:hover {
+  background: color-mix(in srgb, #ef6a6a 18%, transparent);
+}
+
+/* ===== Detail / Forms — compact ===== */
+.detail-card {
+  border: 1px solid color-mix(in srgb, var(--color-surface, #0f1216) 82%, black 18%);
+  border-radius: 10px;
+  padding: 8px;
+  background: color-mix(in srgb, var(--color-surface, #0f1216) 96%, white 4%);
+}
+.detail h4 {
+  margin: 0 0 2px;
+  font-size: 13px;
+}
+.muted { color: color-mix(in srgb, var(--color-text, #e7ecf6) 55%, #8891a4 45%); font-size: 12px; }
+
+.form {
+  display: grid;
+  gap: 6px;
+}
+.form label {
+  display: grid;
+  gap: 4px;
+  font-size: 12.5px;
+}
+.form input,
+.form textarea {
+  inline-size: 100%;
+  box-sizing: border-box;
+  padding: 6px 8px;
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--color-surface, #0f1216) 94%, white 6%);
+  border: 1px solid color-mix(in srgb, var(--color-surface, #0f1216) 80%, black 20%);
+  color: var(--color-text, #e7ecf6);
+  font-size: 12.5px;
+}
+.form input:focus,
+.form textarea:focus {
+  outline: none;
+  border-color: color-mix(in srgb, var(--color-accent, #22d3ee) 60%, white 40%);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-accent, #22d3ee) 22%, transparent);
+}
+.form textarea { resize: vertical; min-block-size: 56px; }
+
+.form-actions {
+  display: flex;
+  gap: 6px;
+  justify-content: flex-end;
+  margin-top: 4px;
+}
+
+/* Tiny buttons for forms */
+.btn {
+  padding: 6px 10px;
+  border-radius: 8px;
+  border: 1px solid transparent;
+  font-size: 12.5px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: filter .12s ease, transform .05s ease, background .12s ease, border-color .12s ease;
+}
+.btn:active { transform: translateY(1px); }
+
+.btn-success {
+  background: var(--color-accent, #22d3ee);
+  color: #0a0a0a;
+  border: none;
+}
+.btn-success:hover { filter: brightness(1.06); }
+
+.btn-secondary {
+  background: transparent;
+  border: 1px solid color-mix(in srgb, var(--color-surface, #0f1216) 78%, black 22%);
+  color: var(--color-text, #e7ecf6);
+}
+.btn-secondary:hover { background: color-mix(in srgb, var(--color-surface, #0f1216) 90%, white 10%); }
+
+.btn-light {
+  background: color-mix(in srgb, var(--color-surface, #0f1216) 92%, white 8%);
+  border: 1px solid color-mix(in srgb, var(--color-surface, #0f1216) 78%, black 22%);
+  color: var(--color-text, #e7ecf6);
+}
+.btn-light:hover { filter: brightness(1.05); }
+
+.error {
+  color: #ef6a6a;
+  font-size: 12px;
+  margin-top: 4px;
+}
+
+/* Hint (when nothing selected) */
+.hint {
+  color: color-mix(in srgb, var(--color-text, #e7ecf6) 55%, #8891a4 45%);
+  font-size: 12.5px;
+  padding: 8px;
+  text-align: center;
+}

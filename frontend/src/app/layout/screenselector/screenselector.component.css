@@ -1,63 +1,108 @@
-/* Top navigation bar */
+
+/* ============= Top navigation bar (compact, sticky) ============= */
 .top-nav {
+  position: sticky;
+  inset-block-start: calc(env(safe-area-inset-top, 0px) + 0px);
+  z-index: 900;
+
   display: flex;
   justify-content: center;
   align-items: center;
   inline-size: 100%;
-  padding: 0.2rem;
+  padding: clamp(4px, 0.5vw, 8px);
+
   background: color-mix(in srgb, var(--color-surface) 92%, transparent 8%);
   backdrop-filter: var(--blur);
   border: 1px solid var(--color-border);
   border-radius: var(--radius);
-  margin-block: calc(var(--spacing-unit) * 1); 
-  z-index: 900;
+
+  margin-block: clamp(6px, 0.6vw, 10px);
   overflow-x: auto;
   -webkit-overflow-scrolling: touch;
   scrollbar-width: thin;
-}
 
+  /* Keep scroll local; prevent the page from rubber-banding horizontally */
+  overscroll-behavior-inline: contain;
+}
 
 /* Inline menu list */
 .top-nav ul {
   display: inline-flex;
-  gap: clamp(1rem, 2vw, 2rem);
+  align-items: center;
+  gap: clamp(.6rem, 1.4vw, 1.4rem);
   list-style: none;
   padding: 0;
-  margin: 0 ;
+  margin: 0;
   white-space: nowrap;
+
+  /* Smooth horizontal scrubbing on small screens */
+  scroll-snap-type: x mandatory;
 }
 
-/* Links */
+/* Each item snaps nicely when scrolled */
+.top-nav li {
+  scroll-snap-align: start;
+  position: relative;
+}
+
+/* Links — lighter, denser */
 .top-nav a {
+  position: relative;
   display: inline-block;
-  padding: 0.3rem 0.6rem;
-  margin: 0rem;
-  font-weight: 400;
+  padding: .45rem .6rem; /* compact hit target */
+  margin: 0;
+  font-weight: 600;
   color: var(--color-text);
   text-decoration: none;
-  border-radius: var(--radius);
-  transition: background-color var(--transition),
-              border-color var(--transition),
-              color var(--transition),
-              box-shadow var(--transition);
+  border-radius: calc(var(--radius) - 6px);
+  transition:
+    color var(--transition),
+    background-color var(--transition),
+    border-color var(--transition),
+    box-shadow var(--transition),
+    transform var(--transition);
+  border: 1px solid transparent;
 }
 
-/* Hover & focus */
+/* Sleek underline indicator (no height cost) */
+.top-nav a::after {
+  content: "";
+  position: absolute;
+  inset-inline: .4rem;
+  inset-block-end: -.2rem;
+  height: 2px;
+  border-radius: 2px;
+  background: color-mix(in srgb, var(--color-accent) 70%, transparent 30%);
+  transform: scaleX(0);
+  transform-origin: center;
+  transition: transform var(--transition);
+}
+
+/* Hover & focus — soft tint + underline appears */
 .top-nav a:hover,
 .top-nav a:focus-visible {
-  background: color-mix(in srgb, var(--color-accent) 12%, var(--color-surface) 88%);
-  border: 1px solid color-mix(in srgb, var(--color-accent) 35%, var(--color-border) 65%);
-  box-shadow: 0 4px 10px color-mix(in srgb, var(--color-accent) 45%, transparent 55%);
+  background: color-mix(in srgb, var(--color-accent) 10%, var(--color-surface) 90%);
+  border-color: color-mix(in srgb, var(--color-accent) 30%, var(--color-border) 70%);
+  box-shadow: 0 4px 10px color-mix(in srgb, var(--color-accent) 30%, transparent 70%);
   outline: none;
 }
+.top-nav a:hover::after,
+.top-nav a:focus-visible::after {
+  transform: scaleX(1);
+}
 
-/* Active link */
+/* Active link — stronger underline, minimal fill */
 .top-nav a.active,
 .top-nav li.active a {
-  background: color-mix(in srgb, var(--color-accent) 65%, transparent 35%);
-  border: 1px solid color-mix(in srgb, var(--color-accent) 55%, var(--color-border) 45%);
-  color: #fff;
-  box-shadow: 0 4px 12px color-mix(in srgb, var(--color-accent) 50%, transparent 50%);
+  color: color-mix(in srgb, white 85%, var(--color-text) 15%);
+  background: color-mix(in srgb, var(--color-accent) 18%, transparent 82%);
+  border-color: color-mix(in srgb, var(--color-accent) 45%, var(--color-border) 55%);
+  box-shadow: 0 4px 12px color-mix(in srgb, var(--color-accent) 38%, transparent 62%);
+}
+.top-nav a.active::after,
+.top-nav li.active a::after {
+  background: color-mix(in srgb, var(--color-accent) 85%, white 15%);
+  transform: scaleX(1);
 }
 
 /* Unauthorized links */
@@ -66,7 +111,7 @@
   font-style: italic;
   cursor: not-allowed;
   pointer-events: none;
-  opacity: 0.7;
+  opacity: .65;
 }
 
 /* Scrollbar styling */
@@ -76,3 +121,8 @@
   border-radius: 3px;
 }
 .top-nav::-webkit-scrollbar-track { background: transparent; }
+
+/* Touch-friendly bump on very small screens */
+@media (max-width: 600px) {
+  .top-nav a { padding: .55rem .7rem; } /* keep hit-area comfy */
+}

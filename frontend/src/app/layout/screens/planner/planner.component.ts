@@ -11,9 +11,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Subscription } from 'rxjs';
 
-import { MapComponentRia } from '../../../luciadmaps/components/map/map.component.ria';
 import {
-  ScenarioService,
   Scenario,
   AircraftType,
   DeployedAircraft,
@@ -33,7 +31,9 @@ import { DeploymentFacade } from './plannercomponents/facades/deployment.facade'
 import { AircraftFacade } from './plannercomponents/facades/aircraft.facade';
 import { MapPickerService } from './plannercomponents/facades/map-picker.service';
 
-interface Waypoint { lat: number; lon: number; alt: number | ''; }
+// ---- Unified, nullable form type for the editor (fixes template typing clashes)
+type WaypointForm = { lat: number | null; lon: number | null; alt: number | null };
+
 type PickMode = 'none' | 'deploy-latlon' | 'waypoint' | 'edit-initial';
 
 @Component({
@@ -83,11 +83,19 @@ export class PlannerComponent implements OnInit, OnDestroy {
     initial_latitude: string | number;
     initial_longitude: string | number;
     initial_altitude_m: string | number;
-  } = { aircraft_type: '', name: '', initial_latitude: '', initial_longitude: '', initial_altitude_m: '' };
+  } = {
+    aircraft_type: '',
+    name: '',
+    initial_latitude: '',
+    initial_longitude: '',
+    initial_altitude_m: '',
+  };
 
   editingAircraft: DeployedAircraft | null = null;
   waypointEditIndex: number | null = null;
-  waypointForm: Waypoint = { lat: 0, lon: 0, alt: '' };
+
+  // ---- Use the unified, nullable form type here
+  waypointForm: WaypointForm = { lat: null, lon: null, alt: null };
 
   // Flags
   loadingScenarios = false;
@@ -131,8 +139,19 @@ export class PlannerComponent implements OnInit, OnDestroy {
       this.editingAircraft = v;
       if (!v) { this.editorOpen = false; this.deployOpen = true; }
     }));
+
     this.subs.add(this.state.waypointEditIndex$.subscribe(v => (this.waypointEditIndex = v)));
-    this.subs.add(this.state.waypointForm$.subscribe(v => (this.waypointForm = v as Waypoint)));
+
+    // ---- Keep the local form typed as WaypointForm (no empty strings)
+    this.subs.add(this.state.waypointForm$.subscribe(v => {
+      const f = v as Partial<WaypointForm> | null;
+      this.waypointForm = {
+        lat: f?.lat ?? null,
+        lon: f?.lon ?? null,
+        alt: f?.alt ?? null,
+      };
+    }));
+
     this.subs.add(this.state.newAircraftForm$.subscribe(v => (this.newAircraftForm = v)));
 
     // initial loads

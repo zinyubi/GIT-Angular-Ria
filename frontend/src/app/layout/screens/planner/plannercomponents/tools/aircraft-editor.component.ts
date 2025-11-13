@@ -1,8 +1,6 @@
-// src/app/layout/screens/planner/plannercomponents/tools/aircraft-editor.component.ts
-import { Component, EventEmitter, Input, Output } from '@angular/core';
+import { Component, Input, Output, EventEmitter } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { DeployedAircraft } from '../../../../../core/auth/services/scenario.service';
 
 @Component({
   standalone: true,
@@ -12,29 +10,50 @@ import { DeployedAircraft } from '../../../../../core/auth/services/scenario.ser
   styleUrls: ['./aircraft-editor.component.css'],
 })
 export class AircraftEditorComponent {
-  @Input() open = false;
+  /** Panel accordion state */
+  @Input() open = true;
   @Output() openChange = new EventEmitter<boolean>();
 
-  @Input() aircraft: DeployedAircraft | null = null;
+  /** Current aircraft being edited */
+  @Input() aircraft: any | null = null;
 
-  @Input() waypointForm: { lat: number; lon: number; alt: number | '' } = { lat: 0, lon: 0, alt: '' };
-  @Output() waypointFormChange = new EventEmitter<{ lat: number; lon: number; alt: number | '' }>();
+  /** Waypoint edit form (lat, lon, alt) */
+  @Input() waypointForm: { lat: number | null; lon: number | null; alt?: number | null } = {
+    lat: null,
+    lon: null,
+    alt: null,
+  };
+  @Output() waypointFormChange = new EventEmitter<typeof this.waypointForm>();
 
+  /** Index of the waypoint being edited (if any) */
   @Input() waypointEditIndex: number | null = null;
 
+  /** Editor events */
   @Output() saveAircraft = new EventEmitter<void>();
   @Output() cancelAircraft = new EventEmitter<void>();
 
+  /** Waypoint events */
   @Output() requestPickWaypoint = new EventEmitter<void>();
-  @Output() requestPickInitial = new EventEmitter<void>();
   @Output() editWaypoint = new EventEmitter<number>();
   @Output() deleteWaypoint = new EventEmitter<number>();
   @Output() saveWaypoint = new EventEmitter<void>();
 
-  toggleOpen(v: boolean) { this.openChange.emit(v); }
+  /** Initial-position pick (from map) */
+  @Output() requestPickInitial = new EventEmitter<void>();
+
+  /** “Advanced position” collapse toggle */
+  showPosAdvanced = false;
+
+  toggleOpen(v: boolean) {
+    this.open = v;
+    this.openChange.emit(v);
+  }
+  isValueNaN(val: any): boolean {
+  return isNaN(Number(val));
+}
 
   resetWpForm() {
-    this.waypointForm = { lat: 0, lon: 0, alt: '' };
+    this.waypointForm = { lat: null, lon: null, alt: null };
     this.waypointFormChange.emit(this.waypointForm);
   }
 }

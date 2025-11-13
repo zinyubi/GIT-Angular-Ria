@@ -1,57 +1,83 @@
-/* ===== Workspace grid (left rail | tools | map) ===== */
+/* === Component host fills its parent ====================================== */
+:host {
+  display: flex;
+  flex-direction: column;
+  block-size: 100%;
+  min-block-size: 0; /* allow children to shrink */
+}
+
+/* Header stays auto-height */
+.planning-header {
+  flex: 0 0 auto;
+}
+
+/* === Workspace grid ======================================================= */
+/* rail | tools | map (when tools visible) */
 .planning-workspace {
   display: grid;
-  grid-template-columns: var(--rail-w, 320px)
-                         minmax(360px, clamp(380px, 42vw, 460px))
-                         1fr;
+  grid-template-columns:
+    var(--rail-w, 300px)
+    minmax(360px, clamp(320px, 42vw, 400px))
+    1fr;
   gap: 0;
   block-size: 100%;
   min-block-size: 0;
 }
 
-.planning-workspace.is-collapsed { --rail-w: 56px; }
+/* When sidebar is collapsed, narrow the rail */
+.planning-workspace.is-collapsed { --rail-w: 45px; }
 .planning-workspace:not(.is-collapsed) { --rail-w: 320px; }
 
+/* When tools are hidden (no scenario), collapse to rail | map */
+.planning-workspace.no-tools {
+  grid-template-columns: var(--rail-w, 320px) 1fr;
+}
+
+/* All direct children must be allowed to shrink */
 .planning-workspace > * {
   min-block-size: 0;
   overflow: hidden;
 }
-/* Tools column must allow children to control overflow */
+
+/* === Left rail ============================================================ */
+.rail-sidebar {
+  height: 100%;
+  min-block-size: 0;
+}
+
+/* === Tools column ========================================================= */
 .planning-workspace > .tools {
   display: flex;
   flex-direction: column;
-  min-block-size: 0;   /* 🔑 allow inner scrollers */
-  overflow: hidden;    /* don't scroll the whole column; let children do it */
-  padding: 12px;
-  gap: 12px;
+  min-block-size: 0;     /* 🔑 inner scrollers allowed */
+  overflow: hidden;      /* column itself doesn’t scroll */
+  padding: 8px;
+  gap: 8px;
   background: var(--tools-bg, color-mix(in srgb, var(--color-surface) 92%, transparent 8%));
   border-inline: 1px solid var(--tools-divider, color-mix(in srgb, var(--color-surface) 84%, black 16%));
 }
 
-/* Group wrappers must also allow shrinking */
+/* Group wrappers */
 .tools-group {
   display: flex;
   flex-direction: column;
   flex: 1 1 auto;
   min-block-size: 0;   /* 🔑 */
   overflow: hidden;
-  gap: 12px;
+  gap: 0px;
 }
 
-/* The planning group contains the deployment form (auto height) + list (grows) */
-.tools-planning {
-  /* nothing special beyond .tools-group */
-}
+/* Planning group specifics */
+.tools-planning { /* no extra rules */ }
 
-/* Make the child component hosts obey our layout (no deep styles needed) */
+/* Make child component hosts obey our layout (no deep styles needed) */
 .tools-planning app-deployment-form {
-  flex: 0 0 auto;      /* header/form consumes only what it needs */
+  flex: 0 0 auto;      /* form takes only what it needs */
 }
-
 .tools-planning app-deployed-aircraft-list {
-  flex: 1 1 auto;      /* the list fills the remaining height */
-  min-block-size: 0;   /* 🔑 so its internal UL can scroll */
-  overflow: auto;    /* scrolling happens inside the component */
+  flex: 1 1 auto;      /* list fills remaining height */
+  min-block-size: 0;   /* 🔑 so list body can scroll */
+  overflow: auto;      /* scrolling happens inside the list */
 }
 
 /* Optional: card look for each tool block */
@@ -64,7 +90,50 @@
   display: block;
   background: var(--card-bg);
   border: 1px solid var(--card-border);
-  border-radius: var(--radius, 12px);
-  padding: 12px;
+  border-radius: var(--radius, 8px);
+  padding: 8px;
   box-shadow: var(--card-shadow);
+}
+
+/* Editor fills tools column; its internal body can scroll */
+.tools-group.tools-editor {
+  min-block-size: 0;             /* 🔑 */
+}
+.tools-group.tools-editor app-aircraft-editor {
+  flex: 1 1 auto;                /* 🔑 */
+  min-block-size: 0;             /* 🔑 */
+  overflow: hidden;              /* body inside will scroll */
+}
+
+/* === Map column =========================================================== */
+.map-wrap {
+  grid-column: 3;        /* with tools visible: rail | tools | [map] */
+  block-size: 100%;
+  min-block-size: 0;
+  width: 100%;
+  display: block;
+}
+
+/* When tools are hidden, map occupies the second column (rail | [map]) */
+.planning-workspace.no-tools .map-wrap {
+  grid-column: 2;
+}
+
+/* Ensure the map panel host itself stretches */
+app-map-panel.map-wrap,
+app-map-panel {
+  block-size: 100%;
+  min-block-size: 0;
+  display: block;
+}
+
+/* If needed, ensure the inner Luciad map fills its host
+   (keep these in map-panel.component.css ideally; duplicated here for safety) */
+app-map-panel ria-map,
+app-map-panel ::ng-deep ria-map,
+app-map-panel ::ng-deep .luciad-map,
+app-map-panel ::ng-deep .map-root {
+  height: 100%;
+  width: 100%;
+  display: block;
 }

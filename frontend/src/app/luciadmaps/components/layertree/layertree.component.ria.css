@@ -36,16 +36,16 @@
 .ltpanel-icon {
   display: inline-grid;
   place-items: center;
-  inline-size: 32px;
-  block-size: 32px;
+  inline-size: 28px;
+  block-size: 28px;
   font-size: 16px;
   color: var(--text-faded);
   flex: 0 0 auto;
 }
 
 .ltpanel-toggle {
-  inline-size: 32px;
-  block-size: 32px;
+  inline-size: 28px;
+  block-size: 28px;
   display: inline-flex;
   align-items: center;
   justify-content: center;

@@ -13,19 +13,37 @@ export class DeployedAircraftListComponent {
   @Input() aircrafts: DeployedAircraft[] = [];
   @Output() edit = new EventEmitter<DeployedAircraft>();
 
+  /** Whether the accordion is open */
+  @Input() open = true;
+  @Output() openChange = new EventEmitter<boolean>();
+
+  /** Toggle accordion open/close */
+  toggleOpen(val: boolean) {
+    this.open = val;
+    this.openChange.emit(val);
+  }
+
+  /** Track function for ngFor */
   trackByAircraftId = (_: number, a: DeployedAircraft) => a.id!;
 
+  /** Helpers for displaying fields */
   getTypeName(ac: DeployedAircraft): string | number {
-    const t = ac.aircraft_type as any;
+    const t = ac.aircraft_type as AircraftType | any;
     return t && typeof t === 'object' ? (t.name ?? 'Type') : (t ?? '');
   }
-  getLat(ac: DeployedAircraft): number | string {
-    return ac.position?.latitude ?? ac.initial_latitude ?? '';
+
+  getLat(ac: DeployedAircraft): string {
+    const v = ac.position?.latitude ?? ac.initial_latitude;
+    return typeof v === 'number' ? v.toFixed(3) : '—';
   }
-  getLon(ac: DeployedAircraft): number | string {
-    return ac.position?.longitude ?? ac.initial_longitude ?? '';
+
+  getLon(ac: DeployedAircraft): string {
+    const v = ac.position?.longitude ?? ac.initial_longitude;
+    return typeof v === 'number' ? v.toFixed(3) : '—';
   }
-  getAlt(ac: DeployedAircraft): number | string {
-    return ac.position?.altitude_m ?? ac.initial_altitude_m ?? '';
+
+  getAlt(ac: DeployedAircraft): string {
+    const v = ac.position?.altitude_m ?? ac.initial_altitude_m;
+    return typeof v === 'number' ? `${v.toFixed(0)}` : '—';
   }
 }
