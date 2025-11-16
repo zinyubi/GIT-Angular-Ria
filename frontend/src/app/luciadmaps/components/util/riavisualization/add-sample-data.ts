@@ -99,7 +99,7 @@ export async function addSampleData(
   const dot = makeCircleCanvas(8, "#e91e63", { color: "#fff", width: 2 });
   const threeD = viz.getOrCreateLayer({ label: "3D", kind: "point", reference: "EPSG:4979" }, debug);
   viz.setActiveLayer(threeD.id);
-  viz.addPoint3D(73.565, 23.03, 1200, { name: "3D Icon" }, { point: { symbol: "icon", image: dot, width: 18, height: 18 } });
+  viz.addPoint3D(73.565, 23.03, 91200, { name: "3D Icon" }, { point: { symbol: "icon", image: dot, width: 18, height: 18 } });
 
 //   if (debug?.fitAfterAdd) {
 //     const b = boundsFromLonLatRect(map.reference, , 0, 77.64, 32.09);

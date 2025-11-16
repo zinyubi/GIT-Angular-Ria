@@ -127,9 +127,9 @@ export class MapComponentRia implements AfterViewInit, OnDestroy {
     await this.baseLayersRia.addBaseLayersFromConfigRia(this.map, DEFAULT_BASELAYER_CONFIG_RIA);
     this.cdr.markForCheck();
 
-    this.vizFacade = await addSampleData(this.map!, {
-      enabled: true, storeLogs: false, paintLogs: false, outlineNew: true, fitAfterAdd: true
-    });
+    // this.vizFacade = await addSampleData(this.map!, {
+    //   enabled: true, storeLogs: false, paintLogs: false, outlineNew: true, fitAfterAdd: true
+    // });
     
 
     this.mapChangeHandle = this.map.on('MapChange', () => {

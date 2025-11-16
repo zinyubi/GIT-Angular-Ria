@@ -45,6 +45,7 @@
         *ngIf="deployedAircrafts?.length"
         [aircrafts]="deployedAircrafts"
         (edit)="startEditAircraft($event)"
+        (remove)="removeAircraft($event)"  
       ></app-deployed-aircraft-list>
     </div>
 
@@ -73,8 +74,9 @@
   <!-- ============== RIGHT: MAP ============== -->
     <app-map-panel
     class="map-wrap"
-    [scenario]="selectedScenario"
-    (pointPicked)="handlePointPicked($event)"
+      [scenario]="selectedScenario"
+      [deployedAircrafts]="deployedAircrafts"
+      (pointPicked)="handlePointPicked($event)">
   ></app-map-panel>
 
 

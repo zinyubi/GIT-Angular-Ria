@@ -139,17 +139,32 @@ export class ScenarioService {
       .pipe(catchError(this.handleError));
   }
 
-  updateDeployedAircraft(id: number, data: Partial<DeployedAircraft>) {
-    // Prefer API_URLS.DEPLOYED_AIRCRAFT_BY_ID if you have it; otherwise fallback.
-    const url = API_URLS.DEPLOYED_AIRCRAFT_BY_SCENARIO_ID(id);
+  updateDeployedAircraft(
+    id: number,
+    data: Partial<DeployedAircraft>
+  ): Observable<DeployedAircraft> {
+    // Prefer dedicated BY_ID helper; fallback to /deployed-aircraft/{id}/
+    const url = (API_URLS as any).DEPLOYED_AIRCRAFT_BY_ID
+      ? (API_URLS as any).DEPLOYED_AIRCRAFT_BY_ID(id)
+      : `${API_URLS.DEPLOYED_AIRCRAFT}${id}/`;
 
+    return this.http
+      .put<DeployedAircraft>(url, data, {
+        headers: this.getAuthHeaders(),
+      })
+      .pipe(catchError(this.handleError));
+  }
 
-      // (API_URLS as any).DEPLOYED_AIRCRAFT_BY_ID
-      //   ? (API_URLS as any).DEPLOYED_AIRCRAFT_BY_ID(id)
-      //   : `${API_URLS.DEPLOYED_AIRCRAFT}${id}/`;
+  deleteDeployedAircraft(id: number): Observable<void> {
+    // Same URL logic as update
+    const url = (API_URLS as any).DEPLOYED_AIRCRAFT_BY_ID
+      ? (API_URLS as any).DEPLOYED_AIRCRAFT_BY_ID(id)
+      : `${API_URLS.DEPLOYED_AIRCRAFT}${id}/`;
 
-    return this.http.put<DeployedAircraft>(url, data, {
-      headers: this.getAuthHeaders(),
-    });
+    return this.http
+      .delete<void>(url, {
+        headers: this.getAuthHeaders(),
+      })
+      .pipe(catchError(this.handleError));
   }
 }

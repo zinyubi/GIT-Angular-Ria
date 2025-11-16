@@ -79,7 +79,6 @@ class AssetDeploymentSerializer(serializers.ModelSerializer):
 
 
 # -------------- Deployed Aircraft ------------------
-
 class PositionSerializer(serializers.Serializer):
     latitude = serializers.FloatField()
     longitude = serializers.FloatField()
@@ -94,6 +93,12 @@ class VelocitySerializer(serializers.Serializer):
 
 
 class DeployedAircraftListSerializer(serializers.ModelSerializer):
+    """
+    Read-only serializer for list/retrieve:
+    - Nested aircraft_type
+    - Position + velocity fields derived from model fields
+    """
+
     position = serializers.SerializerMethodField()
     velocity = serializers.SerializerMethodField()
     aircraft_type = AircraftTypeSerializer(read_only=True)
@@ -102,24 +107,37 @@ class DeployedAircraftListSerializer(serializers.ModelSerializer):
     class Meta:
         model = DeployedAircraft
         fields = [
-            'id',
-            'external_id',
-            'name',
-            'status',
-            'scenario',
-            'aircraft_type',
-            'position',
-            'velocity',
-            'last_updated',
-            'planned_waypoints',
-            'radar_asset',
+            "id",
+            "external_id",
+            "name",
+            "status",
+            "scenario",
+            "aircraft_type",
+            "position",
+            "velocity",
+            "last_updated",
+            "planned_waypoints",
+            "radar_asset",
         ]
 
     def get_position(self, obj):
+        # Fall back to initial_* if current_* is null
         return {
-            "latitude": obj.current_latitude if obj.current_latitude is not None else obj.initial_latitude,
-            "longitude": obj.current_longitude if obj.current_longitude is not None else obj.initial_longitude,
-            "altitude_m": obj.current_altitude_m if obj.current_altitude_m is not None else obj.initial_altitude_m,
+            "latitude": (
+                obj.current_latitude
+                if obj.current_latitude is not None
+                else obj.initial_latitude
+            ),
+            "longitude": (
+                obj.current_longitude
+                if obj.current_longitude is not None
+                else obj.initial_longitude
+            ),
+            "altitude_m": (
+                obj.current_altitude_m
+                if obj.current_altitude_m is not None
+                else obj.initial_altitude_m
+            ),
         }
 
     def get_velocity(self, obj):
@@ -132,15 +150,21 @@ class DeployedAircraftListSerializer(serializers.ModelSerializer):
 
 
 class DeployedAircraftCreateUpdateSerializer(serializers.ModelSerializer):
+    """
+    Minimal serializer for create/update:
+    - Uses scenario (id), aircraft_type (id)
+    - Accepts initial_* and planned_waypoints from the client
+    """
+
     class Meta:
         model = DeployedAircraft
         fields = [
-            'id',
-            'name',
-            'scenario',
-            'aircraft_type',
-            'initial_latitude',
-            'initial_longitude',
-            'initial_altitude_m',
-            'planned_waypoints',
+            "id",
+            "name",
+            "scenario",
+            "aircraft_type",
+            "initial_latitude",
+            "initial_longitude",
+            "initial_altitude_m",
+            "planned_waypoints",
         ]

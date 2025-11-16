@@ -1,21 +1,55 @@
-<section class="tool-card" [class.open]="open">
-  <header class="tool-header" (click)="toggleOpen(!open)">
-    <h3>Deployed Aircraft</h3>
+<section class="list-block" role="region" aria-label="Deployed aircraft">
+  <header class="acc-summary" (click)="toggleOpen(!open)">
+    <span>Deployed Aircraft</span>
+    <span class="muted">
+      {{ aircrafts?.length || 0 }} in scenario
+    </span>
     <span class="chev" [class.rotated]="open">▾</span>
   </header>
 
-  <div class="tool-body list-scroll" *ngIf="open">
-    <ul>
-      <li *ngFor="let ac of aircrafts; trackBy: trackByAircraftId">
-        <div class="info">
+  <ng-container *ngIf="open; else collapsedHint">
+    <ul class="plain" role="list">
+      <li
+        *ngFor="let ac of aircrafts; trackBy: trackByAircraftId"
+        class="row"
+      >
+        <div>
           <strong>{{ ac.name || 'Unnamed' }}</strong>
-          <small class="muted">{{ getTypeName(ac) }}</small>
-          <span class="coords">
+          <span class="muted">
+            {{ getTypeName(ac) }}
+          </span>
+          <span class="muted">
             [{{ getLat(ac) }}, {{ getLon(ac) }}] · Alt {{ getAlt(ac) }}m
           </span>
         </div>
-        <button class="btn-link" (click)="edit.emit(ac)">Edit</button>
+
+        <div class="row-actions">
+          <button
+            type="button"
+            class="btn-link"
+            (click)="edit.emit(ac)"
+          >
+            Edit
+          </button>
+          <button
+            type="button"
+            class="btn-link danger"
+            (click)="remove.emit(ac)"
+          >
+            Remove
+          </button>
+        </div>
+      </li>
+
+      <li *ngIf="!aircrafts?.length" class="row">
+        <span class="muted">No aircraft deployed in this scenario.</span>
       </li>
     </ul>
-  </div>
+  </ng-container>
+
+  <ng-template #collapsedHint>
+    <div class="row">
+      <span class="muted">List collapsed – click header to expand.</span>
+    </div>
+  </ng-template>
 </section>

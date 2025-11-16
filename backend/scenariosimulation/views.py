@@ -72,28 +72,36 @@ class AircraftTypeViewSet(viewsets.ModelViewSet):
 
 # ----------------- DeployedAircraft ---------------------
 
-@extend_schema(tags=['DeployedAircrafts'])
+@extend_schema(tags=["DeployedAircrafts"])
 class DeployedAircraftViewSet(viewsets.ModelViewSet):
     """
     ViewSet for managing DeployedAircraft instances.
 
-    - Supports listing all deployed aircrafts in a scenario
-    - Supports creating and updating deployed aircraft with waypoints
+    - Supports listing all deployed aircraft for a scenario via ?scenario=<id>
+    - Supports creating / updating / deleting deployed aircraft with waypoints
 
     Permissions:
         Requires authentication.
     """
+
+    queryset = DeployedAircraft.objects.all()
     permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
-        queryset = DeployedAircraft.objects.all()
-        scenario_id = self.request.query_params.get('scenario')
+        """
+        Optionally filter by scenario id using the 'scenario' query parameter.
+        """
+        qs = super().get_queryset()
+        scenario_id = self.request.query_params.get("scenario")
         if scenario_id:
-            queryset = queryset.filter(scenario_id=scenario_id)
-        return queryset
+            qs = qs.filter(scenario_id=scenario_id)
+        return qs
 
     def get_serializer_class(self):
-        if self.action in ['list', 'retrieve']:
+        """
+        Use a richer list/retrieve serializer and a simpler create/update serializer.
+        """
+        if self.action in ["list", "retrieve"]:
             return DeployedAircraftListSerializer
         return DeployedAircraftCreateUpdateSerializer
 

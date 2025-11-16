@@ -31,7 +31,7 @@ export const API_URLS = {
 
   // Add these to your API_URLS
   AIRCRAFT_TYPES: `${BACKEND_BASE}/scenariosimulation/aircrafttypes/`,
-  DEPLOYED_AIRCRAFT_BY_ID: (id: number) => `/scenariosimulation/deployedaircrafts/${id}/`,
+  DEPLOYED_AIRCRAFT_BY_ID: (id: number) => `${BACKEND_BASE}/scenariosimulation/deployedaircrafts/${id}/`,
   DEPLOYED_AIRCRAFT: `${BACKEND_BASE}/scenariosimulation/deployedaircrafts/`,
   DEPLOYED_AIRCRAFT_BY_SCENARIO: (scenarioId: number | string) => `${BACKEND_BASE}/scenariosimulation/deployedaircrafts/?scenario=${scenarioId}`,
   DEPLOYED_AIRCRAFT_BY_SCENARIO_ID: (scenarioId: number | string) => `${BACKEND_BASE}/scenariosimulation/deployedaircrafts/${scenarioId}/`,

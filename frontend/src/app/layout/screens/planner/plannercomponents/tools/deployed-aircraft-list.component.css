@@ -13,8 +13,8 @@
   --tool-tile: color-mix(in srgb, var(--color-surface, #10131a) 92%, black 8%);
 }
 
-/* ===== Shared card container ===== */
-.tool-card {
+/* ===== Card container (outer section) ===== */
+.list-block {
   display: flex;
   flex-direction: column;
   overflow: hidden;
@@ -23,75 +23,122 @@
   border-radius: var(--radius, 10px);
   transition: box-shadow 0.2s ease, border-color 0.2s ease;
 }
-.tool-card.open {
+
+/* Optional: if you bind [class.open]="open" on the section */
+.list-block.open {
   border-color: color-mix(in srgb, var(--tool-accent) 40%, var(--tool-border) 60%);
   box-shadow: 0 0 0 2px color-mix(in srgb, var(--tool-accent) 25%, transparent);
 }
 
-/* ===== Header ===== */
-.tool-header {
+/* ===== Header / summary row ===== */
+.acc-summary {
   display: flex;
-  justify-content: space-between;
   align-items: center;
+  gap: 0.5rem;
+  justify-content: space-between;
   background: var(--tool-header);
   padding: 0.65rem 0.9rem;
   font-weight: 600;
+  font-size: 0.95rem;
   cursor: pointer;
   border-bottom: 1px solid var(--tool-border);
   transition: background-color 0.2s ease;
 }
-.tool-header:hover {
+
+.acc-summary:hover {
   background: color-mix(in srgb, var(--tool-header) 88%, var(--tool-accent) 12%);
 }
+
+/* Title + count alignment */
+.acc-summary > span:first-child {
+  flex: 1;
+}
+
+/* Chevron */
 .chev {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.85rem;
   transition: transform 0.25s ease;
 }
 .chev.rotated {
   transform: rotate(180deg);
 }
 
-/* ===== Scrollable body ===== */
-.tool-body {
-  flex: 1;
-  overflow: auto;
-  padding: 0.6rem 1rem;
-  background: var(--tool-panel);
-  border-top: 1px solid var(--tool-border);
+/* Muted text helper */
+.muted {
+  color: var(--tool-muted);
+  font-size: 0.85rem;
 }
 
-/* ===== List styling ===== */
-.list-scroll ul {
+/* ===== Scrollable body / list wrapper ===== */
+.plain {
   list-style: none;
-  padding: 0;
   margin: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 0.4rem;
+  padding: 0.6rem 0.9rem 0.7rem;
+  background: var(--tool-panel);
 }
 
-.list-scroll li {
+/* Set max height so it scrolls inside tools column */
+.plain {
+  max-height: 260px;
+  overflow-y: auto;
+}
+
+/* ===== Individual rows ===== */
+.row {
   display: flex;
-  justify-content: space-between;
   align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
   background: var(--tool-tile);
-  border: 1px solid color-mix(in srgb, var(--tool-border) 80%, transparent);
   border-radius: 8px;
+  border: 1px solid color-mix(in srgb, var(--tool-border) 80%, transparent);
   padding: 0.5rem 0.75rem;
+  margin-bottom: 0.45rem;
   transition: border-color 0.2s ease, background-color 0.2s ease;
 }
-.list-scroll li:hover {
+
+.row:last-child {
+  margin-bottom: 0;
+}
+
+.row:hover {
   border-color: var(--tool-accent);
   background: color-mix(in srgb, var(--tool-tile) 88%, var(--tool-accent) 12%);
 }
 
-/* ===== Info block ===== */
-.info {
+/* Left info block (name, type, coords) */
+.row > div:first-child {
   display: flex;
   flex-direction: column;
+  gap: 0.1rem;
+  min-width: 0;
 }
-.coords {
-  font-size: 0.85rem;
-  color: var(--tool-muted);
+
+.row strong {
+  font-size: 0.95rem;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  overflow: hidden;
+}
+
+.row .muted {
+  font-size: 0.8rem;
+}
+
+/* Coords line */
+.row .muted:last-child {
+  font-size: 0.82rem;
+}
+
+/* Right actions block (Edit / Remove) */
+.row-actions {
+  display: flex;
+  flex-shrink: 0;
+  gap: 0.5rem;
+  align-items: center;
 }
 
 /* ===== Button link ===== */
@@ -101,30 +148,49 @@
   border: none;
   color: var(--tool-accent);
   font-weight: 600;
-  font-size: 0.9rem;
+  font-size: 0.85rem;
   cursor: pointer;
   padding: 0;
-  transition: opacity 0.15s ease;
+  transition: opacity 0.15s ease, transform 0.1s ease;
 }
+
 .btn-link:hover {
   text-decoration: underline;
   opacity: 0.85;
 }
 
-/* ===== Scrollbar (optional) ===== */
-.tool-body::-webkit-scrollbar {
+.btn-link:active {
+  transform: translateY(1px);
+}
+
+/* Danger variant for Remove */
+.btn-link.danger {
+  color: #ff5c5c;
+}
+
+/* ===== Collapsed hint row ===== */
+:host ::ng-deep ng-template .row {
+  /* just in case template projection is different */
+}
+
+.row span.muted {
+  font-size: 0.85rem;
+}
+
+/* ===== Scrollbar styling for the list ===== */
+.plain::-webkit-scrollbar {
   width: 8px;
 }
-.tool-body::-webkit-scrollbar-thumb {
+.plain::-webkit-scrollbar-thumb {
   background: color-mix(in srgb, var(--tool-accent) 40%, transparent 60%);
   border-radius: 4px;
 }
-.tool-body::-webkit-scrollbar-track {
+.plain::-webkit-scrollbar-track {
   background: transparent;
 }
 
 /* ===== Focus-visible (accessibility) ===== */
-:where(.tool-header, .btn-link):focus-visible {
+:where(.acc-summary, .btn-link):focus-visible {
   outline: 2px solid color-mix(in srgb, var(--tool-accent) 55%, transparent);
   outline-offset: 2px;
 }

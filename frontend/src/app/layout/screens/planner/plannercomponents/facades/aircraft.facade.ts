@@ -1,7 +1,11 @@
 // src/app/layout/screens/planner/plannercomponents/facades/aircraft.facade.ts
 import { Injectable } from '@angular/core';
 import { PlannerState } from '../state/planner.state';
-import { ScenarioService, DeployedAircraft, AircraftType } from '../../../../../core/auth/services/scenario.service';
+import {
+  ScenarioService,
+  DeployedAircraft,
+  AircraftType,
+} from '../../../../../core/auth/services/scenario.service';
 
 @Injectable({ providedIn: 'root' })
 export class AircraftFacade {
@@ -19,9 +23,12 @@ export class AircraftFacade {
 
     // If list serializer did not include initial_* fields, derive them from position
     if (clone.position) {
-      if (clone.initial_latitude === undefined) clone.initial_latitude = clone.position.latitude;
-      if (clone.initial_longitude === undefined) clone.initial_longitude = clone.position.longitude;
-      if (clone.initial_altitude_m === undefined) clone.initial_altitude_m = clone.position.altitude_m;
+      if (clone.initial_latitude === undefined)
+        clone.initial_latitude = clone.position.latitude;
+      if (clone.initial_longitude === undefined)
+        clone.initial_longitude = clone.position.longitude;
+      if (clone.initial_altitude_m === undefined)
+        clone.initial_altitude_m = clone.position.altitude_m;
     }
 
     this.s.editingAircraft$.next(clone);
@@ -42,20 +49,36 @@ export class AircraftFacade {
     const lon = this.num(ac.initial_longitude);
     const alt = this.num(ac.initial_altitude_m);
 
-    if (!(Number.isFinite(lat) && lat >= -90 && lat <= 90)) { alert('Initial latitude must be between -90 and 90.'); return; }
-    if (!(Number.isFinite(lon) && lon >= -180 && lon <= 180)) { alert('Initial longitude must be between -180 and 180.'); return; }
-    if (!(Number.isFinite(alt) && alt >= 0)) { alert('Initial altitude must be a non-negative number.'); return; }
+    if (!(Number.isFinite(lat) && lat >= -90 && lat <= 90)) {
+      alert('Initial latitude must be between -90 and 90.');
+      return;
+    }
+    if (!(Number.isFinite(lon) && lon >= -180 && lon <= 180)) {
+      alert('Initial longitude must be between -180 and 180.');
+      return;
+    }
+    if (!(Number.isFinite(alt) && alt >= 0)) {
+      alert('Initial altitude must be a non-negative number.');
+      return;
+    }
 
     // Waypoint validation (alt optional)
-    const wps = Array.isArray(ac.planned_waypoints) ? [...ac.planned_waypoints] : [];
+    const wps = Array.isArray(ac.planned_waypoints)
+      ? [...ac.planned_waypoints]
+      : [];
     for (const wp of wps) {
       const wlat = this.num(wp.lat);
       const wlon = this.num(wp.lon);
-      const hasAlt = (wp as any).alt !== undefined && (wp as any).alt !== null && String((wp as any).alt).trim() !== '';
+      const hasAlt =
+        (wp as any).alt !== undefined &&
+        (wp as any).alt !== null &&
+        String((wp as any).alt).trim() !== '';
       const walt = hasAlt ? this.num((wp as any).alt) : undefined;
 
-      if (!(Number.isFinite(wlat) && wlat >= -90 && wlat <= 90) ||
-          !(Number.isFinite(wlon) && wlon >= -180 && wlon <= 180)) {
+      if (
+        !(Number.isFinite(wlat) && wlat >= -90 && wlat <= 90) ||
+        !(Number.isFinite(wlon) && wlon >= -180 && wlon <= 180)
+      ) {
         alert('One or more waypoints have invalid latitude/longitude.');
         return;
       }
@@ -63,7 +86,8 @@ export class AircraftFacade {
         alert('Waypoint altitude must be numeric if provided.');
         return;
       }
-      if (!hasAlt) delete (wp as any).alt; else (wp as any).alt = walt!;
+      if (!hasAlt) delete (wp as any).alt;
+      else (wp as any).alt = walt!;
     }
 
     // aircraft_type id for update serializer
@@ -87,11 +111,17 @@ export class AircraftFacade {
       next: updated => {
         const arr = [...this.s.deployedAircrafts$.value];
         const idx = arr.findIndex(a => a.id === updated.id);
-        if (idx >= 0) { arr[idx] = updated; this.s.deployedAircrafts$.next(arr); }
+        if (idx >= 0) {
+          arr[idx] = updated;
+          this.s.deployedAircrafts$.next(arr);
+        }
         this.s.editingAircraft$.next(null);
         this.s.waypointEditIndex$.next(null);
       },
-      error: err => { console.error('Failed to save aircraft', err); alert('Failed to save aircraft.'); },
+      error: err => {
+        console.error('Failed to save aircraft', err);
+        alert('Failed to save aircraft.');
+      },
       complete: () => this.s.savingAircraft$.next(false),
     });
   }
@@ -102,7 +132,11 @@ export class AircraftFacade {
     const wp = ac.planned_waypoints[index];
     if (!wp) return;
     this.s.waypointEditIndex$.next(index);
-    this.s.waypointForm$.next({ lat: wp.lat, lon: wp.lon, alt: (wp as any).alt ?? '' });
+    this.s.waypointForm$.next({
+      lat: wp.lat,
+      lon: wp.lon,
+      alt: (wp as any).alt ?? '',
+    });
   }
 
   saveWaypoint() {
@@ -110,13 +144,19 @@ export class AircraftFacade {
     const f: any = this.s.waypointForm$.value;
     if (!ac) return;
 
-    const lat = this.num(f.lat), lon = this.num(f.lon);
-    const hasAlt = f.alt !== undefined && f.alt !== null && String(f.alt).trim() !== '';
+    const lat = this.num(f.lat),
+      lon = this.num(f.lon);
+    const hasAlt =
+      f.alt !== undefined && f.alt !== null && String(f.alt).trim() !== '';
     const alt = hasAlt ? this.num(f.alt) : undefined;
 
-    if (!(Number.isFinite(lat) && lat >= -90 && lat <= 90) ||
-        !(Number.isFinite(lon) && lon >= -180 && lon <= 180)) {
-      alert('Waypoint must have valid latitude (−90..90) and longitude (−180..180).');
+    if (
+      !(Number.isFinite(lat) && lat >= -90 && lat <= 90) ||
+      !(Number.isFinite(lon) && lon >= -180 && lon <= 180)
+    ) {
+      alert(
+        'Waypoint must have valid latitude (−90..90) and longitude (−180..180).',
+      );
       return;
     }
     if (hasAlt && !Number.isFinite(alt)) {
@@ -141,5 +181,41 @@ export class AircraftFacade {
     if (!ac?.planned_waypoints) return;
     ac.planned_waypoints.splice(index, 1);
     this.s.editingAircraft$.next({ ...ac });
+  }
+
+  // ========= NEW: delete deployed aircraft =========
+  deleteAircraft(ac: DeployedAircraft) {
+    if (!ac?.id) {
+      return;
+    }
+
+    // Optional confirmation — you can remove this if you handle it in UI
+    const ok = confirm(
+      `Remove aircraft "${ac.name || ac.id}" from this scenario?`,
+    );
+    if (!ok) return;
+
+    this.s.savingAircraft$.next(true);
+
+    // Adjust method name if your ScenarioService uses a different one
+    this.api.deleteDeployedAircraft(ac.id).subscribe({
+      next: () => {
+        // Remove from local state so UI & map update
+        const current = this.s.deployedAircrafts$.value;
+        const updated = current.filter(a => a.id !== ac.id);
+        this.s.deployedAircrafts$.next(updated);
+
+        // If we were editing this aircraft, close editor
+        if (this.s.editingAircraft$.value?.id === ac.id) {
+          this.s.editingAircraft$.next(null);
+          this.s.waypointEditIndex$.next(null);
+        }
+      },
+      error: err => {
+        console.error('Failed to delete aircraft', err);
+        alert('Failed to delete aircraft.');
+      },
+      complete: () => this.s.savingAircraft$.next(false),
+    });
   }
 }

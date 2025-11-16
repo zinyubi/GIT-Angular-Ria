@@ -119,19 +119,68 @@ export class LayertreeComponentRia implements OnDestroy {
     }
   }
 
-  deleteLayer(n: LayerTreeNodeVM, ev: MouseEvent) {
-    ev.stopPropagation();
-    const ref: any = n.ref;
-    try {
-      if (ref?.parent?.removeChild) {
-        ref.parent.removeChild(ref);
-      } else if (ref?.layer?.parent?.removeChild) {
-        ref.layer.parent.removeChild(ref.layer);
-      }
-    } catch (e) {
-      console.warn('Cannot delete layer', e);
-    }
+deleteLayer(n: LayerTreeNodeVM, ev: MouseEvent) {
+  ev.stopPropagation();
+  if (!this._map) {
+    return;
   }
+
+  const lt: any = this._map.layerTree;
+  const ref: any = n.ref;
+
+  try {
+    // 1) Try to resolve the underlying Luciad layer
+    let layer: any = null;
+
+    // If the ref itself is a layer (FeatureLayer / RasterTileSetLayer / GridLayer / etc.)
+    if (ref instanceof FeatureLayer ||
+        ref instanceof RasterTileSetLayer ||
+        ref instanceof RasterImageLayer ||
+        ref instanceof GridLayer) {
+      layer = ref;
+    } else if (ref?.layer) {
+      // If ref is a tree node wrapping a layer
+      layer = ref.layer;
+    }
+
+    if (layer) {
+      // Prefer the layer's parent (LayerGroup / LayerTree), else fall back to the map's layerTree
+      const parent: any = layer.parent || lt;
+
+      if (parent && typeof parent.removeChild === 'function') {
+        parent.removeChild(layer);
+        // Make sure UI reflects the change
+        this.rebuild();
+        this.cdr.markForCheck();
+        return;
+      }
+    }
+
+    // 2) Fallback: if the ref itself is something the parent can remove
+    if (ref?.parent && typeof ref.parent.removeChild === 'function') {
+      ref.parent.removeChild(ref);
+      this.rebuild();
+      this.cdr.markForCheck();
+      return;
+    }
+
+    // 3) Last resort: try to remove by id from layerTree if available
+    if (lt?.findLayerById && lt?.removeChild) {
+      const found = lt.findLayerById(n.id);
+      if (found) {
+        lt.removeChild(found);
+        this.rebuild();
+        this.cdr.markForCheck();
+        return;
+      }
+    }
+
+    console.warn('[LayerTree] Could not determine how to delete node', n);
+  } catch (e) {
+    console.warn('[LayerTree] Cannot delete layer', e);
+  }
+}
+
 
   // DnD
   dragStart(n: LayerTreeNodeVM, ev: DragEvent) {

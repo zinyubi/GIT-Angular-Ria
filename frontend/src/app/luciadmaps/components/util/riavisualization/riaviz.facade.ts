@@ -1,7 +1,14 @@
+// riaviz.facade.ts
 import { WebGLMap } from "@luciad/ria/view/WebGLMap.js";
-import type { LayerDefinition, CreatedLayer, MeshSpec, DebugConfig } from "./riaviz.types";
+import type {
+  LayerDefinition,
+  CreatedLayer,
+  MeshSpec,
+  DebugConfig,
+} from "./riaviz.types";
 import { MapContext, LayerRegistry, FeatureStore } from "./riaviz.services";
 import type { Feature } from "@luciad/ria/model/feature/Feature.js";
+import type { FeatureLayer } from "@luciad/ria/view/feature/FeatureLayer.js";
 
 // NEW: mesh helpers
 import { buildMeshIconFromSpec } from "./riaviz.mesh";
@@ -14,7 +21,10 @@ export class RiaVizFacade {
   private reg: LayerRegistry;
   private storeImpl: FeatureStore;
 
-  private featureOwner = new Map<string, { layerId: string; kind: Kind; label: string }>();
+  private featureOwner = new Map<
+    string,
+    { layerId: string; kind: Kind; label: string }
+  >();
 
   constructor(map: WebGLMap) {
     this.ctx = new MapContext(map);
@@ -32,9 +42,36 @@ export class RiaVizFacade {
     return this.reg.getOrCreateLayer(def, debug);
   }
 
-  setActiveLayer(id: string) { this.reg.setActiveLayer(id); }
-  setLayerVisibility(id: string, visible: boolean) { this.reg.setVisibility(id, visible); }
-  setLayerOpacity(id: string, opacity: number) { this.reg.setOpacity(id, opacity); }
+  /**
+   * Set the active layer.
+   *
+   * Accepts:
+   *  - registry id (string), OR
+   *  - Luciad FeatureLayer (or any object with an `id`).
+   *
+   * When a FeatureLayer is passed that isn't known yet, we register it
+   * into LayerRegistry (so FeatureStore can work with its model/store/reference),
+   * then activate that entry.
+   */
+  setActiveLayer(target: string | FeatureLayer | { id: string }) {
+    // Case 1: existing registry id → just delegate
+    if (typeof target === "string") {
+      this.reg.setActiveLayer(target);
+      return;
+    }
+
+    // Case 2: Luciad FeatureLayer / object with id
+    const layerObj = target as FeatureLayer;
+    const { id } = this.ensureEntryForLayer(layerObj);
+    this.reg.setActiveLayer(id);
+  }
+
+  setLayerVisibility(id: string, visible: boolean) {
+    this.reg.setVisibility(id, visible);
+  }
+  setLayerOpacity(id: string, opacity: number) {
+    this.reg.setOpacity(id, opacity);
+  }
 
   /** Mesh-aware layer style update */
   updateLayerStyle(id: string, style: any) {
@@ -42,7 +79,9 @@ export class RiaVizFacade {
     this.reg.updateLayerStyle(id, next);
   }
 
-  removeLayer(id: string) { this.reg.remove(id); }
+  removeLayer(id: string) {
+    this.reg.remove(id);
+  }
 
   /* ---------- Editor hooks ---------- */
   lookupOwnerByFeature(feature: Feature) {
@@ -53,13 +92,21 @@ export class RiaVizFacade {
       const store: any = entry.store;
       if (!store) continue;
 
-      if (fid && typeof store.get === "function" && (store.get(fid) ?? store.get(Number(fid)))) {
-        const info = { layerId: entry.id, kind: entry.kind as Kind, label: entry.label };
+      if (
+        fid &&
+        typeof store.get === "function" &&
+        (store.get(fid) ?? store.get(Number(fid)))
+      ) {
+        const info = {
+          layerId: entry.id,
+          kind: entry.kind as Kind,
+          label: entry.label,
+        };
         if (fid) this.featureOwner.set(fid, info);
         return info;
       }
 
-      const cursor = (store.query ? store.query() : entry.model?.query?.());
+      const cursor = store.query ? store.query() : entry.model?.query?.();
       if (cursor) {
         let found = false;
         this.iterCursor(cursor, (f: Feature) => {
@@ -68,7 +115,11 @@ export class RiaVizFacade {
           if (f === feature || (fid && id === fid)) found = true;
         });
         if (found) {
-          const info = { layerId: entry.id, kind: entry.kind as Kind, label: entry.label };
+          const info = {
+            layerId: entry.id,
+            kind: entry.kind as Kind,
+            label: entry.label,
+          };
           if (fid) this.featureOwner.set(fid, info);
           return info;
         }
@@ -83,9 +134,12 @@ export class RiaVizFacade {
     const store: any = (e as any).store;
     if (!store) return;
 
-    let f: any = (typeof store.get === "function") ? (store.get(featureId) ?? store.get(Number(featureId))) : null;
+    let f: any =
+      typeof store.get === "function"
+        ? store.get(featureId) ?? store.get(Number(featureId))
+        : null;
     if (!f) {
-      const cursor = (store.query ? store.query() : (e as any).model?.query?.());
+      const cursor = store.query ? store.query() : (e as any).model?.query?.();
       if (cursor) {
         this.iterCursor(cursor, (fx: any) => {
           if (f) return;
@@ -105,10 +159,10 @@ export class RiaVizFacade {
     if (typeof store.put === "function") store.put(next);
     else if (typeof store.reload === "function") {
       const items: Feature[] = [];
-      const cursor = (store.query ? store.query() : (e as any).model?.query?.());
+      const cursor = store.query ? store.query() : (e as any).model?.query?.();
       this.iterCursor(cursor, (fx: any) => {
         const id = fx?.id;
-        items.push((id === featureId || id === Number(featureId)) ? next : fx);
+        items.push(id === featureId || id === Number(featureId) ? next : fx);
       });
       store.reload(items);
     }
@@ -123,79 +177,278 @@ export class RiaVizFacade {
     this.reg.updateLayerStyle(hit.id, merged);
   }
 
-  /* ---------- Features (+ remember owners) ---------- */
-  addPoint(lon: number, lat: number, attrs?: Record<string, any>, style?: any) {
-    const a = this.reg.activeLayer; if (!a) throw new Error("No active layer");
+  /* ---------- Features (+ remember owners) using activeLayer ---------- */
+
+  addPoint(
+    lon: number,
+    lat: number,
+    attrs?: Record<string, any>,
+    style?: any
+  ) {
+    const a = this.reg.activeLayer;
+    if (!a) throw new Error("No active layer");
     const ref = this.storeImpl.addPoint(a.id, lon, lat, { attrs, style });
-    this.rememberOwner(ref?.id, a.id, "point"); return ref;
-  }
-  addPoint3D(lon: number, lat: number, alt: number, attrs?: Record<string, any>, style?: any) {
-    const a = this.reg.activeLayer; if (!a) throw new Error("No active layer");
-    const ref = this.storeImpl.addPoint3D(a.id, lon, lat, alt, { attrs, style });
-    this.rememberOwner(ref?.id, a.id, "point"); return ref;
-  }
-  addPolyline(coords: Array<[number, number] | [number, number, number]>, attrs?: Record<string, any>, style?: any) {
-    const a = this.reg.activeLayer; if (!a) throw new Error("No active layer");
-    const ref = this.storeImpl.addPolyline(a.id, coords, { attrs, style });
-    this.rememberOwner(ref?.id, a.id, "polyline"); return ref;
-  }
-  addPolyline3D(coordsWithZ: Array<[number, number, number]>, attrs?: Record<string, any>, style?: any) {
-    const a = this.reg.activeLayer; if (!a) throw new Error("No active layer");
-    const ref = this.storeImpl.addPolyline3D(a.id, coordsWithZ, { attrs, style });
-    this.rememberOwner(ref?.id, a.id, "polyline"); return ref;
-  }
-  addLine3D(coordsWithZ: Array<[number, number, number]>, attrs?: Record<string, any>, style?: any) {
-    return this.addPolyline3D(coordsWithZ, attrs, style);
-  }
-  addPolygon(ring: Array<[number, number] | [number, number, number]>, attrs?: Record<string, any>, style?: any) {
-    const a = this.reg.activeLayer; if (!a) throw new Error("No active layer");
-    const ref = this.storeImpl.addPolygon(a.id, ring, { attrs, style });
-    this.rememberOwner(ref?.id, a.id, "polygon"); return ref;
-  }
-  addExtrudedPolygon(ring: Array<[number, number] | [number, number, number]>, minH: number, maxH: number, attrs?: Record<string, any>, style?: any) {
-    const a = this.reg.activeLayer; if (!a) throw new Error("No active layer");
-    const ref = this.storeImpl.addExtrudedPolygon(a.id, ring, minH, maxH, { attrs, style });
-    this.rememberOwner(ref?.id, a.id, "polygon"); return ref;
-  }
-  addExtrudedPolyline(coords: Array<[number, number] | [number, number, number]>, minH: number, maxH: number, attrs?: Record<string, any>, style?: any) {
-    const a = this.reg.activeLayer; if (!a) throw new Error("No active layer");
-    const ref = this.storeImpl.addExtrudedPolyline(a.id, coords, minH, maxH, { attrs, style });
-    this.rememberOwner(ref?.id, a.id, "polyline"); return ref;
-  }
-  addMeshIcon(lon: number, lat: number, mesh: MeshSpec, attrs?: Record<string, any>, style?: any, alt?: number) {
-    const a = this.reg.activeLayer; if (!a) throw new Error("No active layer");
-    const ref = this.storeImpl.addMeshIcon(a.id, lon, lat, mesh, { attrs, style, alt });
-    this.rememberOwner(ref?.id, a.id, "point"); return ref;
+    this.rememberOwner(ref?.id, a.id, "point");
+    return ref;
   }
 
-  get registry(){ return this.reg; }
+  addPoint3D(
+    lon: number,
+    lat: number,
+    alt: number,
+    attrs?: Record<string, any>,
+    style?: any
+  ) {
+    const a = this.reg.activeLayer;
+    if (!a) throw new Error("No active layer");
+    const ref = this.storeImpl.addPoint3D(a.id, lon, lat, alt, { attrs, style });
+    this.rememberOwner(ref?.id, a.id, "point");
+    return ref;
+  }
+
+  addPolyline(
+    coords: Array<[number, number] | [number, number, number]>,
+    attrs?: Record<string, any>,
+    style?: any
+  ) {
+    const a = this.reg.activeLayer;
+    if (!a) throw new Error("No active layer");
+    const ref = this.storeImpl.addPolyline(a.id, coords, { attrs, style });
+    this.rememberOwner(ref?.id, a.id, "polyline");
+    return ref;
+  }
+
+  addPolyline3D(
+    coordsWithZ: Array<[number, number, number]>,
+    attrs?: Record<string, any>,
+    style?: any
+  ) {
+    const a = this.reg.activeLayer;
+    if (!a) throw new Error("No active layer");
+    const ref = this.storeImpl.addPolyline3D(a.id, coordsWithZ, { attrs, style });
+    this.rememberOwner(ref?.id, a.id, "polyline");
+    return ref;
+  }
+
+  addLine3D(
+    coordsWithZ: Array<[number, number, number]>,
+    attrs?: Record<string, any>,
+    style?: any
+  ) {
+    return this.addPolyline3D(coordsWithZ, attrs, style);
+  }
+
+  addPolygon(
+    ring: Array<[number, number] | [number, number, number]>,
+    attrs?: Record<string, any>,
+    style?: any
+  ) {
+    const a = this.reg.activeLayer;
+    if (!a) throw new Error("No active layer");
+    const ref = this.storeImpl.addPolygon(a.id, ring, { attrs, style });
+    this.rememberOwner(ref?.id, a.id, "polygon");
+    return ref;
+  }
+
+  addExtrudedPolygon(
+    ring: Array<[number, number] | [number, number, number]>,
+    minH: number,
+    maxH: number,
+    attrs?: Record<string, any>,
+    style?: any
+  ) {
+    const a = this.reg.activeLayer;
+    if (!a) throw new Error("No active layer");
+    const ref = this.storeImpl.addExtrudedPolygon(a.id, ring, minH, maxH, {
+      attrs,
+      style,
+    });
+    this.rememberOwner(ref?.id, a.id, "polygon");
+    return ref;
+  }
+
+  addExtrudedPolyline(
+    coords: Array<[number, number] | [number, number, number]>,
+    minH: number,
+    maxH: number,
+    attrs?: Record<string, any>,
+    style?: any
+  ) {
+    const a = this.reg.activeLayer;
+    if (!a) throw new Error("No active layer");
+    const ref = this.storeImpl.addExtrudedPolyline(a.id, coords, minH, maxH, {
+      attrs,
+      style,
+    });
+    this.rememberOwner(ref?.id, a.id, "polyline");
+    return ref;
+  }
+
+  addMeshIcon(
+    lon: number,
+    lat: number,
+    mesh: MeshSpec,
+    attrs?: Record<string, any>,
+    style?: any,
+    alt?: number
+  ) {
+    const a = this.reg.activeLayer;
+    if (!a) throw new Error("No active layer");
+    const ref = this.storeImpl.addMeshIcon(a.id, lon, lat, mesh, {
+      attrs,
+      style,
+      alt,
+    });
+    this.rememberOwner(ref?.id, a.id, "point");
+    return ref;
+  }
+
+  /* ---------- Features for a specific FeatureLayer (scenario use-case) ---------- */
+
+  private ensureEntryForLayer(layer: FeatureLayer): { id: string; entry: any } {
+    const layerObj = layer as any;
+    const idFromLayer =
+      layerObj && typeof layerObj.id !== "undefined"
+        ? String(layerObj.id)
+        : undefined;
+
+    if (!idFromLayer) {
+      throw new Error("ensureEntryForLayer: layer must have an 'id' property");
+    }
+
+    const anyReg: any = this.reg as any;
+    const entries: Map<string, any> = anyReg.entries || anyReg._entries;
+
+    if (!entries) {
+      throw new Error(
+        "ensureEntryForLayer: LayerRegistry has no internal entries map"
+      );
+    }
+
+    // 1) Try to find an existing entry that already wraps this layer
+    for (const [key, value] of entries.entries()) {
+      const v = value as any;
+      if (v.layer === layerObj) {
+        return { id: key, entry: v };
+      }
+      if (String(v.id) === idFromLayer) {
+        return { id: key, entry: v };
+      }
+    }
+
+    // 2) Not found → create a new registry entry backed by this FeatureLayer.
+    const model = layerObj.model;
+    const store = model?.store;
+    const reference =
+      model?.reference ??
+      (this.ctx as any).mapRef ??
+      (this.ctx as any).reference;
+
+    const entryId = idFromLayer;
+    const entry = {
+      id: entryId,
+      layer: layerObj,
+      label: layerObj.label ?? "Layer",
+      kind: (layerObj as any).kind ?? ("point" as Kind),
+      store,
+      model,
+      reference,
+      style: (layerObj as any).style,
+    };
+
+    entries.set(entryId, entry);
+    return { id: entryId, entry };
+  }
+
+  // Use a specific FeatureLayer instead of relying on activeLayer
+  addPoint3DForLayer(
+    layer: FeatureLayer,
+    lon: number,
+    lat: number,
+    alt: number,
+    attrs?: Record<string, any>,
+    style?: any
+  ) {
+    const { id } = this.ensureEntryForLayer(layer);
+    const ref = this.storeImpl.addPoint3D(id, lon, lat, alt, { attrs, style });
+    this.rememberOwner(ref?.id, id, "point");
+    return ref;
+  }
+
+  addLine3DForLayer(
+    layer: FeatureLayer,
+    coordsWithZ: Array<[number, number, number]>,
+    attrs?: Record<string, any>,
+    style?: any
+  ) {
+    const { id } = this.ensureEntryForLayer(layer);
+    const ref = this.storeImpl.addPolyline3D(id, coordsWithZ, {
+      attrs,
+      style,
+    });
+    this.rememberOwner(ref?.id, id, "polyline");
+    return ref;
+  }
+
+  get registry() {
+    return this.reg;
+  }
 
   /* ---------- internals ---------- */
   private rememberOwner(id?: string, layerId?: string, kind?: Kind) {
     if (!id || !layerId) return;
     try {
       const entry = this.reg.get(layerId);
-      const label = (entry as any).layer?.label ?? entry.label ?? "Layer";
-      this.featureOwner.set(id, { layerId, kind: (kind || (entry as any).kind) as Kind, label });
+      const label =
+        (entry as any).layer?.label ?? entry.label ?? "Layer";
+      this.featureOwner.set(id, {
+        layerId,
+        kind: (kind || (entry as any).kind) as Kind,
+        label,
+      });
     } catch {}
   }
 
-  private *iterRegistry(): Iterable<{ id: string; kind: Kind; label: string; store: any; model: any }> {
+  private *iterRegistry(): Iterable<{
+    id: string;
+    kind: Kind;
+    label: string;
+    store: any;
+    model: any;
+  }> {
     const anyReg: any = this.reg as any;
-    if (typeof anyReg.iterEntries === "function") { yield* anyReg.iterEntries(); return; }
+    if (typeof anyReg.iterEntries === "function") {
+      yield* anyReg.iterEntries();
+      return;
+    }
     const mapLike: Map<string, any> = anyReg.entries || anyReg._entries;
     if (mapLike?.forEach) {
       const out: any[] = [];
-      mapLike.forEach((v: any, k: string) => out.push({ id: k, kind: v.kind, label: v.label, store: v.store, model: v.model }));
+      mapLike.forEach((v: any, k: string) =>
+        out.push({
+          id: k,
+          kind: v.kind,
+          label: v.label,
+          store: v.store,
+          model: v.model,
+        })
+      );
       for (const e of out) yield e;
     }
   }
 
   private iterCursor(cursor: any, cb: (f: Feature) => void) {
     if (!cursor) return;
-    if (typeof cursor.forEach === "function") { cursor.forEach(cb); return; }
-    if (typeof cursor.hasNext === "function" && typeof cursor.next === "function") {
-      while (cursor.hasNext()) cb(cursor.next()); return;
+    if (typeof cursor.forEach === "function") {
+      cursor.forEach(cb);
+      return;
+    }
+    if (
+      typeof cursor.hasNext === "function" &&
+      typeof cursor.next === "function"
+    ) {
+      while (cursor.hasNext()) cb(cursor.next());
+      return;
     }
     if (Array.isArray(cursor)) cursor.forEach(cb);
   }
@@ -203,10 +456,11 @@ export class RiaVizFacade {
   private mergeDeep<T extends object>(a: T, b: any): T {
     const out: any = Array.isArray(a) ? [...(a as any)] : { ...(a as any) };
     if (b && typeof b === "object") {
-      Object.keys(b).forEach(k => {
+      Object.keys(b).forEach((k) => {
         const v = (b as any)[k];
-        if (v && typeof v === "object" && !Array.isArray(v)) out[k] = this.mergeDeep(out[k] || {}, v);
-        else out[k] = v;
+        if (v && typeof v === "object" && !Array.isArray(v)) {
+          out[k] = this.mergeDeep(out[k] || {}, v);
+        } else out[k] = v;
       });
     }
     return out as T;
@@ -216,8 +470,10 @@ export class RiaVizFacade {
   private ensureMesh3D(style: any): any {
     if (!style?.point || style.point.symbol !== "mesh3d") return style;
 
-    const m: (MeshIcon3DStyle & { shape?: string; params?: Record<string, any> }) =
-      style.point.mesh3d ?? (style.mesh3d as any) ?? {};
+    const m: MeshIcon3DStyle & {
+      shape?: string;
+      params?: Record<string, any>;
+    } = style.point.mesh3d ?? (style.mesh3d as any) ?? {};
 
     // If geometry definition is present (or mesh missing), (re)build it
     if ((m as any).shape || (m as any).params || !m.mesh) {
@@ -229,7 +485,7 @@ export class RiaVizFacade {
         rotation: (m as any).rotation,
         translation: (m as any).translation,
         lightIntensity: (m as any).pbrSettings?.lightIntensity ?? 1.0,
-        transparency: (m as any).transparency ?? false
+        transparency: (m as any).transparency ?? false,
       };
       const icon = buildMeshIconFromSpec(spec);
 
@@ -246,13 +502,16 @@ export class RiaVizFacade {
             scale: m.scale ?? icon.scale,
             rotation: m.rotation ?? icon.rotation,
             translation: m.translation ?? icon.translation,
-            transparency: typeof m.transparency === "boolean" ? m.transparency : icon.transparency,
+            transparency:
+              typeof m.transparency === "boolean"
+                ? m.transparency
+                : icon.transparency,
             facetCulling: m.facetCulling ?? icon.facetCulling,
             // keep declarative bits for round-trip with editor
             shape: (m as any).shape ?? spec.shape,
-            params: (m as any).params ?? spec.params
-          }
-        }
+            params: (m as any).params ?? spec.params,
+          },
+        },
       };
     }
     return style;

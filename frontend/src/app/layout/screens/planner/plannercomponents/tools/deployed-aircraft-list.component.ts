@@ -10,23 +10,22 @@ import { DeployedAircraft, AircraftType } from '../../../../../core/auth/service
   styleUrls: ['./deployed-aircraft-list.component.css'],
 })
 export class DeployedAircraftListComponent {
-  @Input() aircrafts: DeployedAircraft[] = [];
+  @Input() aircrafts: DeployedAircraft[] | null | undefined = [];
+
   @Output() edit = new EventEmitter<DeployedAircraft>();
+  @Output() remove = new EventEmitter<DeployedAircraft>();
 
   /** Whether the accordion is open */
   @Input() open = true;
   @Output() openChange = new EventEmitter<boolean>();
 
-  /** Toggle accordion open/close */
   toggleOpen(val: boolean) {
     this.open = val;
     this.openChange.emit(val);
   }
 
-  /** Track function for ngFor */
   trackByAircraftId = (_: number, a: DeployedAircraft) => a.id!;
 
-  /** Helpers for displaying fields */
   getTypeName(ac: DeployedAircraft): string | number {
     const t = ac.aircraft_type as AircraftType | any;
     return t && typeof t === 'object' ? (t.name ?? 'Type') : (t ?? '');

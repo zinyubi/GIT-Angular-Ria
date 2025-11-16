@@ -135,22 +135,29 @@ export class PlannerComponent implements OnInit, OnDestroy {
     this.subs.add(this.state.savingAircraft$.subscribe(v => (this.savingAircraft = v)));
 
     // auto-close editor when facade clears it
-    this.subs.add(this.state.editingAircraft$.subscribe(v => {
-      this.editingAircraft = v;
-      if (!v) { this.editorOpen = false; this.deployOpen = true; }
-    }));
+    this.subs.add(
+      this.state.editingAircraft$.subscribe(v => {
+        this.editingAircraft = v;
+        if (!v) {
+          this.editorOpen = false;
+          this.deployOpen = true;
+        }
+      }),
+    );
 
     this.subs.add(this.state.waypointEditIndex$.subscribe(v => (this.waypointEditIndex = v)));
 
     // ---- Keep the local form typed as WaypointForm (no empty strings)
-    this.subs.add(this.state.waypointForm$.subscribe(v => {
-      const f = v as Partial<WaypointForm> | null;
-      this.waypointForm = {
-        lat: f?.lat ?? null,
-        lon: f?.lon ?? null,
-        alt: f?.alt ?? null,
-      };
-    }));
+    this.subs.add(
+      this.state.waypointForm$.subscribe(v => {
+        const f = v as Partial<WaypointForm> | null;
+        this.waypointForm = {
+          lat: f?.lat ?? null,
+          lon: f?.lon ?? null,
+          alt: f?.alt ?? null,
+        };
+      }),
+    );
 
     this.subs.add(this.state.newAircraftForm$.subscribe(v => (this.newAircraftForm = v)));
 
@@ -159,19 +166,28 @@ export class PlannerComponent implements OnInit, OnDestroy {
     this.deployFx.loadAircraftTypes();
   }
 
-  // sidebar helpers
-  expand(): void { this.state.sidebarCollapsed$.next(false); }
+  // ===== Sidebar helpers =====
+  expand(): void {
+    this.state.sidebarCollapsed$.next(false);
+  }
+
   expandAnd(section: 'create' | 'edit' | 'list'): void {
     this.state.sidebarCollapsed$.next(false);
     requestAnimationFrame(() => {
-      if (section === 'create') this.handleCreateScenario();
-      else if (section === 'edit') { if (this.selectedScenario) this.handleEditScenario(); }
-      else if (section === 'list') this.listBlock?.nativeElement?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      if (section === 'create') {
+        this.handleCreateScenario();
+      } else if (section === 'edit') {
+        if (this.selectedScenario) this.handleEditScenario();
+      } else if (section === 'list') {
+        this.listBlock?.nativeElement?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
     });
   }
 
-  // scenarios
-  loadScenarios() { this.scenariosFx.loadScenarios(); }
+  // ===== Scenarios =====
+  loadScenarios() {
+    this.scenariosFx.loadScenarios();
+  }
 
   handleSelect(s: Scenario) {
     this.scenariosFx.selectScenario(s, () => this.deployFx.loadDeployedAircrafts());
@@ -179,49 +195,87 @@ export class PlannerComponent implements OnInit, OnDestroy {
     this.deployOpen = true;
   }
 
-  handleCreateScenario() { this.scenariosFx.createScenario(); }
-  handleEditScenario() { this.scenariosFx.editScenario(); }
-  handleCancelEditScenario() { this.scenariosFx.cancelEditScenario(); }
-  handleSaveScenario() { this.scenariosFx.saveScenario(); }
-  handleDeleteScenario(s: Scenario) { this.scenariosFx.deleteScenario(s); }
+  handleCreateScenario() {
+    this.scenariosFx.createScenario();
+  }
+  handleEditScenario() {
+    this.scenariosFx.editScenario();
+  }
+  handleCancelEditScenario() {
+    this.scenariosFx.cancelEditScenario();
+  }
+  handleSaveScenario() {
+    this.scenariosFx.saveScenario();
+  }
+  handleDeleteScenario(s: Scenario) {
+    this.scenariosFx.deleteScenario(s);
+  }
 
-  // types + deployed
-  loadAircraftTypes() { this.deployFx.loadAircraftTypes(); }
-  loadDeployedAircrafts() { this.deployFx.loadDeployedAircrafts(); }
+  // ===== Types + deployed =====
+  loadAircraftTypes() {
+    this.deployFx.loadAircraftTypes();
+  }
+  loadDeployedAircrafts() {
+    this.deployFx.loadDeployedAircrafts();
+  }
 
-  // single-open logic
+  // ===== Single-open logic (deploy vs editor) =====
   onDeployOpenChange(open: boolean) {
     this.deployOpen = open;
     if (open) this.editorOpen = false;
   }
+
   onEditorOpenChange(open: boolean) {
     this.editorOpen = open;
     if (open) this.deployOpen = false;
   }
 
-  // deployment
+  // ===== Deployment =====
   handleDeployAircraft() {
     this.deployFx.deployAircraft();
     this.deployOpen = false;
   }
 
-  // aircraft editor
+  // ===== Aircraft editor =====
   startEditAircraft(ac: DeployedAircraft) {
     this.aircraftFx.startEdit(ac);
     this.editorOpen = true;
     this.deployOpen = false;
   }
+
   cancelEditAircraft() {
     this.aircraftFx.cancelEdit();
     this.editorOpen = false;
     this.deployOpen = true;
   }
-  saveAircraft() { this.aircraftFx.saveAircraft(); }
-  editWaypoint(i: number) { this.aircraftFx.editWaypoint(i); }
-  saveWaypoint() { this.aircraftFx.saveWaypoint(); }
-  deleteWaypoint(i: number) { this.aircraftFx.deleteWaypoint(i); }
 
-  // map picking
+  saveAircraft() {
+    this.aircraftFx.saveAircraft();
+  }
+
+  editWaypoint(i: number) {
+    this.aircraftFx.editWaypoint(i);
+  }
+
+  saveWaypoint() {
+    this.aircraftFx.saveWaypoint();
+  }
+
+  deleteWaypoint(i: number) {
+    this.aircraftFx.deleteWaypoint(i);
+  }
+
+  // ===== NEW: Delete / remove deployed aircraft =====
+  removeAircraft(ac: DeployedAircraft) {
+    // Call into your facade; adjust the method name to whatever you implement there.
+    this.aircraftFx.deleteAircraft(ac);
+
+    // If your facade updates state asynchronously, you don't need the below.
+    // If you prefer optimistic UI updates, you can uncomment:
+    // this.deployedAircrafts = this.deployedAircrafts.filter(a => a.id !== ac.id);
+  }
+
+  // ===== Map picking =====
   beginPick(mode: PickMode) {
     this.pickMode = mode;
     if (mode !== 'edit-initial') {
@@ -229,6 +283,7 @@ export class PlannerComponent implements OnInit, OnDestroy {
     }
     this.mapPanel?.startPointPicking();
   }
+
   cancelPick() {
     if (this.pickMode !== 'edit-initial') {
       this.picker.cancel();
@@ -236,6 +291,7 @@ export class PlannerComponent implements OnInit, OnDestroy {
     this.pickMode = 'none';
     this.mapPanel?.stopPointPicking();
   }
+
   handlePointPicked(coords: { lon: number; lat: number }) {
     const lat = +coords.lat.toFixed(6);
     const lon = +coords.lon.toFixed(6);
@@ -252,14 +308,17 @@ export class PlannerComponent implements OnInit, OnDestroy {
     // deploy/waypoint modes
     this.picker.apply(
       coords,
-      (plat, plon) => this.state.newAircraftForm$.next({
-        ...this.state.newAircraftForm$.value,
-        initial_latitude: plat, initial_longitude: plon
-      }),
+      (plat, plon) =>
+        this.state.newAircraftForm$.next({
+          ...this.state.newAircraftForm$.value,
+          initial_latitude: plat,
+          initial_longitude: plon,
+        }),
       (wplat, wplon) => {
         this.state.waypointForm$.next({
           ...this.state.waypointForm$.value,
-          lat: wplat, lon: wplon
+          lat: wplat,
+          lon: wplon,
         });
 
         // OPTIONAL: auto-save each picked waypoint and keep picking
@@ -274,12 +333,25 @@ export class PlannerComponent implements OnInit, OnDestroy {
   }
 
   @HostListener('document:keydown.escape')
-  onEsc() { this.cancelPick(); }
+  onEsc() {
+    this.cancelPick();
+  }
 
-  // trackBy
+  // ===== trackBy helpers =====
   trackByScenarioId = (_: number, s: Scenario) => s.id;
   trackByAircraftId = (_: number, a: DeployedAircraft) => a.id;
   trackByWaypointIndex = (i: number) => i;
 
-  ngOnDestroy() { this.subs.unsubscribe(); }
+  // === Only pass aircraft for the currently selected scenario to the map ===
+  get mapDeployedAircrafts(): DeployedAircraft[] {
+    if (!this.selectedScenario || !this.deployedAircrafts) {
+      return [];
+    }
+    const sid = this.selectedScenario.id;
+    return this.deployedAircrafts.filter(ac => ac.scenario === sid);
+  }
+
+  ngOnDestroy() {
+    this.subs.unsubscribe();
+  }
 }
