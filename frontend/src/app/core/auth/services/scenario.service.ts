@@ -23,7 +23,7 @@ export interface AircraftType {
 export interface Waypoint {
   lat: number;
   lon: number;
-  alt?: number; // optional per your serializer
+  alt: number;
 }
 
 export type AircraftStatus = 'waiting' | 'moving' | 'paused' | 'arrived' | 'stopped';

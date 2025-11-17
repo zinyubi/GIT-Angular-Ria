@@ -33,7 +33,9 @@ export class AircraftFacade {
 
     this.s.editingAircraft$.next(clone);
     this.s.waypointEditIndex$.next(null);
-    this.s.waypointForm$.next({ lat: 0, lon: 0, alt: '' as any });
+
+    // ✅ keep form clean & nullable
+    this.s.waypointForm$.next({ lat: null, lon: null, alt: null });
   }
 
   cancelEdit() {
@@ -62,18 +64,19 @@ export class AircraftFacade {
       return;
     }
 
-    // Waypoint validation (alt optional)
+    // Waypoint validation (alt optional per waypoint)
     const wps = Array.isArray(ac.planned_waypoints)
       ? [...ac.planned_waypoints]
       : [];
+
     for (const wp of wps) {
       const wlat = this.num(wp.lat);
       const wlon = this.num(wp.lon);
-      const hasAlt =
-        (wp as any).alt !== undefined &&
-        (wp as any).alt !== null &&
-        String((wp as any).alt).trim() !== '';
-      const walt = hasAlt ? this.num((wp as any).alt) : undefined;
+
+      const rawAlt = (wp as any).alt;
+      const hasAlt = rawAlt !== null && rawAlt !== undefined && rawAlt !== "";
+
+      const walt = hasAlt ? this.num(rawAlt) : null;
 
       if (
         !(Number.isFinite(wlat) && wlat >= -90 && wlat <= 90) ||
@@ -82,12 +85,18 @@ export class AircraftFacade {
         alert('One or more waypoints have invalid latitude/longitude.');
         return;
       }
+
       if (hasAlt && !Number.isFinite(walt)) {
         alert('Waypoint altitude must be numeric if provided.');
         return;
       }
-      if (!hasAlt) delete (wp as any).alt;
-      else (wp as any).alt = walt!;
+
+      // ✅ normalize: either numeric alt or no alt property
+      if (!hasAlt) {
+        delete (wp as any).alt;
+      } else {
+        (wp as any).alt = walt!;
+      }
     }
 
     // aircraft_type id for update serializer
@@ -131,11 +140,14 @@ export class AircraftFacade {
     if (!ac?.planned_waypoints) return;
     const wp = ac.planned_waypoints[index];
     if (!wp) return;
+
     this.s.waypointEditIndex$.next(index);
+
+    // ✅ alt is kept as number | null | undefined, no magic 0
     this.s.waypointForm$.next({
-      lat: wp.lat,
-      lon: wp.lon,
-      alt: (wp as any).alt ?? '',
+      lat: wp.lat ?? null,
+      lon: wp.lon ?? null,
+      alt: (wp as any).alt ?? null,
     });
   }
 
@@ -144,12 +156,18 @@ export class AircraftFacade {
     const f: any = this.s.waypointForm$.value;
     if (!ac) return;
 
-    const lat = this.num(f.lat),
-      lon = this.num(f.lon);
-    const hasAlt =
-      f.alt !== undefined && f.alt !== null && String(f.alt).trim() !== '';
-    const alt = hasAlt ? this.num(f.alt) : undefined;
+    const lat = this.num(f.lat);
+    const lon = this.num(f.lon);
 
+    const rawAlt = f.alt;
+    const hasAlt =
+      rawAlt !== undefined &&
+      rawAlt !== null &&
+      String(rawAlt).trim() !== '';
+
+    const alt = hasAlt ? this.num(rawAlt) : null;
+
+    // Validate lat/lon
     if (
       !(Number.isFinite(lat) && lat >= -90 && lat <= 90) ||
       !(Number.isFinite(lon) && lon >= -180 && lon <= 180)
@@ -159,19 +177,30 @@ export class AircraftFacade {
       );
       return;
     }
+
+    // Validate altitude if provided
     if (hasAlt && !Number.isFinite(alt)) {
       alert('Waypoint altitude must be numeric if provided.');
       return;
     }
 
     if (!Array.isArray(ac.planned_waypoints)) ac.planned_waypoints = [];
-    const next = hasAlt ? { lat, lon, alt } : { lat, lon };
+
+    // ✅ Only include alt when provided; otherwise keep it 2D
+    const next: any = { lat, lon };
+    if (hasAlt) {
+      next.alt = alt;
+    }
 
     const idx = this.s.waypointEditIndex$.value;
-    if (idx === null) ac.planned_waypoints.push(next as any);
-    else ac.planned_waypoints[idx] = next as any;
+    if (idx === null) {
+      ac.planned_waypoints.push(next);
+    } else {
+      ac.planned_waypoints[idx] = next;
+    }
 
-    this.s.waypointForm$.next({ lat: 0, lon: 0, alt: '' as any });
+    // ✅ Reset to nulls, not 0 / ''
+    this.s.waypointForm$.next({ lat: null, lon: null, alt: null });
     this.s.waypointEditIndex$.next(null);
     this.s.editingAircraft$.next({ ...ac });
   }
@@ -189,7 +218,6 @@ export class AircraftFacade {
       return;
     }
 
-    // Optional confirmation — you can remove this if you handle it in UI
     const ok = confirm(
       `Remove aircraft "${ac.name || ac.id}" from this scenario?`,
     );
@@ -197,15 +225,12 @@ export class AircraftFacade {
 
     this.s.savingAircraft$.next(true);
 
-    // Adjust method name if your ScenarioService uses a different one
     this.api.deleteDeployedAircraft(ac.id).subscribe({
       next: () => {
-        // Remove from local state so UI & map update
         const current = this.s.deployedAircrafts$.value;
         const updated = current.filter(a => a.id !== ac.id);
         this.s.deployedAircrafts$.next(updated);
 
-        // If we were editing this aircraft, close editor
         if (this.s.editingAircraft$.value?.id === ac.id) {
           this.s.editingAircraft$.next(null);
           this.s.waypointEditIndex$.next(null);

@@ -1,6 +1,10 @@
+// src/app/layout/screens/planner/plannercomponents/tools/deployed-aircraft-list.component.ts
 import { Component, EventEmitter, Input, Output } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { DeployedAircraft, AircraftType } from '../../../../../core/auth/services/scenario.service';
+import {
+  DeployedAircraft,
+  AircraftType,
+} from '../../../../../core/auth/services/scenario.service';
 
 @Component({
   standalone: true,
@@ -15,7 +19,7 @@ export class DeployedAircraftListComponent {
   @Output() edit = new EventEmitter<DeployedAircraft>();
   @Output() remove = new EventEmitter<DeployedAircraft>();
 
-  /** Whether the accordion is open */
+  /** Accordion state */
   @Input() open = true;
   @Output() openChange = new EventEmitter<boolean>();
 
@@ -44,5 +48,11 @@ export class DeployedAircraftListComponent {
   getAlt(ac: DeployedAircraft): string {
     const v = ac.position?.altitude_m ?? ac.initial_altitude_m;
     return typeof v === 'number' ? `${v.toFixed(0)}` : '—';
+  }
+
+  /** Total waypoints for this aircraft */
+  getWaypointCount(ac: DeployedAircraft): number {
+    const wps = (ac as any).planned_waypoints;
+    return Array.isArray(wps) ? wps.length : 0;
   }
 }

@@ -1,55 +1,107 @@
-<section class="list-block" role="region" aria-label="Deployed aircraft">
-  <header class="acc-summary" (click)="toggleOpen(!open)">
-    <span>Deployed Aircraft</span>
-    <span class="muted">
-      {{ aircrafts?.length || 0 }} in scenario
-    </span>
-    <span class="chev" [class.rotated]="open">▾</span>
+<section
+  class="dal-card"
+  role="region"
+  aria-label="Deployed aircraft"
+>
+  <!-- ============== HEADER ============== -->
+  <header class="dal-header" (click)="toggleOpen(!open)">
+    <div class="dal-header-left">
+      <h3 class="dal-title">Deployed Aircraft</h3>
+      <span class="dal-subtle">
+        {{ aircrafts?.length || 0 }} in scenario
+      </span>
+    </div>
+
+    <div class="dal-header-right">
+      <span
+        class="dal-badge dal-badge-count"
+        *ngIf="aircrafts?.length"
+      >
+        {{ aircrafts?.length }} active
+      </span>
+      <span
+        class="dal-chev"
+        [class.dal-chev--rotated]="open"
+        aria-hidden="true"
+      >
+        ▾
+      </span>
+    </div>
   </header>
 
+  <!-- ============== BODY ============== -->
   <ng-container *ngIf="open; else collapsedHint">
-    <ul class="plain" role="list">
-      <li
-        *ngFor="let ac of aircrafts; trackBy: trackByAircraftId"
-        class="row"
-      >
-        <div>
-          <strong>{{ ac.name || 'Unnamed' }}</strong>
-          <span class="muted">
-            {{ getTypeName(ac) }}
-          </span>
-          <span class="muted">
-            [{{ getLat(ac) }}, {{ getLon(ac) }}] · Alt {{ getAlt(ac) }}m
-          </span>
-        </div>
+    <div class="dal-body">
+      <ul class="dal-list" role="list">
+        <li
+          *ngFor="let ac of aircrafts; trackBy: trackByAircraftId"
+          class="dal-row"
+        >
+          <!-- LEFT: name + meta -->
+          <div class="dal-row-main">
+            <!-- Call / type -->
+            <div class="dal-row-title">
+              <span class="dal-call">
+                {{ ac.name || 'Unnamed' }}
+              </span>
+              <span class="dal-pill dal-pill-type">
+                {{ getTypeName(ac) }}
+              </span>
+            </div>
 
-        <div class="row-actions">
-          <button
-            type="button"
-            class="btn-link"
-            (click)="edit.emit(ac)"
-          >
-            Edit
-          </button>
-          <button
-            type="button"
-            class="btn-link danger"
-            (click)="remove.emit(ac)"
-          >
-            Remove
-          </button>
-        </div>
-      </li>
+            <!-- Meta line -->
+            <div class="dal-row-meta">
+              <span class="dal-chip">
+                <span class="dal-chip-label">Pos</span>
+                <code>[{{ getLat(ac) }}, {{ getLon(ac) }}]</code>
+              </span>
 
-      <li *ngIf="!aircrafts?.length" class="row">
-        <span class="muted">No aircraft deployed in this scenario.</span>
-      </li>
-    </ul>
+              <span class="dal-chip">
+                <span class="dal-chip-label">Alt</span>
+                <code>{{ getAlt(ac) }} m</code>
+              </span>
+
+              <span class="dal-chip dal-chip--wp">
+                <span class="dal-dot dal-dot--wp"></span>
+                <span>{{ getWaypointCount(ac) }} wp</span>
+              </span>
+            </div>
+          </div>
+
+          <!-- RIGHT: actions -->
+          <div class="dal-row-actions">
+            <button
+              type="button"
+              class="dal-btn dal-btn-secondary dal-btn-sm"
+              (click)="edit.emit(ac)"
+            >
+              Edit
+            </button>
+            <button
+              type="button"
+              class="dal-btn dal-btn-secondary dal-btn-sm dal-btn-danger"
+              (click)="remove.emit(ac)"
+            >
+              Remove
+            </button>
+          </div>
+        </li>
+
+        <li *ngIf="!aircrafts?.length" class="dal-row dal-row-empty">
+          <span class="dal-subtle">
+            No aircraft deployed in this scenario.
+          </span>
+        </li>
+      </ul>
+    </div>
   </ng-container>
 
+  <!-- Collapsed hint -->
   <ng-template #collapsedHint>
-    <div class="row">
-      <span class="muted">List collapsed – click header to expand.</span>
+    <div class="dal-body dal-body-collapsed">
+      <span class="dal-subtle">
+        List collapsed – click header to expand.
+      </span>
     </div>
   </ng-template>
 </section>

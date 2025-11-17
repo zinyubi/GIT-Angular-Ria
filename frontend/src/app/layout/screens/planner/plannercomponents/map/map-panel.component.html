@@ -1,2 +1,5 @@
 <!-- riamap is your MapComponentRia; it emits (pointPicked) in your original code -->
-<riamap class="map" (pointPicked)="onPointPicked($event)"></riamap>
+<riamap class="map" 
+  (pointPicked)="onPointPicked($event)"
+  (pickPreview)="onPickPreview($event)"
+  ></riamap>

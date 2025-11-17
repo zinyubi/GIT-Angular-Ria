@@ -1,10 +1,11 @@
-// scenario-layer.helper.ts
+// src/app/layout/screens/planner/plannercomponents/map/helper/scenario-layer.helper.ts
 import type { WebGLMap } from "@luciad/ria/view/WebGLMap.js";
 
 import { FeatureLayer } from "@luciad/ria/view/feature/FeatureLayer.js";
 import { FeatureModel } from "@luciad/ria/model/feature/FeatureModel.js";
 import { MemoryStore } from "@luciad/ria/model/store/MemoryStore.js";
 import { getReference } from "@luciad/ria/reference/ReferenceProvider.js";
+import { createPoint } from "@luciad/ria/shape/ShapeFactory.js";
 
 import {
   Scenario,
@@ -18,12 +19,26 @@ import { MapComponentRia } from "../../../../../../luciadmaps/components/map/map
 
 type AnyNode = any;
 
+const PICK_PREVIEW_ID = "__pick_preview__";
+const PICK_PREVIEW_KIND = "pick-preview";
+
 export class ScenarioLayerHelper {
   private currentScenarioKey: string | number | null = null;
   private currentLayer: FeatureLayer | null = null;
 
-  /** Cached icon canvas for 3D points */
+  /** Underlying MemoryStore used by the scenario FeatureModel */
+  private scenarioStore?: MemoryStore;
+
+  /** Cached icon canvas for normal 3D points */
   private pointIconCanvas?: HTMLCanvasElement | null;
+
+  /** Cached icon canvas for pick-preview (orange) */
+  private pickPreviewIconCanvas?: HTMLCanvasElement | null;
+
+  // cached style objects for provider
+  private basePointStyle: any;
+  private previewPointStyle: any;
+  private lineStyle: any;
 
   // ✅ Do NOT change this constructor signature
   constructor(
@@ -32,12 +47,6 @@ export class ScenarioLayerHelper {
     private mapCmp?: MapComponentRia
   ) {}
 
-  /**
-   * Behavior:
-   *  - s == null → remove current layer.
-   *  - s != null → remove previous scenario layer, create a fresh layer named after scenario,
-   *                then render aircraft for that scenario.
-   */
   applyScenario(s: Scenario | null, aircrafts: DeployedAircraft[] = []): void {
     const mapAny: any = this.map as any;
     const lt: AnyNode = mapAny.layerTree;
@@ -52,14 +61,20 @@ export class ScenarioLayerHelper {
     const scenarioKey: string | number = (s as any).id ?? s.name;
     const label: string = s.name || `Scenario ${scenarioKey}`;
 
-
     // Always remove previous scenario layer
     this.removeCurrentLayer();
 
-    // Prepare icon canvas once
+    // Prepare icon canvases once
     if (!this.pointIconCanvas) {
       this.pointIconCanvas = makeCircleCanvas(8, "#e91e63", {
         color: "#fff",
+        width: 2,
+      });
+    }
+    if (!this.pickPreviewIconCanvas) {
+      // 🔥 make preview *very obviously* orange and slightly larger
+      this.pickPreviewIconCanvas = makeCircleCanvas(11, "#ff9800", {
+        color: "#ffffff",
         width: 2,
       });
     }
@@ -69,22 +84,49 @@ export class ScenarioLayerHelper {
     const reference = getReference("EPSG:4979"); // 3D WGS84
     const model = new FeatureModel(store, { reference });
 
+    // Define base styles
+    this.basePointStyle = {
+      symbol: "icon",
+      image: this.pointIconCanvas,
+      width: 18,
+      height: 18,
+    };
+    this.previewPointStyle = {
+      symbol: "icon",
+      image: this.pickPreviewIconCanvas,
+      width: 24,
+      height: 24,
+    };
+    this.lineStyle = {
+      color: "rgba(11, 65, 240, 1)",
+      bloom: "10",
+      width: 1,
+    };
+
     const layer = new FeatureLayer(model as any, {
       label,
       style: {
-        point: {
-          symbol: "icon",
-          image: this.pointIconCanvas,
-          width: 18,
-          height: 18,
-        },
-        line: {
-          color: "rgba(11, 65, 240, 1)",
-          bloom: "10",
-          width: 1,
-        },
+        point: this.basePointStyle,
+        line: this.lineStyle,
       } as any,
     } as any);
+
+    // Style provider so pick-preview is always orange, others use normal style
+    (layer as any).styleProvider = (feature: any) => {
+      const props = (feature && feature.properties) || {};
+      if (props.kind === PICK_PREVIEW_KIND) {
+        return {
+          point: this.previewPointStyle,
+        } as any;
+      }
+      return {
+        point: this.basePointStyle,
+        line: this.lineStyle,
+      } as any;
+    };
+
+    (layer as any).__isScenarioLayer = true;
+    (layer as any).__scenarioKey = scenarioKey;
 
     try {
       lt.addChild(layer);
@@ -97,6 +139,7 @@ export class ScenarioLayerHelper {
 
     this.currentScenarioKey = scenarioKey;
     this.currentLayer = layer;
+    this.scenarioStore = store;
 
     // Render aircraft + waypoints + routes into this layer
     try {
@@ -119,7 +162,7 @@ export class ScenarioLayerHelper {
           ""
         ).toString()
       );
-
+      console.info("[ScenarioLayerHelper] LayerTree top-level:", labels);
     } catch {
       /* best effort only */
     }
@@ -130,10 +173,6 @@ export class ScenarioLayerHelper {
 
   // ──────────────────────────── Aircraft → 3D Shapes ────────────────────────────
 
-  /**
-   * IMPORTANT: we pass the actual FeatureLayer so RiaViz can write directly
-   * into that scenario layer, without relying on activeLayer.
-   */
   private renderAircraftForScenario(
     aircrafts: DeployedAircraft[],
     scenario: Scenario,
@@ -145,8 +184,6 @@ export class ScenarioLayerHelper {
       );
       return;
     }
-
-
 
     // Ensure icon canvas is available
     if (!this.pointIconCanvas) {
@@ -257,6 +294,56 @@ export class ScenarioLayerHelper {
     }
   }
 
+  // ──────────────────────────── LIVE PICK PREVIEW ────────────────────────────
+
+  setPickPreview(point: { lon: number; lat: number; alt: number } | null): void {
+    if (!this.currentLayer || !this.scenarioStore) {
+      return;
+    }
+
+    const store = this.scenarioStore;
+    const ref3D = getReference("EPSG:4979");
+
+    // If null → just clear existing preview (if any)
+    if (!point) {
+      try {
+        store.remove(PICK_PREVIEW_ID);
+      } catch {
+        /* ignore if not present */
+      }
+      (this.map as any).repaint?.();
+      return;
+    }
+
+    const { lon, lat, alt } = point;
+    const shape = createPoint(ref3D, [lon, lat, alt]);
+
+    const existing = store.get(PICK_PREVIEW_ID as any);
+
+    if (existing) {
+      store.put({
+        ...existing,
+        shape, // Luciad FeatureModel expects 'shape'
+        properties: {
+          ...(existing as any).properties,
+          kind: PICK_PREVIEW_KIND,
+          alt_m: alt,
+        },
+      } as any);
+    } else {
+      store.put({
+        id: PICK_PREVIEW_ID,
+        shape,
+        properties: {
+          kind: PICK_PREVIEW_KIND,
+          alt_m: alt,
+        },
+      } as any);
+    }
+
+    (this.map as any).repaint?.();
+  }
+
   // ──────────────────────────── internals ────────────────────────────
 
   private removeCurrentLayer(): void {
@@ -280,6 +367,7 @@ export class ScenarioLayerHelper {
 
     this.currentLayer = null;
     this.currentScenarioKey = null;
+    this.scenarioStore = undefined;
   }
 
   private getChildren(n: AnyNode): AnyNode[] {

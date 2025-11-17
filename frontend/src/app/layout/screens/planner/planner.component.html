@@ -1,10 +1,15 @@
 <!-- ======= HEADER (auto height) ======= -->
 <div class="planning-header"></div>
 
-<!-- ======= WORKSPACE GRID (fills the rest of the screen) ======= -->
-<div class="planning-workspace" [class.is-collapsed]="sidebarCollapsed"  [class.no-tools]="!selectedScenario" >
+<!-- ======= WORKSPACE GRID: rail | map | right-rail | inspector ======= -->
+<div
+  class="planning-workspace"
+  [class.is-collapsed]="sidebarCollapsed"
+  [class.no-inspector]="!selectedScenario"
+  [class.inspector-collapsed]="inspectorCollapsed"
+>
 
-  <!-- ============== LEFT: SIDEBAR ============== -->
+  <!-- ============== LEFT: SCENARIOS RAIL ============== -->
   <app-scenarios-rail
     class="rail-sidebar"
     [collapsed]="sidebarCollapsed"
@@ -23,62 +28,79 @@
     (expandTo)="expandAnd($event)"
   ></app-scenarios-rail>
 
-  <!-- ============== CENTER: TOOLS ============== -->
-  <section class="tools" aria-label="Tools" data-single-open *ngIf="selectedScenario">
-
-    <!-- ===== Group A: (2) List + (3) Deployment ===== -->
-    <div class="tools-group tools-planning" *ngIf="!editorOpen ">
-      <!-- Deployment form -->
-      <app-deployment-form
-        [open]="deployOpen"
-        [aircraftTypes]="aircraftTypes"
-        [formValue]="newAircraftForm"
-        [deploying]="deploying"
-        (openChange)="onDeployOpenChange($event)"
-        (requestPick)="beginPick('deploy-latlon')"
-        (deploy)="handleDeployAircraft()"
-        (formValueChange)="newAircraftForm = $event"
-      ></app-deployment-form>
-
-      <!-- Deployed list (always visible within planning group if items exist) -->
-      <app-deployed-aircraft-list
-        *ngIf="deployedAircrafts?.length"
-        [aircrafts]="deployedAircrafts"
-        (edit)="startEditAircraft($event)"
-        (remove)="removeAircraft($event)"  
-      ></app-deployed-aircraft-list>
-    </div>
-
-    <!-- ===== Group B: (1) Editor ===== -->
-    <div class="tools-group tools-editor" *ngIf="editorOpen">
-      <app-aircraft-editor
-        [open]="editorOpen"
-        [aircraft]="editingAircraft"
-        [waypointForm]="waypointForm"
-        [waypointEditIndex]="waypointEditIndex"
-        (openChange)="onEditorOpenChange($event)"
-        (saveAircraft)="saveAircraft()"
-        (cancelAircraft)="cancelEditAircraft()"
-        (requestPickWaypoint)="beginPick('waypoint')"
-        (editWaypoint)="editWaypoint($event)"
-        (deleteWaypoint)="deleteWaypoint($event)"
-        (saveWaypoint)="saveWaypoint()"
-        (waypointFormChange)="waypointForm = { lat: $event.lat ?? null, lon: $event.lon ?? null, alt: $event.alt ?? null }"
-
-        (requestPickInitial)="beginPick('edit-initial')"
-      ></app-aircraft-editor>
-    </div>
-
-  </section>
-
-  <!-- ============== RIGHT: MAP ============== -->
-    <app-map-panel
+  <!-- ============== CENTER: MAP (dominant) ============== -->
+  <app-map-panel
     class="map-wrap"
-      [scenario]="selectedScenario"
-      [deployedAircrafts]="deployedAircrafts"
-      (pointPicked)="handlePointPicked($event)">
+    [scenario]="selectedScenario"
+    [deployedAircrafts]="deployedAircrafts"
+    (pointPicked)="handlePointPicked($event)"
   ></app-map-panel>
 
+  <!-- ============== RIGHT: MINI RAIL (like left side) ============== -->
+  <div class="right-rail" *ngIf="selectedScenario">
+    <button
+      class="right-rail-btn"
+      type="button"
+      (click)="inspectorCollapsed = !inspectorCollapsed"
+      [attr.aria-label]="inspectorCollapsed ? 'Expand tools panel' : 'Collapse tools panel'"
+    >
+      <!-- Expanded → arrow points right (collapse) -->
+      <span *ngIf="!inspectorCollapsed">›</span>
+      <!-- Collapsed → arrow points left (expand) -->
+      <span *ngIf="inspectorCollapsed">‹</span>
+    </button>
+  </div>
 
+  <!-- ============== RIGHT: INSPECTOR (tools) ============== -->
+  <section
+    class="inspector"
+    aria-label="Scenario tools"
+    *ngIf="selectedScenario"
+  >
+    <div class="inspector-inner">
 
+      <!-- ===== Default: Deployment + Deployed list ===== -->
+      <ng-container *ngIf="!editorOpen; else editorPane">
+        <app-deployment-form
+          class="inspector-card"
+          [open]="deployOpen"
+          [aircraftTypes]="aircraftTypes"
+          [formValue]="newAircraftForm"
+          [deploying]="deploying"
+          (openChange)="onDeployOpenChange($event)"
+          (requestPick)="beginPick('deploy-latlon')"
+          (deploy)="handleDeployAircraft()"
+          (formValueChange)="newAircraftForm = $event"
+        ></app-deployment-form>
+
+        <app-deployed-aircraft-list
+          class="inspector-card inspector-card--list"
+          *ngIf="deployedAircrafts?.length"
+          [aircrafts]="deployedAircrafts"
+          (edit)="startEditAircraft($event)"
+          (remove)="removeAircraft($event)"
+        ></app-deployed-aircraft-list>
+      </ng-container>
+
+      <!-- ===== Editor mode: aircraft editor fills inspector ===== -->
+      <ng-template #editorPane>
+        <app-aircraft-editor
+          class="inspector-card inspector-editor"
+          [open]="editorOpen"
+          [aircraft]="editingAircraft"
+          [waypointForm]="waypointForm"
+          [waypointEditIndex]="waypointEditIndex"
+          (openChange)="onEditorOpenChange($event)"
+          (saveAircraft)="saveAircraft()"
+          (cancelAircraft)="cancelEditAircraft()"
+          (requestPickWaypoint)="beginPick('waypoint')"
+          (editWaypoint)="editWaypoint($event)"
+          (deleteWaypoint)="deleteWaypoint($event)"
+          (saveWaypoint)="saveWaypoint()"
+          (waypointFormChange)="onWaypointFormChange($event)"
+          (requestPickInitial)="beginPick('edit-initial')"
+        ></app-aircraft-editor>
+      </ng-template>
+    </div>
+  </section>
 </div>

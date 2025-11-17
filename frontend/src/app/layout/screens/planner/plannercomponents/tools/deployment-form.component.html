@@ -1,15 +1,27 @@
 <section class="tool-card" [class.open]="open">
+  <!-- Header -->
   <header class="tool-header" (click)="toggleOpen(!open)">
-    <h3>Deployment</h3>
-    <span class="chev" [class.rotated]="open">▾</span>
+    <div class="tool-title">
+      <h3>Deployment</h3>
+      <small class="tool-sub" *ngIf="formValue?.name">
+        New aircraft: {{ formValue.name }}
+      </small>
+    </div>
+
+    <span class="chev" [class.rotated]="open" aria-hidden="true">▾</span>
   </header>
 
+  <!-- Body -->
   <div class="tool-body" *ngIf="open">
     <form (ngSubmit)="deploy.emit()" class="form-grid" novalidate>
-      <label>
-        <span>Aircraft Type</span>
-        <select [(ngModel)]="formValue.aircraft_type" name="aircraft_type"
-                required (ngModelChange)="formValueChange.emit(formValue)">
+      <label class="field">
+        <span class="field-label">Aircraft Type</span>
+        <select
+          [(ngModel)]="formValue.aircraft_type"
+          name="aircraft_type"
+          required
+          (ngModelChange)="formValueChange.emit(formValue)"
+        >
           <option value="" disabled>Select Type</option>
           <option *ngFor="let type of aircraftTypes" [value]="type.id">
             {{ type.name }} ({{ type.model }})
@@ -17,38 +29,72 @@
         </select>
       </label>
 
-      <label>
-        <span>Name</span>
-        <input type="text" [(ngModel)]="formValue.name" name="name" autocomplete="off"
-               (ngModelChange)="formValueChange.emit(formValue)" />
+      <label class="field">
+        <span class="field-label">Name</span>
+        <input
+          type="text"
+          [(ngModel)]="formValue.name"
+          name="name"
+          autocomplete="off"
+          placeholder="Callsign / label"
+          (ngModelChange)="formValueChange.emit(formValue)"
+        />
       </label>
 
-      <label>
-        <span>Latitude</span>
+      <label class="field">
+        <span class="field-label">Latitude</span>
         <div class="inline-input">
-          <input type="number" step="any" inputmode="decimal"
-                 [(ngModel)]="formValue.initial_latitude" name="initial_latitude"
-                 (ngModelChange)="formValueChange.emit(formValue)" />
-          <button type="button" class="btn-ghost" (click)="requestPick.emit()" title="Pick on map">📍</button>
+          <input
+            type="number"
+            step="any"
+            inputmode="decimal"
+            [(ngModel)]="formValue.initial_latitude"
+            name="initial_latitude"
+            (ngModelChange)="formValueChange.emit(formValue)"
+          />
+          <button
+            type="button"
+            class="btn-ghost"
+            (click)="requestPick.emit()"
+            title="Pick on map"
+          >
+            📍
+          </button>
         </div>
       </label>
 
-      <label>
-        <span>Longitude</span>
-        <input type="number" step="any" inputmode="decimal"
-               [(ngModel)]="formValue.initial_longitude" name="initial_longitude"
-               (ngModelChange)="formValueChange.emit(formValue)" />
+      <label class="field">
+        <span class="field-label">Longitude</span>
+        <input
+          type="number"
+          step="any"
+          inputmode="decimal"
+          [(ngModel)]="formValue.initial_longitude"
+          name="initial_longitude"
+          (ngModelChange)="formValueChange.emit(formValue)"
+        />
       </label>
 
-      <label>
-        <span>Altitude (m)</span>
-        <input type="number" step="1" inputmode="numeric"
-               [(ngModel)]="formValue.initial_altitude_m" name="initial_altitude_m"
-               (ngModelChange)="formValueChange.emit(formValue)" />
+      <label class="field">
+        <span class="field-label">Altitude (m)</span>
+        <input
+          type="number"
+          step="1"
+          inputmode="numeric"
+          [(ngModel)]="formValue.initial_altitude_m"
+          name="initial_altitude_m"
+          (ngModelChange)="formValueChange.emit(formValue)"
+        />
       </label>
 
       <div class="form-actions">
-        <button type="submit" class="btn-primary" [disabled]="deploying">Deploy Aircraft</button>
+        <button
+          type="submit"
+          class="btn-primary"
+          [disabled]="deploying"
+        >
+          {{ deploying ? 'Deploying…' : 'Deploy Aircraft' }}
+        </button>
       </div>
     </form>
   </div>

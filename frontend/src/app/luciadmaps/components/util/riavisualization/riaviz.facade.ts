@@ -10,9 +10,8 @@ import { MapContext, LayerRegistry, FeatureStore } from "./riaviz.services";
 import type { Feature } from "@luciad/ria/model/feature/Feature.js";
 import type { FeatureLayer } from "@luciad/ria/view/feature/FeatureLayer.js";
 
-// NEW: mesh helpers
+// Mesh helpers
 import { buildMeshIconFromSpec } from "./riaviz.mesh";
-import type { MeshIcon3DStyle } from "@luciad/ria/view/style/Icon3DStyle.js";
 
 type Kind = "point" | "polyline" | "polygon";
 
@@ -21,6 +20,7 @@ export class RiaVizFacade {
   private reg: LayerRegistry;
   private storeImpl: FeatureStore;
 
+  // Cache: featureId → { layerId, kind, label }
   private featureOwner = new Map<
     string,
     { layerId: string; kind: Kind; label: string }
@@ -32,7 +32,10 @@ export class RiaVizFacade {
     this.storeImpl = new FeatureStore(this.reg);
   }
 
-  /* ---------- Layers ---------- */
+  /* ------------------------------------------------------------------
+   * Layers
+   * ------------------------------------------------------------------ */
+
   createLayer(def: LayerDefinition, debug?: DebugConfig): CreatedLayer {
     return this.reg.createLayer(def, debug);
   }
@@ -69,6 +72,7 @@ export class RiaVizFacade {
   setLayerVisibility(id: string, visible: boolean) {
     this.reg.setVisibility(id, visible);
   }
+
   setLayerOpacity(id: string, opacity: number) {
     this.reg.setOpacity(id, opacity);
   }
@@ -83,15 +87,25 @@ export class RiaVizFacade {
     this.reg.remove(id);
   }
 
-  /* ---------- Editor hooks ---------- */
+  /* ------------------------------------------------------------------
+   * Editor hooks
+   * ------------------------------------------------------------------ */
+
+  /**
+   * Given a Luciad Feature, try to determine which RiaViz layer
+   * (id/label/kind) owns it.
+   */
   lookupOwnerByFeature(feature: Feature) {
     const fid = (feature as any)?.id as string | undefined;
-    if (fid && this.featureOwner.has(fid)) return this.featureOwner.get(fid)!;
+    if (fid && this.featureOwner.has(fid)) {
+      return this.featureOwner.get(fid)!;
+    }
 
     for (const entry of this.iterRegistry()) {
       const store: any = entry.store;
       if (!store) continue;
 
+      // a) Fast path: direct get by id
       if (
         fid &&
         typeof store.get === "function" &&
@@ -106,13 +120,16 @@ export class RiaVizFacade {
         return info;
       }
 
+      // b) Slow path: iterate the cursor
       const cursor = store.query ? store.query() : entry.model?.query?.();
       if (cursor) {
         let found = false;
         this.iterCursor(cursor, (f: Feature) => {
           if (found) return;
           const id = (f as any).id;
-          if (f === feature || (fid && id === fid)) found = true;
+          if (f === feature || (fid && id === fid)) {
+            found = true;
+          }
         });
         if (found) {
           const info = {
@@ -130,16 +147,17 @@ export class RiaVizFacade {
 
   /** Mesh-aware feature style update */
   updateFeatureStyle(layerId: string, featureId: string, stylePatch: any) {
-    const e = this.reg.get(layerId);
-    const store: any = (e as any).store;
+    const e: any = this.reg.get(layerId);
+    const store: any = e?.store;
     if (!store) return;
 
     let f: any =
       typeof store.get === "function"
         ? store.get(featureId) ?? store.get(Number(featureId))
         : null;
+
     if (!f) {
-      const cursor = store.query ? store.query() : (e as any).model?.query?.();
+      const cursor = store.query ? store.query() : e.model?.query?.();
       if (cursor) {
         this.iterCursor(cursor, (fx: any) => {
           if (f) return;
@@ -156,10 +174,11 @@ export class RiaVizFacade {
 
     const next = { ...f, properties: { ...props, __style: nextStyle } };
 
-    if (typeof store.put === "function") store.put(next);
-    else if (typeof store.reload === "function") {
+    if (typeof store.put === "function") {
+      store.put(next);
+    } else if (typeof store.reload === "function") {
       const items: Feature[] = [];
-      const cursor = store.query ? store.query() : (e as any).model?.query?.();
+      const cursor = store.query ? store.query() : e.model?.query?.();
       this.iterCursor(cursor, (fx: any) => {
         const id = fx?.id;
         items.push(id === featureId || id === Number(featureId) ? next : fx);
@@ -177,7 +196,9 @@ export class RiaVizFacade {
     this.reg.updateLayerStyle(hit.id, merged);
   }
 
-  /* ---------- Features (+ remember owners) using activeLayer ---------- */
+  /* ------------------------------------------------------------------
+   * Features (using activeLayer)
+   * ------------------------------------------------------------------ */
 
   addPoint(
     lon: number,
@@ -225,11 +246,15 @@ export class RiaVizFacade {
   ) {
     const a = this.reg.activeLayer;
     if (!a) throw new Error("No active layer");
-    const ref = this.storeImpl.addPolyline3D(a.id, coordsWithZ, { attrs, style });
+    const ref = this.storeImpl.addPolyline3D(a.id, coordsWithZ, {
+      attrs,
+      style,
+    });
     this.rememberOwner(ref?.id, a.id, "polyline");
     return ref;
   }
 
+  /** Alias for addPolyline3D */
   addLine3D(
     coordsWithZ: Array<[number, number, number]>,
     attrs?: Record<string, any>,
@@ -303,10 +328,12 @@ export class RiaVizFacade {
     return ref;
   }
 
-  /* ---------- Features for a specific FeatureLayer (scenario use-case) ---------- */
+  /* ------------------------------------------------------------------
+   * Features for a specific FeatureLayer (scenario use-case)
+   * ------------------------------------------------------------------ */
 
   private ensureEntryForLayer(layer: FeatureLayer): { id: string; entry: any } {
-    const layerObj = layer as any;
+    const layerObj: any = layer as any;
     const idFromLayer =
       layerObj && typeof layerObj.id !== "undefined"
         ? String(layerObj.id)
@@ -317,7 +344,8 @@ export class RiaVizFacade {
     }
 
     const anyReg: any = this.reg as any;
-    const entries: Map<string, any> = anyReg.entries || anyReg._entries;
+    const entries: Map<string, any> =
+      anyReg.entries || anyReg._entries || anyReg._entryMap;
 
     if (!entries) {
       throw new Error(
@@ -353,7 +381,7 @@ export class RiaVizFacade {
       store,
       model,
       reference,
-      style: (layerObj as any).style,
+      style: layerObj.style,
     };
 
     entries.set(entryId, entry);
@@ -382,10 +410,7 @@ export class RiaVizFacade {
     style?: any
   ) {
     const { id } = this.ensureEntryForLayer(layer);
-    const ref = this.storeImpl.addPolyline3D(id, coordsWithZ, {
-      attrs,
-      style,
-    });
+    const ref = this.storeImpl.addPolyline3D(id, coordsWithZ, { attrs, style });
     this.rememberOwner(ref?.id, id, "polyline");
     return ref;
   }
@@ -394,19 +419,23 @@ export class RiaVizFacade {
     return this.reg;
   }
 
-  /* ---------- internals ---------- */
+  /* ------------------------------------------------------------------
+   * Internals
+   * ------------------------------------------------------------------ */
+
   private rememberOwner(id?: string, layerId?: string, kind?: Kind) {
     if (!id || !layerId) return;
     try {
-      const entry = this.reg.get(layerId);
-      const label =
-        (entry as any).layer?.label ?? entry.label ?? "Layer";
+      const entry: any = this.reg.get(layerId);
+      const label = entry?.layer?.label ?? entry.label ?? "Layer";
       this.featureOwner.set(id, {
         layerId,
-        kind: (kind || (entry as any).kind) as Kind,
+        kind: (kind || entry.kind) as Kind,
         label,
       });
-    } catch {}
+    } catch {
+      // ignore
+    }
   }
 
   private *iterRegistry(): Iterable<{
@@ -417,11 +446,15 @@ export class RiaVizFacade {
     model: any;
   }> {
     const anyReg: any = this.reg as any;
+
     if (typeof anyReg.iterEntries === "function") {
       yield* anyReg.iterEntries();
       return;
     }
-    const mapLike: Map<string, any> = anyReg.entries || anyReg._entries;
+
+    const mapLike: Map<string, any> =
+      anyReg.entries || anyReg._entries || anyReg._entryMap;
+
     if (mapLike?.forEach) {
       const out: any[] = [];
       mapLike.forEach((v: any, k: string) =>
@@ -450,7 +483,9 @@ export class RiaVizFacade {
       while (cursor.hasNext()) cb(cursor.next());
       return;
     }
-    if (Array.isArray(cursor)) cursor.forEach(cb);
+    if (Array.isArray(cursor)) {
+      cursor.forEach(cb);
+    }
   }
 
   private mergeDeep<T extends object>(a: T, b: any): T {
@@ -460,32 +495,36 @@ export class RiaVizFacade {
         const v = (b as any)[k];
         if (v && typeof v === "object" && !Array.isArray(v)) {
           out[k] = this.mergeDeep(out[k] || {}, v);
-        } else out[k] = v;
+        } else {
+          out[k] = v;
+        }
       });
     }
     return out as T;
   }
 
-  /** Ensure mesh3d has a Mesh and rebuild geometry when shape/params change */
+  /**
+   * Ensure a style object with point.symbol === "mesh3d" has a proper
+   * mesh + PBR settings by running it through buildMeshIconFromSpec.
+   */
   private ensureMesh3D(style: any): any {
-    if (!style?.point || style.point.symbol !== "mesh3d") return style;
+    if (!style?.point || style.point.symbol !== "mesh3d") {
+      return style;
+    }
 
-    const m: MeshIcon3DStyle & {
-      shape?: string;
-      params?: Record<string, any>;
-    } = style.point.mesh3d ?? (style.mesh3d as any) ?? {};
+    const m: any = style.point.mesh3d ?? (style.mesh3d as any) ?? {};
 
     // If geometry definition is present (or mesh missing), (re)build it
-    if ((m as any).shape || (m as any).params || !m.mesh) {
+    if (m.shape || m.params || !m.mesh) {
       const spec = {
-        shape: (m as any).shape ?? "ellipsoid",
-        params: (m as any).params ?? {},
-        color: (m as any).color,
-        scale: (m as any).scale,
-        rotation: (m as any).rotation,
-        translation: (m as any).translation,
-        lightIntensity: (m as any).pbrSettings?.lightIntensity ?? 1.0,
-        transparency: (m as any).transparency ?? false,
+        shape: m.shape ?? "ellipsoid",
+        params: m.params ?? {},
+        color: m.color,
+        scale: m.scale,
+        rotation: m.rotation,
+        translation: m.translation,
+        lightIntensity: m.pbrSettings?.lightIntensity ?? 1.0,
+        transparency: m.transparency ?? false,
       };
       const icon = buildMeshIconFromSpec(spec);
 
@@ -508,8 +547,8 @@ export class RiaVizFacade {
                 : icon.transparency,
             facetCulling: m.facetCulling ?? icon.facetCulling,
             // keep declarative bits for round-trip with editor
-            shape: (m as any).shape ?? spec.shape,
-            params: (m as any).params ?? spec.params,
+            shape: m.shape ?? spec.shape,
+            params: m.params ?? spec.params,
           },
         },
       };

@@ -1,6 +1,13 @@
+// src/app/layout/screens/planner/plannercomponents/tools/aircraft-editor.component.ts
 import { Component, Input, Output, EventEmitter } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+
+export type WaypointForm = {
+  lat: number | null;
+  lon: number | null;
+  alt: number | null;
+};
 
 @Component({
   standalone: true,
@@ -10,50 +17,68 @@ import { FormsModule } from '@angular/forms';
   styleUrls: ['./aircraft-editor.component.css'],
 })
 export class AircraftEditorComponent {
-  /** Panel accordion state */
   @Input() open = true;
   @Output() openChange = new EventEmitter<boolean>();
 
-  /** Current aircraft being edited */
+  /** Currently edited aircraft (from Planner / facade) */
   @Input() aircraft: any | null = null;
 
-  /** Waypoint edit form (lat, lon, alt) */
-  @Input() waypointForm: { lat: number | null; lon: number | null; alt?: number | null } = {
-    lat: null,
-    lon: null,
-    alt: null,
-  };
-  @Output() waypointFormChange = new EventEmitter<typeof this.waypointForm>();
+  /** Current waypoint form (lat/lon/alt nullable) */
+  @Input() waypointForm: WaypointForm = { lat: null, lon: null, alt: null };
+  @Output() waypointFormChange = new EventEmitter<WaypointForm>();
 
-  /** Index of the waypoint being edited (if any) */
+  /** Index of waypoint being edited (or null for new) */
   @Input() waypointEditIndex: number | null = null;
 
-  /** Editor events */
+  /** Aircraft actions */
   @Output() saveAircraft = new EventEmitter<void>();
   @Output() cancelAircraft = new EventEmitter<void>();
 
-  /** Waypoint events */
+  /** Waypoint actions */
   @Output() requestPickWaypoint = new EventEmitter<void>();
   @Output() editWaypoint = new EventEmitter<number>();
   @Output() deleteWaypoint = new EventEmitter<number>();
   @Output() saveWaypoint = new EventEmitter<void>();
 
-  /** Initial-position pick (from map) */
+  /** Initial aircraft position pick from map */
   @Output() requestPickInitial = new EventEmitter<void>();
-
-  /** “Advanced position” collapse toggle */
-  showPosAdvanced = false;
 
   toggleOpen(v: boolean) {
     this.open = v;
     this.openChange.emit(v);
   }
-  isValueNaN(val: any): boolean {
-  return isNaN(Number(val));
-}
+
+  /** Angular-safe update (no spread operator in template) */
+  updateField(field: keyof WaypointForm, value: any) {
+
+
+    let v: any = value;
+
+    // convert "", null, undefined → null
+    if (v === '' || v === null || v === undefined) {
+      v = null;
+    }
+
+    // convert numeric strings → number
+    if (typeof v === 'string' && v.trim() !== '') {
+      const n = Number(v);
+      v = Number.isFinite(n) ? n : null;
+    }
+
+    const updated: WaypointForm = {
+      ...this.waypointForm,
+      [field]: v,
+    };
+
+
+
+    this.waypointForm = updated;
+    this.waypointFormChange.emit(updated);
+  }
 
   resetWpForm() {
-    this.waypointForm = { lat: null, lon: null, alt: null };
-    this.waypointFormChange.emit(this.waypointForm);
+    const reset: WaypointForm = { lat: null, lon: null, alt: null };
+    this.waypointForm = reset;
+    this.waypointFormChange.emit(reset);
   }
 }

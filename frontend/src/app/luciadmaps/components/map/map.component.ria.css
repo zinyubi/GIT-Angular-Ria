@@ -4,14 +4,14 @@
   block-size: 100%;
 }
 
-/* The wrapper must have height; parent should give it room */
+/* Wrapper */
 .mapwrap {
   position: relative;
   inline-size: 100%;
   block-size: 100%;
   min-block-size: 640px;
   height: 100%;
-  background: #0f1623; /* just a dark backdrop */
+  background: #0f1623;
 }
 
 .mapDiv {
@@ -21,7 +21,10 @@
   height: 100%;
 }
 
-.zoom-btn , .compass{
+/* ───── Zoom + compass ───── */
+
+.zoom-btn,
+.compass {
   background: color-mix(in srgb, var(--color-surface) 88%, transparent 12%);
   backdrop-filter: var(--blur);
   border: 1px solid var(--color-border);
@@ -34,30 +37,42 @@
   inline-size: 36px;
   block-size: 36px;
 
-  display: inline-flex;            /* center content */
+  display: inline-flex;
   align-items: center;
   justify-content: center;
 
-  padding: 0;                      /* no default padding */
-  line-height: 1;                  /* ignore font metrics */
+  padding: 0;
+  line-height: 1;
   font-weight: 600;
-  font-size: 20px;                 /* a bit larger looks nicer */
+  font-size: 20px;
 
   cursor: pointer;
   z-index: 10;
 }
-.zoom-btn:hover { border-color: var(--color-accent); }
-.zoom-in  { top: 12px;  }
-.zoom-out { top: 56px; }
-.compass { top: 100px; }
-.compass:hover { border-color: var(--color-accent); }
+
+.zoom-btn:hover,
+.compass:hover {
+  border-color: var(--color-accent);
+}
+
+.zoom-in {
+  top: 12px;
+}
+.zoom-out {
+  top: 56px;
+}
+.compass {
+  top: 100px;
+}
+
 .compass img {
   inline-size: 22px;
   block-size: 22px;
   transform-origin: 50% 50%;
-  transition: transform 120ms linear; /* smooth but responsive */
-  color: var(--color-text);
+  transition: transform 120ms linear;
 }
+
+/* ───── Projection switcher ───── */
 
 .proj-switch {
   background: transparent;
@@ -65,8 +80,6 @@
   border: 1px solid var(--color-border);
   color: var(--color-text);
   position: absolute;
-  /* inline-size: 36px;
-  block-size: 36px; */
   left: 56px;
   top: 12px;
   z-index: 10;
@@ -74,19 +87,23 @@
   border-radius: var(--radius);
 }
 
-/* coords (bottom-center) */
+/* ───── Mouse coords (bottom center, above alt HUD) ───── */
+
 .coords-wrap {
   background: color-mix(in srgb, var(--color-surface) 88%, transparent 52%);
   backdrop-filter: var(--blur);
   border: 1px solid var(--color-border);
   color: var(--color-text);
+
   position: absolute;
   left: 50%;
-  bottom: 12px;
+  bottom: 52px;              /* ⬅ raised to make room for alt pill */
   transform: translateX(-50%);
   z-index: 10;
   border-radius: var(--radius);
 }
+
+/* ───── Right panel ───── */
 
 .rightcard {
   background: color-mix(in srgb, var(--color-surface) 88%, transparent 12%);
@@ -95,15 +112,17 @@
   color: var(--color-text);
   position: absolute;
   right: 12px;
-  top: 12px;  
-  padding: 2px;  
-  height: auto ;       /* leave space above coords if you like */
+  top: 12px;
+  padding: 2px;
+  height: auto;
   z-index: 100;
-  max-inline-size: 380px; /* your panel width */
+  max-inline-size: 380px;
   pointer-events: auto;
   border-radius: var(--radius);
   overflow-y: auto;
 }
+
+/* ───── Left panel ───── */
 
 .leftcard {
   background: color-mix(in srgb, var(--color-surface) 88%, transparent 12%);
@@ -111,10 +130,62 @@
   border: 1px solid var(--color-border);
   color: var(--color-text);
   position: absolute;
-  left: 0px;
-  top: 0px;           /* leave space above coords if you like */
+  left: 0;
+  top: 0;
   z-index: 100;
-  max-inline-size: 320px; /* your panel width */
+  max-inline-size: 320px;
   pointer-events: auto;
   border-radius: var(--radius);
+}
+
+/* ───── Picking cursors ───── */
+
+.mapDiv.is-picking {
+  cursor: crosshair;
+}
+
+.mapDiv.is-picking-alt {
+  cursor: ns-resize;
+}
+
+/* ───── Altitude HUD (bottom center, below mouse coords) ───── */
+
+.pick-alt-pill {
+  position: absolute;
+  left: 50%;
+  bottom: 12px;              /* ⬅ directly below coords-wrap */
+  transform: translateX(-50%);
+  z-index: 12;               /* above coords-wrap */
+  pointer-events: none;
+}
+
+/* Pill design (shared) */
+.coords-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+
+  block-size: 36px;
+  padding: 0 10px;
+
+  background: color-mix(
+    in srgb,
+    var(--color-surface, #0f1216) 88%,
+    transparent 12%
+  );
+  backdrop-filter: var(--blur, blur(10px));
+  border: 1px solid var(--color-border, #2b3244);
+  color: var(--color-text, #e7ecf6);
+  border-radius: var(--radius, 999px);
+
+  font: 500 12px/1 system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+}
+
+.coords {
+  white-space: nowrap;
+}
+
+.ref {
+  opacity: 0.75;
+  white-space: nowrap;
 }

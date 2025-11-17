@@ -1,196 +1,253 @@
 :host {
   display: block;
+  inline-size: 100%;
+  min-block-size: 0;
   color: var(--color-text, #e7ecf6);
-  font-family: var(--font-sans, system-ui, sans-serif);
-
-  /* Derive local palette from global tokens */
-  --tool-surface: var(--color-surface, #10131a);
-  --tool-panel: color-mix(in srgb, var(--color-surface, #10131a) 94%, transparent);
-  --tool-header: color-mix(in srgb, var(--color-surface, #10131a) 86%, black 14%);
-  --tool-border: var(--color-border, #242938);
-  --tool-accent: var(--color-accent, #0d6efd);
-  --tool-muted: var(--color-muted, #a9b3cc);
-  --tool-tile: color-mix(in srgb, var(--color-surface, #10131a) 92%, black 8%);
-}
-
-/* ===== Card container (outer section) ===== */
-.list-block {
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-  background: var(--tool-surface);
-  border: 1px solid var(--tool-border);
-  border-radius: var(--radius, 10px);
-  transition: box-shadow 0.2s ease, border-color 0.2s ease;
-}
-
-/* Optional: if you bind [class.open]="open" on the section */
-.list-block.open {
-  border-color: color-mix(in srgb, var(--tool-accent) 40%, var(--tool-border) 60%);
-  box-shadow: 0 0 0 2px color-mix(in srgb, var(--tool-accent) 25%, transparent);
-}
-
-/* ===== Header / summary row ===== */
-.acc-summary {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  justify-content: space-between;
-  background: var(--tool-header);
-  padding: 0.65rem 0.9rem;
-  font-weight: 600;
-  font-size: 0.95rem;
-  cursor: pointer;
-  border-bottom: 1px solid var(--tool-border);
-  transition: background-color 0.2s ease;
-}
-
-.acc-summary:hover {
-  background: color-mix(in srgb, var(--tool-header) 88%, var(--tool-accent) 12%);
-}
-
-/* Title + count alignment */
-.acc-summary > span:first-child {
-  flex: 1;
-}
-
-/* Chevron */
-.chev {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 0.85rem;
-  transition: transform 0.25s ease;
-}
-.chev.rotated {
-  transform: rotate(180deg);
-}
-
-/* Muted text helper */
-.muted {
-  color: var(--tool-muted);
-  font-size: 0.85rem;
-}
-
-/* ===== Scrollable body / list wrapper ===== */
-.plain {
-  list-style: none;
-  margin: 0;
-  padding: 0.6rem 0.9rem 0.7rem;
-  background: var(--tool-panel);
-}
-
-/* Set max height so it scrolls inside tools column */
-.plain {
-  max-height: 260px;
-  overflow-y: auto;
-}
-
-/* ===== Individual rows ===== */
-.row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 0.75rem;
-  background: var(--tool-tile);
-  border-radius: 8px;
-  border: 1px solid color-mix(in srgb, var(--tool-border) 80%, transparent);
-  padding: 0.5rem 0.75rem;
-  margin-bottom: 0.45rem;
-  transition: border-color 0.2s ease, background-color 0.2s ease;
-}
-
-.row:last-child {
-  margin-bottom: 0;
-}
-
-.row:hover {
-  border-color: var(--tool-accent);
-  background: color-mix(in srgb, var(--tool-tile) 88%, var(--tool-accent) 12%);
-}
-
-/* Left info block (name, type, coords) */
-.row > div:first-child {
-  display: flex;
-  flex-direction: column;
-  gap: 0.1rem;
-  min-width: 0;
-}
-
-.row strong {
-  font-size: 0.95rem;
-  white-space: nowrap;
-  text-overflow: ellipsis;
-  overflow: hidden;
-}
-
-.row .muted {
   font-size: 0.8rem;
 }
 
-/* Coords line */
-.row .muted:last-child {
-  font-size: 0.82rem;
+/* ================= OUTER CARD ================= */
+
+.dal-card {
+  display: flex;
+  flex-direction: column;
+  block-size: 100%;
+  background: transparent; /* outer inspector-card provides frame */
 }
 
-/* Right actions block (Edit / Remove) */
-.row-actions {
+/* ================= HEADER ================= */
+
+.dal-header {
+  padding: 0.55rem 0.9rem;
+  background: #171b26;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
   display: flex;
-  flex-shrink: 0;
-  gap: 0.5rem;
+  align-items: center;
+  justify-content: space-between;
+  cursor: pointer;
+}
+
+.dal-header-left {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.dal-title {
+  margin: 0;
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.dal-subtle {
+  font-size: 0.78rem;
+  opacity: 0.7;
+}
+
+.dal-header-right {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.dal-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.1rem 0.55rem;
+  border-radius: 999px;
+  font-size: 0.7rem;
+  border: 1px solid transparent;
+  white-space: nowrap;
+}
+
+.dal-badge-count {
+  background: rgba(248, 113, 113, 0.08);
+  border-color: rgba(248, 113, 113, 0.7);
+  color: #fecaca;
+}
+
+.dal-chev {
+  font-size: 0.9rem;
+  transition: transform 0.2s ease;
+  opacity: 0.85;
+}
+.dal-chev--rotated {
+  transform: rotate(180deg);
+}
+
+/* ================= BODY ================= */
+
+.dal-body {
+  flex: 1 1 auto;
+  min-block-size: 0;
+  background: #0f1216;
+  padding: 0.55rem 0.9rem 0.6rem;
+  display: flex;
+  flex-direction: column;
+}
+
+.dal-body-collapsed {
+  align-items: center;
+  justify-content: center;
+}
+
+/* List container */
+.dal-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  flex: 1 1 auto;
+  min-block-size: 0;
+  overflow-y: auto;
+}
+
+/* ================= ROWS ================= */
+
+.dal-row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.6rem;
+  padding: 0.35rem 0.35rem;
+  border-radius: 10px;
+  transition: background 0.15s ease, box-shadow 0.15s ease, transform 0.1s;
+}
+
+.dal-row + .dal-row {
+  margin-top: 0.2rem;
+}
+
+.dal-row:hover {
+  background: #151927;
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.06);
+  transform: translateY(-1px);
+}
+
+.dal-row-empty {
+  justify-content: center;
+}
+
+/* Left column */
+.dal-row-main {
+  display: flex;
+  flex-direction: column;
+  gap: 0.18rem;
+  min-width: 0;
+}
+
+.dal-row-title {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
   align-items: center;
 }
 
-/* ===== Button link ===== */
-.btn-link {
-  appearance: none;
-  background: none;
+.dal-call {
+  font-weight: 500;
+  max-inline-size: 11rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Type pill */
+.dal-pill {
+  border-radius: 999px;
+  padding: 0.08rem 0.45rem;
+  font-size: 0.7rem;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  background: #1c2131;
+  white-space: nowrap;
+}
+
+.dal-pill-type {
+  background: rgba(59, 130, 246, 0.12);
+  border-color: rgba(59, 130, 246, 0.7);
+  color: #bfdbfe;
+}
+
+/* Meta line */
+.dal-row-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem;
+  align-items: center;
+}
+
+.dal-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.08rem 0.45rem;
+  border-radius: 999px;
+  background: #1c2131;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  font-size: 0.72rem;
+}
+
+.dal-chip-label {
+  opacity: 0.75;
+}
+
+.dal-chip code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas,
+    'Liberation Mono', 'Courier New', monospace;
+  font-size: 0.72rem;
+}
+
+/* waypoint chip variant */
+.dal-chip--wp {
+  background: rgba(6, 95, 70, 0.5);
+  border-color: rgba(34, 197, 94, 0.85);
+  color: #bbf7d0;
+}
+
+.dal-dot {
+  width: 0.4rem;
+  height: 0.4rem;
+  border-radius: 999px;
+}
+.dal-dot--wp {
+  background: #22c55e;
+}
+
+/* Right column: actions */
+.dal-row-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  align-items: flex-end;
+  flex-shrink: 0;
+}
+
+/* ================= BUTTONS (match ae-btn style) ================= */
+
+.dal-btn {
+  border-radius: 999px;
+  padding: 0.28rem 0.7rem;
+  font-size: 0.78rem;
   border: none;
-  color: var(--tool-accent);
-  font-weight: 600;
-  font-size: 0.85rem;
   cursor: pointer;
-  padding: 0;
-  transition: opacity 0.15s ease, transform 0.1s ease;
+  white-space: nowrap;
 }
 
-.btn-link:hover {
-  text-decoration: underline;
-  opacity: 0.85;
+.dal-btn-sm {
+  padding-inline: 0.55rem;
 }
 
-.btn-link:active {
-  transform: translateY(1px);
+.dal-btn-secondary {
+  background: #252a3a;
+  color: var(--color-text, #e7ecf6);
 }
 
-/* Danger variant for Remove */
-.btn-link.danger {
-  color: #ff5c5c;
+.dal-btn-secondary:hover {
+  background: color-mix(
+    in srgb,
+    #252a3a 75%,
+    var(--color-accent, #ff4b8b) 25%
+  );
 }
 
-/* ===== Collapsed hint row ===== */
-:host ::ng-deep ng-template .row {
-  /* just in case template projection is different */
-}
-
-.row span.muted {
-  font-size: 0.85rem;
-}
-
-/* ===== Scrollbar styling for the list ===== */
-.plain::-webkit-scrollbar {
-  width: 8px;
-}
-.plain::-webkit-scrollbar-thumb {
-  background: color-mix(in srgb, var(--tool-accent) 40%, transparent 60%);
-  border-radius: 4px;
-}
-.plain::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-/* ===== Focus-visible (accessibility) ===== */
-:where(.acc-summary, .btn-link):focus-visible {
-  outline: 2px solid color-mix(in srgb, var(--tool-accent) 55%, transparent);
-  outline-offset: 2px;
+.dal-btn-danger {
+  color: #ff6b6b;
 }
