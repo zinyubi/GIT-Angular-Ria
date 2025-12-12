@@ -1,46 +1,271 @@
+/* src/app/layout/screens/primary/primary.component.css */
+
 :host {
-  display: flex;
-  flex-direction: column;
-  height: 100%;   /* inherits from parent; fine because parent uses 100dvh */
-}
-
-.primary {            /* if you show banners/headings here */
-  text-align: center;
-  padding: 0.5rem;
-  color: var(--color-error);
-  flex: 0 0 auto;
-}
-
-/* The map container fills remaining space and can scroll if needed */
-.primarycontainer {
-  display: flex;        /* Enable flex layout */
-  flex-direction: row;  /* Horizontal split */
-  height: 100%;
-  width: 100%;
-  overflow: hidden;     /* Prevent scrollbars from flex container */
-  border-radius: var(--radius);
-  min-height: 0;        /* Important for flex children with overflow */
-}
-
-
-/* Left side - you can customize content */
-.left-side {
-  flex: 0 0 40%;        /* Take 40% width */
-  background: #f0f0f0;  /* Optional: distinguish visually */
-  overflow: auto;       /* Scroll if content overflows */
-}
-
-/* Right side - the ria-map */
-.right-side {
-  flex: 0 0 60%;        /* Take 60% width */
-  min-height: 0;        /* Prevent overflow issues */
-  overflow: hidden;     /* Hide scrollbars here */
-  border-radius: var(--radius);
-}
-
-/* Make the map fill its parent */
-ria-map, ria-map *:host { 
   display: block;
   inline-size: 100%;
   block-size: 100%;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  color: var(--color-text, #e7ecf6);
+}
+
+/* Layout: left info panel | right map */
+.primarycontainer {
+  display: flex;
+  block-size: calc(100vh - 64px);
+  min-block-size: 0;
+  background: var(--color-app-bg, #050712);
+}
+
+.left-side {
+  flex: 0 0 360px;
+  max-inline-size: 420px;
+  min-inline-size: 320px;
+  padding: 8px;
+  background: #050712;
+  min-block-size: 0;
+}
+
+.right-side {
+  flex: 1 1 auto;
+  min-inline-size: 0;
+  min-block-size: 0;
+  border-inline-start: 1px solid #1f2937;
+}
+
+/* Card */
+.ae-card {
+  block-size: 100%;
+  min-block-size: 0;
+  display: flex;
+  flex-direction: column;
+  background: #0b0f19;
+  border-radius: 12px;
+  border: 1px solid #1f2639;
+  box-shadow: 0 14px 32px rgba(0, 0, 0, 0.6);
+}
+
+/* Header */
+.ae-header {
+  padding: 10px 14px;
+  border-bottom: 1px solid #1f2639;
+  background: linear-gradient(to bottom, #131728, #0b0f19);
+}
+
+.ae-title h3 {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.ae-subtle {
+  margin-top: 4px;
+  font-size: 0.8rem;
+  color: #9ea6bd;
+}
+
+.ae-subtle strong {
+  font-weight: 600;
+}
+
+.state-running { color: #22c55e; }
+.state-paused  { color: #fbbf24; }
+.state-stopped { color: #f97373; }
+
+.online { color: #4ade80; }
+.offline { color: #f97373; }
+
+/* Body + scroll */
+.ae-body {
+  flex: 1 1 auto;
+  min-block-size: 0;
+}
+
+.ae-scroll {
+  block-size: 100%;
+  min-block-size: 0;
+  padding: 10px 14px 12px;
+  overflow-y: auto;
+}
+
+/* Sections */
+.ae-section-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 4px;
+}
+
+.ae-section-head h4 {
+  margin: 0;
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+/* Simple grid / fields */
+.ae-grid {
+  display: grid;
+  gap: 0.6rem;
+}
+
+.ae-grid-2 {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.ae-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.ae-label {
+  font-size: 0.8rem;
+  color: #aeb6cd;
+}
+
+.ae-input {
+  inline-size: 100%;
+  box-sizing: border-box;
+  padding: 0.35rem 0.55rem;
+  border-radius: 0.5rem;
+  border: 1px solid #252c41;
+  background: #101525;
+  color: #e7ecf6;
+  font-size: 0.85rem;
+}
+
+.ae-input:focus {
+  outline: none;
+  border-color: #4f46e5;
+  box-shadow: 0 0 0 2px color-mix(in srgb, #4f46e5 25%, transparent);
+}
+
+.ae-hint {
+  margin-top: 4px;
+  font-size: 0.78rem;
+  color: #9ea6bd;
+}
+
+/* Buttons */
+.sim-controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+.ae-btn {
+  padding: 0.3rem 0.7rem;
+  border-radius: 999px;
+  border: 1px solid transparent;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.ae-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.ae-btn-primary {
+  background: #4f46e5;
+  color: #f9fafb;
+}
+
+.ae-btn-primary:hover:not(:disabled) {
+  background: color-mix(in srgb, #4f46e5 85%, black 15%);
+}
+
+.ae-btn-secondary {
+  background: #111827;
+  border-color: #30364a;
+  color: #e5e7eb;
+}
+
+.ae-btn-secondary:hover:not(:disabled) {
+  background: #1b2336;
+}
+
+.ae-btn-ghost {
+  background: transparent;
+  border-color: #30364a;
+  color: #d1d5db;
+}
+
+.ae-btn-ghost:hover:not(:disabled) {
+  background: #121826;
+}
+
+/* Dividers, empty, error */
+.ae-divider {
+  border: none;
+  margin: 10px 0;
+  block-size: 1px;
+  background: radial-gradient(circle, #2b3247, transparent);
+}
+
+.ae-empty {
+  margin-top: 0.75rem;
+  font-size: 0.9rem;
+}
+
+.error {
+  margin-top: 0.75rem;
+  font-size: 0.8rem;
+  color: #fecaca;
+}
+
+/* Block body (Simulation Info) */
+.ae-block-body {
+  font-size: 0.8rem;
+  background: #090d18;
+  border-radius: 10px;
+  border: 1px solid #20263a;
+  padding: 0.55rem 0.7rem;
+}
+
+.ae-block-body.small div {
+  margin-bottom: 2px;
+}
+
+/* Deployed aircraft list – this is the chip style you liked */
+.ae-wp-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.ae-wp-item {
+  background: #111827;
+  border-radius: 999px;
+  border: 1px solid #1f2937;
+  padding: 3px 5px;
+  font-size: 0.8rem;
+}
+
+.ae-wp-values {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem;
+  align-items: center;
+}
+
+.ae-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.15rem 0.5rem;
+  border-radius: 999px;
+  background: #020617;
+  color: #e5e7eb;
+}
+
+/* Map component should fill right side */
+.right-side riamap {
+  display: block;
+  block-size: 100%;
+  inline-size: 100%;
 }

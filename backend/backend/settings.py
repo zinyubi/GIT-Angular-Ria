@@ -89,6 +89,7 @@ INSTALLED_APPS = [
     # Local apps
     'users',
     'scenariosimulation',
+    'simulation',
 
     # Third-party apps
     'rest_framework',
@@ -148,10 +149,7 @@ ASGI_APPLICATION = 'backend.asgi.application'  # ✅ Using ASGI (for WebSockets)
 
 CHANNEL_LAYERS = {
     "default": {
-        "BACKEND": "channels_redis.core.RedisChannelLayer",
-        "CONFIG": {
-            "hosts": [("127.0.0.1", 6379)],
-        },
+        "BACKEND": "channels.layers.InMemoryChannelLayer",
     },
 }
 

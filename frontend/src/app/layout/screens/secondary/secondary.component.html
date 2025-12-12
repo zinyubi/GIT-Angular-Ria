@@ -1,0 +1,107 @@
+<!-- src/app/layout/screens/secondary/secondary.component.html -->
+<div class="secondarycontainer">
+
+  <!-- LEFT PANEL -->
+  <div class="left-side">
+    <div class="ae-card">
+
+      <!-- HEADER -->
+      <div class="ae-header">
+        <div class="ae-title">
+          <h3>Scenario Simulation (Viewer)</h3>
+          <div class="ae-subtle">
+            Scenario:
+            <strong>{{ scenarioName }}</strong> ·
+            State:
+            <span
+              [class.state-running]="simState === 'running'"
+              [class.state-paused]="simState === 'paused'"
+              [class.state-stopped]="simState === 'stopped'">
+              {{ simState }}
+            </span> ·
+            Socket:
+            <span [class.online]="connectionStatus" [class.offline]="!connectionStatus">
+              {{ connectionStatus ? 'Connected' : 'Disconnected' }}
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <!-- BODY -->
+      <div class="ae-body">
+        <div class="ae-scroll">
+
+          <!-- Scenario selector -->
+          <section>
+            <div class="ae-section-head">
+              <h4>Scenario</h4>
+            </div>
+            <div class="ae-grid ae-grid-2">
+              <div class="ae-field">
+                <label class="ae-label" for="scenarioSelectViewer">Running scenarios</label>
+                <select
+                  id="scenarioSelectViewer"
+                  class="ae-input"
+                  [ngModel]="selectedScenarioId"
+                  (ngModelChange)="onScenarioChange($event)"
+                >
+                  <option [ngValue]="null">-- Choose running scenario --</option>
+                  <option *ngFor="let s of visibleScenarios" [ngValue]="s.scenario_id">
+                    {{ s.scenario_name }} ({{ s.state }})
+                  </option>
+                </select>
+                <div class="ae-hint" *ngIf="!anyRunning">
+                  No scenario is currently running. When a C2 user starts a simulation,
+                  it will appear here.
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <hr class="ae-divider" />
+
+          <!-- Aircraft list -->
+          <section *ngIf="lastSnapshot" class="sim-summary">
+            <div class="ae-section-head">
+              <h4>Deployed Aircraft ({{ lastSnapshot.aircraft_count }})</h4>
+            </div>
+
+            <ul class="ae-wp-list">
+              <li *ngFor="let ac of lastSnapshot.aircraft" class="ae-wp-item">
+                <div class="ae-wp-values">
+                  <span class="ae-chip">
+                    <strong>{{ ac.name }}</strong>
+                  </span>
+                  <span class="ae-chip">
+                    {{ ac.sim_status }} &#64;
+                    {{ ac.sim_position?.latitude | number:'1.4-4' }},
+                    {{ ac.sim_position?.longitude | number:'1.4-4' }}
+                  </span>
+                </div>
+              </li>
+            </ul>
+          </section>
+
+          <!-- Empty state -->
+          <section *ngIf="!lastSnapshot" class="ae-empty">
+            <div class="ae-hint">
+              Select a running scenario to view its live simulation.
+            </div>
+          </section>
+
+          <!-- Error -->
+          <p *ngIf="lastError" class="error">
+            {{ lastError }}
+          </p>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- RIGHT SIDE MAP -->
+  <div class="right-side">
+    <riamap></riamap>
+  </div>
+
+</div>

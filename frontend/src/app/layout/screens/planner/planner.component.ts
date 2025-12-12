@@ -371,7 +371,6 @@ export class PlannerComponent implements OnInit, OnDestroy {
           ...current,
           initial_latitude: plat,
           initial_longitude: plon,
-          // If map gave us an altitude, store it into the deploy form as well
           ...(alt !== null ? { initial_altitude_m: alt } : {}),
         });
       },
@@ -382,7 +381,6 @@ export class PlannerComponent implements OnInit, OnDestroy {
           ...currentWpForm,
           lat: wplat,
           lon: wplon,
-          // Use map altitude for waypoint if present
           ...(alt !== null ? { alt } : {}),
         });
 
@@ -406,11 +404,13 @@ export class PlannerComponent implements OnInit, OnDestroy {
   trackByAircraftId = (_: number, a: DeployedAircraft) => a.id;
   trackByWaypointIndex = (i: number) => i;
 
+  /**
+   * (Optional helper – no longer used by the map input, but safe to keep)
+   */
   get mapDeployedAircrafts(): DeployedAircraft[] {
     if (!this.selectedScenario || !this.deployedAircrafts) return [];
     const sid = this.selectedScenario.id;
-    const filtered = this.deployedAircrafts.filter(ac => ac.scenario === sid);
-    return filtered;
+    return this.deployedAircrafts.filter(ac => ac.scenario === sid);
   }
 
   ngOnDestroy() {

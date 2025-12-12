@@ -1,4 +1,3 @@
-// src/app/luciadmaps/components/map/map.component.ria.ts
 import {
   AfterViewInit,
   ChangeDetectionStrategy,
@@ -33,6 +32,8 @@ import { PanControlComponentRia } from '../pancontrol/pan-control.component.ria'
 import { RiaStyleEditorComponent } from '../util/riavisualization/editor';
 import { RiaLocationEditorComponent } from '../util/riavisualization/editor/location-editor.component';
 import { RiaVizFacade } from '../util/riavisualization';
+
+import { StyleEditorService } from '../util/riavisualization/editor/style-editor.service';
 
 import { Observable } from 'rxjs';
 import { Point } from '@luciad/ria/shape/Point.js';
@@ -69,8 +70,11 @@ export class MapComponentRia implements AfterViewInit, OnDestroy {
   @Output() pointPicked = new EventEmitter<{ lon: number; lat: number; alt?: number }>();
   @Output() pickPreview = new EventEmitter<PickPreviewEvent>();
 
+  /** Luciad map instance (public so other components can read it) */
   public map?: WebGLMap;
-  vizFacade?: RiaVizFacade;
+
+  /** Shared viz facade for style/location editors + scenario helper */
+  public vizFacade?: RiaVizFacade;
 
   // UI state
   isLayerTreeOpen = true;
@@ -104,15 +108,71 @@ export class MapComponentRia implements AfterViewInit, OnDestroy {
     private mouseCoordsRia: MouseCoordinateServiceRia,
     private compassServiceRia: CompassServiceRia,
     private cdr: ChangeDetectorRef,
+    private styleEditor: StyleEditorService,
   ) {
     this.modelPoint$ = this.mouseCoordsRia.model$();
     this.currentProjKey = this.cfg.getDefaultKey();
+  }
+
+  // ───────────────────────────── lifecycle ─────────────────────────────
+
+  async ngAfterViewInit(): Promise<void> {
+    try {
+      const refCode = this.cfg.getDefaultProjection().reference;
+      const reference = getReference(refCode);
+      this.map = new WebGLMap(this.mapDiv.nativeElement, { reference });
+
+      // Shared viz facade
+      this.vizFacade = new RiaVizFacade(this.map);
+
+      // ✅ init StyleEditorService with map + viz (wrapped in try so failures don’t kill the map)
+      try {
+        this.styleEditor.init(this.map, this.vizFacade);
+      } catch (e) {
+        console.error('[MapComponentRia] styleEditor.init failed', e);
+      }
+
+      // Connect layer tree
+      if (this.treeCmp) {
+        (this.treeCmp as any).map = this.map;
+        this.treeCmp.refreshNow();
+      }
+      this.cdr.markForCheck();
+
+      // Mouse coords + base layers
+      this.mouseCoordsRia.start(this.map, getReference('CRS:84'));
+      await this.baseLayersRia.addBaseLayersFromConfigRia(
+        this.map,
+        DEFAULT_BASELAYER_CONFIG_RIA,
+      );
+      this.cdr.markForCheck();
+
+      // Compass update on map movements
+      this.mapChangeHandle = this.map.on('MapChange', () => {
+        if (this.rafQueued) return;
+        this.rafQueued = true;
+        requestAnimationFrame(() => {
+          this.rafQueued = false;
+          this.updateCompassTransform();
+          this.cdr.markForCheck();
+        });
+      });
+    } catch (e) {
+      console.error('[MapComponentRia] ngAfterViewInit failed, map will not initialise', e);
+    }
   }
 
   ngOnDestroy(): void {
     this.stopPointPicking(true);
     this.mapChangeHandle?.remove?.();
     this.mapChangeHandle = null;
+
+    // Clean up style editor listener
+    try {
+      this.styleEditor.dispose();
+    } catch (e) {
+      console.warn('[MapComponentRia] styleEditor.dispose failed', e);
+    }
   }
 
   public refreshLayerTree(): void {
@@ -124,6 +184,8 @@ export class MapComponentRia implements AfterViewInit, OnDestroy {
     this.compassTransform = this.compassServiceRia.cssRotationForMapRia(this.map);
   }
 
+  // ───────────── side panels (layer tree / style / location) ─────────────
+
   onLayertreeCollapsedChange(collapsed: boolean) {
     this.isLayerTreeOpen = !collapsed;
     if (this.isLayerTreeOpen) {
@@ -131,6 +193,7 @@ export class MapComponentRia implements AfterViewInit, OnDestroy {
       this.isLocationOpen = false;
     }
   }
+
   onEditorCollapsedChange(collapsed: boolean) {
     this.isEditorOpen = !collapsed;
     if (this.isEditorOpen) {
@@ -138,6 +201,7 @@ export class MapComponentRia implements AfterViewInit, OnDestroy {
       this.isLocationOpen = false;
     }
   }
+
   onLocationCollapsed(collapsed: boolean) {
     this.isLocationOpen = !collapsed;
     if (this.isLocationOpen) {
@@ -145,6 +209,7 @@ export class MapComponentRia implements AfterViewInit, OnDestroy {
       this.isEditorOpen = false;
     }
   }
+
   onPanelCollapseToggled(e: { collapsed: boolean }) {
     this.isLayerTreeOpen = !e.collapsed;
     if (this.isLayerTreeOpen) {
@@ -154,57 +219,25 @@ export class MapComponentRia implements AfterViewInit, OnDestroy {
     this.cdr.markForCheck();
   }
 
-  async ngAfterViewInit(): Promise<void> {
-    const refCode = this.cfg.getDefaultProjection().reference;
-    const reference = getReference(refCode);
-    this.map = new WebGLMap(this.mapDiv.nativeElement, { reference });
-
-    if (this.treeCmp) {
-      (this.treeCmp as any).map = this.map;
-      this.treeCmp.refreshNow();
-    }
-    this.cdr.markForCheck();
-
-    this.mouseCoordsRia.start(this.map, getReference('CRS:84'));
-    await this.baseLayersRia.addBaseLayersFromConfigRia(
-      this.map,
-      DEFAULT_BASELAYER_CONFIG_RIA,
-    );
-    this.cdr.markForCheck();
-
-    this.mapChangeHandle = this.map.on('MapChange', () => {
-      if (this.rafQueued) return;
-      this.rafQueued = true;
-      requestAnimationFrame(() => {
-        this.rafQueued = false;
-        this.updateCompassTransform();
-        this.cdr.markForCheck();
-      });
-    });
-  }
-
   onNodeExpandToggled(_: any) { /* noop */ }
   onNodeVisibilityToggled(_: any) { /* noop */ }
 
   // ───────────────────────────────
-  //  Altitude scaling by zoom/camera height
+  //  Altitude scaling by mapScale
   // ───────────────────────────────
   private computeMetersPerPixel(): number {
     if (!this.map) return 300;
 
-    const scale = this.map.mapScale; // real map scale
+    const raw: any = (this.map as any).mapScale;
+    const scale: number = Array.isArray(raw) ? raw[0] : raw;
 
-    // Normalize scale into a usable multiplier
-    const baseScale = 1000000;    
-    let sf =    1/ scale[0];     // tune this for sensitivity
-    let scaleFactor = sf / baseScale
+    const baseScale = 1e-6;
+    let scaleFactor = scale / baseScale;
 
+    if (scaleFactor < 0.1) scaleFactor = 0.1;
+    if (scaleFactor > 40) scaleFactor = 40;
 
-    // // Clamp extremes
-    // if (scaleFactor < 0.1) scaleFactor = 0.1;   // slow when zoomed in
-    // if (scaleFactor > 25) scaleFactor = 25;     // fast when zoomed out
-
-    const base = 200; // 200 meters per pixel at base scale
+    const base = 150;
     return base * scaleFactor;
   }
 
@@ -234,6 +267,7 @@ export class MapComponentRia implements AfterViewInit, OnDestroy {
       try {
         if (!this.map) return;
 
+        // Phase 1: pick lat/lon
         if (this.pickingPhase === 'latlon') {
           const rect = container.getBoundingClientRect();
           const viewPt = createPoint(null, [
@@ -267,8 +301,6 @@ export class MapComponentRia implements AfterViewInit, OnDestroy {
           this.pickCurrentAlt = this.pickBaseAlt;
           this.lastPreviewLonLat = { ...this.pickBaseLonLat };
 
-          console.debug('[MapComponentRia] pick phase1 lat/lon', this.pickBaseLonLat);
-
           this.pickPreview.emit({
             lon: this.pickBaseLonLat.lon,
             lat: this.pickBaseLonLat.lat,
@@ -284,14 +316,10 @@ export class MapComponentRia implements AfterViewInit, OnDestroy {
           this.pickMoveListener = (moveEvt: MouseEvent) => {
             if (!this.pickBaseLonLat || !this.map) return;
 
-            const dy = this.pickBaseScreenY - moveEvt.clientY; // up → positive
+            const dy = this.pickBaseScreenY - moveEvt.clientY;
             const metersPerPixel = this.computeMetersPerPixel();
             const alt = this.pickBaseAlt + dy * metersPerPixel;
             this.pickCurrentAlt = Math.max(0, Math.min(1_000_000, alt));
-
-            // 🔍 debug zoom + scale
-            const zoom = this.map!.mapScale;
-
 
             this.lastPreviewLonLat = { ...this.pickBaseLonLat! };
 
@@ -309,6 +337,7 @@ export class MapComponentRia implements AfterViewInit, OnDestroy {
           return;
         }
 
+        // Phase 2: fix altitude and emit final point
         if (this.pickingPhase === 'alt') {
           if (!this.pickBaseLonLat) return;
           const finalAlt =
@@ -319,7 +348,6 @@ export class MapComponentRia implements AfterViewInit, OnDestroy {
             lat: this.pickBaseLonLat.lat,
             alt: +finalAlt.toFixed(1),
           };
-          console.debug('[MapComponentRia] pick complete', out);
 
           this.pickPreview.emit({
             lon: out.lon,
@@ -330,7 +358,7 @@ export class MapComponentRia implements AfterViewInit, OnDestroy {
 
           this.pointPicked.emit(out);
 
-          // keep preview, so clearPreview = false
+          // Don't clear preview on done → keep orange marker
           this.stopPointPicking(false);
         }
       } catch (err) {
@@ -377,6 +405,8 @@ export class MapComponentRia implements AfterViewInit, OnDestroy {
 
     this.cdr.markForCheck();
   }
+
+  // ───────────────────────────── map controls ─────────────────────────────
 
   rotateNorth(): void {
     if (!this.map) return;

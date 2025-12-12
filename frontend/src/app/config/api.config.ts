@@ -1,3 +1,4 @@
+// src/app/config/api.config.ts
 import { environment } from '../../environments/environment';
 
 const BACKEND_BASE = environment.backendBase;
@@ -23,19 +24,20 @@ export const API_URLS = {
   SCREENS: `${BACKEND_BASE}/users/screens/`,
   ROLES_SCREENS: `${BACKEND_BASE}/users/roles/screens/`,
 
-  // Add scenario endpoints:
+  // Scenario endpoints:
   SCENARIOS_BASE: `${BACKEND_BASE}/scenariosimulation/scenarios/`,
-  // for convenience, individual:
-  SCENARIOS: `${BACKEND_BASE}/scenariosimulation/scenarios/`, // list & create
-  SCENARIO_BY_ID: (id: number | string) => `${BACKEND_BASE}/scenariosimulation/scenarios/${id}/`, // get, update, delete
+  SCENARIOS: `${BACKEND_BASE}/scenariosimulation/scenarios/`,
+  SCENARIO_BY_ID: (id: number | string) =>
+    `${BACKEND_BASE}/scenariosimulation/scenarios/${id}/`,
 
-  // Add these to your API_URLS
   AIRCRAFT_TYPES: `${BACKEND_BASE}/scenariosimulation/aircrafttypes/`,
-  DEPLOYED_AIRCRAFT_BY_ID: (id: number) => `${BACKEND_BASE}/scenariosimulation/deployedaircrafts/${id}/`,
+  DEPLOYED_AIRCRAFT_BY_ID: (id: number) =>
+    `${BACKEND_BASE}/scenariosimulation/deployedaircrafts/${id}/`,
   DEPLOYED_AIRCRAFT: `${BACKEND_BASE}/scenariosimulation/deployedaircrafts/`,
-  DEPLOYED_AIRCRAFT_BY_SCENARIO: (scenarioId: number | string) => `${BACKEND_BASE}/scenariosimulation/deployedaircrafts/?scenario=${scenarioId}`,
-  DEPLOYED_AIRCRAFT_BY_SCENARIO_ID: (scenarioId: number | string) => `${BACKEND_BASE}/scenariosimulation/deployedaircrafts/${scenarioId}/`,
-  
+  DEPLOYED_AIRCRAFT_BY_SCENARIO: (scenarioId: number | string) =>
+    `${BACKEND_BASE}/scenariosimulation/deployedaircrafts/?scenario=${scenarioId}`,
+  DEPLOYED_AIRCRAFT_BY_SCENARIO_ID: (scenarioId: number | string) =>
+    `${BACKEND_BASE}/scenariosimulation/deployedaircrafts/${scenarioId}/`,
 };
 
 /**
@@ -46,11 +48,15 @@ export const WS_URLS = {
   CHAT: `${WS_BASE}/ws/chat/`,
 
   /**
-   * Generates the WebSocket URL for simulation data for a given scenario.
-   *
-   * @param scenarioId - The ID of the simulation scenario (number or string).
-   * @returns WebSocket URL string for the simulation.
+   * WebSocket URL for simulation data for a given scenario.
+   * Backend route: ws://.../ws/simulation/<scenario_id>/
    */
-  simulation: (scenarioId: number | string) =>
-    `${WS_BASE}/ws/simulations/${scenarioId}/`,
+  SIMULATION: (scenarioId: number | string) =>
+    `${WS_BASE}/ws/simulation/${scenarioId}/`,
+
+  /**
+   * Global simulation monitor.
+   * Backend route: ws://.../ws/simulations/monitor/
+   */
+  MONITOR: `${WS_BASE}/ws/simulations/monitor/`,
 };

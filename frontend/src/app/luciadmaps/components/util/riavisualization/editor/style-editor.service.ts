@@ -1,6 +1,6 @@
+// src/app/luciadmaps/components/util/riavisualization/editor/style-editor.service.ts
 import { Injectable } from "@angular/core";
 import type { WebGLMap } from "@luciad/ria/view/WebGLMap.js";
-import { FeatureLayer } from "@luciad/ria/view/feature/FeatureLayer.js";
 import type { Feature } from "@luciad/ria/model/feature/Feature.js";
 import type { RiaVizFacade } from "../index";
 
@@ -22,66 +22,184 @@ export class StyleEditorService {
   init(map: WebGLMap, viz: RiaVizFacade) {
     this.map = map;
     this.viz = viz;
+
+    // (re)wire SelectionChanged listener
     this.off?.();
-    const h = (this.map as any).on?.("SelectionChanged", (ev: any) => this.onSelection(ev));
+    const h = (this.map as any).on?.("SelectionChanged", (ev: any) =>
+      this.onSelection(ev)
+    );
     this.off = () => (h?.remove ? h.remove() : undefined);
+
+    console.info("[StyleEditorService] init done");
   }
 
-  dispose() { this.off?.(); this.off = null; }
-  getCurrent(): SelectedContext | null { return this.current; }
+  dispose() {
+    this.off?.();
+    this.off = null;
+    this.current = null;
+    console.info("[StyleEditorService] disposed");
+  }
 
+  getCurrent(): SelectedContext | null {
+    return this.current;
+  }
+
+  /**
+   * Apply style patch to the currently selected feature AND its layer.
+   *
+   * 1) Feature-level: props.__style (used by ScenarioLayerHelper.styleProvider)
+   * 2) Layer-level:   merge patch into entry.style and call updateLayerStyle(id,…)
+   */
   patchSelectedFeature(stylePatch: any) {
-    if (!this.current) return;
-    this.viz.updateFeatureStyle(this.current.layerId, this.current.featureId, stylePatch);
+    if (!this.current) {
+      console.warn("[StyleEditorService] patchSelectedFeature → no current selection");
+      return;
+    }
+
+    const { layerId, layerLabel, kind, featureId } = this.current;
+
+    console.group("[StyleEditorService] patchSelectedFeature");
+    console.log("→ selection:", { layerId, layerLabel, kind, featureId });
+    console.log("→ stylePatch:", stylePatch);
+
+    // 1) Feature-level styling
+    try {
+      this.viz.updateFeatureStyle(layerId, featureId, stylePatch);
+    } catch (e) {
+      console.warn("[StyleEditorService] updateFeatureStyle failed", e);
+    }
+
+    // 2) Also patch the owning layer style (by layerId, not label)
+    try {
+      const entry: any = (this.viz as any).registry?.get?.(layerId);
+      const baseStyle = entry?.style || entry?.layer?.style || {};
+      const merged = this.mergeDeep(baseStyle, stylePatch);
+      console.log("→ patching layer style (merged):", merged);
+      this.viz.updateLayerStyle(layerId, merged);
+    } catch (e) {
+      console.warn("[StyleEditorService] updateLayerStyle(layerId) failed", e);
+    }
+
+    console.groupEnd();
   }
 
-  patchLayerByLabel(stylePatch: any) {
-    if (!this.current) return;
-    this.viz.updateLayerStyleByLabel(this.current.layerLabel, this.current.kind, stylePatch);
+  /** Apply style patch to entire layer (using layerId from current selection) */
+  patchLayer(stylePatch: any) {
+    if (!this.current) {
+      console.warn("[StyleEditorService] patchLayer → no current selection");
+      return;
+    }
+
+    const { layerId, layerLabel, kind } = this.current;
+
+    console.group("[StyleEditorService] patchLayer");
+    console.log("→ selection:", { layerId, layerLabel, kind });
+    console.log("→ stylePatch:", stylePatch);
+
+    try {
+      const entry: any = (this.viz as any).registry?.get?.(layerId);
+      const baseStyle = entry?.style || entry?.layer?.style || {};
+      const merged = this.mergeDeep(baseStyle, stylePatch);
+      console.log("→ merged layer style:", merged);
+      this.viz.updateLayerStyle(layerId, merged);
+    } catch (e) {
+      console.warn("[StyleEditorService] patchLayer/updateLayerStyle failed", e);
+    }
+
+    console.groupEnd();
   }
 
-  // ---- internals ----
+  // ───────────────────────────── Selection handling ─────────────────────────────
+
   private onSelection(ev: any) {
-    const sel = ev?.selectionChanges?.[0]?.selected ?? [];
-    const f = sel[0] as Feature | undefined;
-    if (!f) { this.current = null; return; }
+    console.group("👆 [StyleEditor] onSelection");
+    console.log("→ event:", ev);
 
-    const hit = this.findLayerForFeature(f);
-    if (!hit) { this.current = null; return; }
+    const changes = ev?.selectionChanges ?? [];
 
-    const featureId = (f as any).id ?? (f as any).properties?.id ?? "unknown";
-    this.current = {
-      layerId: hit.layerId,
-      layerLabel: hit.label,
-      kind: hit.kind,
-      featureId,
-      feature: f
-    };
-  }
-
-  private findLayerForFeature(feature: Feature) {
-    const tree = (this.map as any).layerTree;
-    const layers: FeatureLayer[] = [];
-    tree.traverse((n: any) => { if (n.layer instanceof FeatureLayer) layers.push(n.layer); });
-
-    for (const fl of layers) {
-      const store = (fl.model as any)?.store;
-      if (!store) continue;
-      const id = (feature as any).id;
-      if (id && store.get(id)) {
-        return {
-          layer: fl,
-          layerId: (fl as any).id ?? ((fl as any).label ?? "Layer"),
-          label: (fl as any).label ?? "Layer",
-          kind: this.inferKind(fl)
-        };
+    // Try to find a *newly selected* feature in this event
+    let f: Feature | undefined;
+    for (let i = changes.length - 1; i >= 0 && !f; i--) {
+      const added = changes[i]?.selected;
+      if (Array.isArray(added) && added.length > 0) {
+        f = added[0] as Feature;
       }
     }
-    return null;
+
+    // Fallback: global selection on the map
+    if (!f) {
+      const sel = (this.map as any).selection;
+      if (sel && Array.isArray(sel) && sel.length > 0) {
+        f = sel[0] as Feature;
+        console.log("→ using map.selection[0] as fallback:", f);
+      }
+    }
+
+    // IMPORTANT:
+    // Luciad may send SelectionChanged events with only "deselected" items
+    // (e.g., after a feature is updated), while the user still has something
+    // visually selected. In that case, we *do not* clear the current context
+    // if map.selection is still populated.
+    if (!f) {
+      const sel = (this.map as any).selection;
+      if (sel && Array.isArray(sel) && sel.length > 0) {
+        console.log(
+          "→ no new selected feature in event, but map.selection still non-empty; keeping current selection"
+        );
+        console.groupEnd();
+        return;
+      }
+
+      // Real clear: nothing in event AND nothing in map.selection
+      this.current = null;
+      console.info("❌ [StyleEditor] selection really cleared (no selection left)");
+      console.groupEnd();
+      return;
+    }
+
+    console.log("→ feature selected:", f);
+
+    // 🔑 Ask RiaViz which layer owns this feature
+    const owner = this.viz.lookupOwnerByFeature(f);
+    console.log("→ lookupOwnerByFeature:", owner);
+
+    if (!owner) {
+      console.warn("[StyleEditor] onSelection → no owner for feature, keeping previous selection");
+      console.groupEnd();
+      return;
+    }
+
+    const featureId =
+      (f as any).id ??
+      (f as any).properties?.id ??
+      "unknown";
+
+    this.current = {
+      layerId: owner.layerId,
+      layerLabel: owner.label,
+      kind: owner.kind,
+      featureId,
+      feature: f,
+    };
+
+    console.log("→ updated current selection:", this.current);
+    console.groupEnd();
   }
 
-  private inferKind(fl: FeatureLayer): "point"|"polyline"|"polygon" {
-    const p: any = fl.painter;
-    return (p?.cfg?.kind as any) ?? "point";
+  // ───────────────────────────── helpers ─────────────────────────────
+
+  private mergeDeep<T extends object>(a: T, b: any): T {
+    const out: any = Array.isArray(a) ? [...(a as any)] : { ...(a as any) };
+    if (b && typeof b === "object") {
+      Object.keys(b).forEach((k) => {
+        const v = (b as any)[k];
+        if (v && typeof v === "object" && !Array.isArray(v)) {
+          out[k] = this.mergeDeep(out[k] || {}, v);
+        } else {
+          out[k] = v;
+        }
+      });
+    }
+    return out as T;
   }
 }

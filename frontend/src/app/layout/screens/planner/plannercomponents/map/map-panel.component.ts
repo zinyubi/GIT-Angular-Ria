@@ -12,13 +12,17 @@ import {
 import { CommonModule } from '@angular/common';
 import type { WebGLMap } from '@luciad/ria/view/WebGLMap.js';
 
-import { MapComponentRia, PickPreviewEvent } from '../../../../../luciadmaps/components/map/map.component.ria';
+import {
+  MapComponentRia,
+  PickPreviewEvent,
+} from '../../../../../luciadmaps/components/map/map.component.ria';
+
 import {
   Scenario,
   DeployedAircraft,
 } from '../../../../../core/auth/services/scenario.service';
 
-import { RiaVizFacade } from '../../../../../luciadmaps/components/util/riavisualization/index';
+import { RiaVizFacade } from '../../../../../luciadmaps/components/util/riavisualization';
 import {
   setWrapNormalization,
   setWgsSource,
@@ -55,13 +59,16 @@ export class MapPanelComponent implements OnChanges, AfterViewInit {
   // ──────────────────────────── Lifecycle ────────────────────────────
 
   ngAfterViewInit() {
-    this.map = (this.mapCmp as any)?.map as WebGLMap | undefined;
-    if (!this.map) return;
+    this.map = this.mapCmp?.map as WebGLMap | undefined;
+    this.viz = this.mapCmp?.vizFacade as RiaVizFacade | undefined;
+
+    if (!this.map || !this.viz) {
+      return;
+    }
 
     setWrapNormalization((this.map as any).wrapAroundWorld ?? false);
     setWgsSource('CRS:84');
 
-    this.viz = new RiaVizFacade(this.map);
     this.scenarioHelper = new ScenarioLayerHelper(
       this.map,
       this.viz,

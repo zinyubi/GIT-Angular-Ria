@@ -1,101 +1,116 @@
+# users/admin.py
 from django.contrib import admin
 from django import forms
-from .models import TWCCUser, Role, Screen, RoleScreenAccess, Message, Functionality
 
+from .models import (
+    TWCCUser,
+    Role,
+    Screen,
+    RoleScreenAccess,
+    Message,
+    Functionality,
+)
+
+
+# -------------------------------------------------------------------
+# Custom ModelForm for Role: handles screens + can_control_simulation
+# -------------------------------------------------------------------
 class RoleScreenMultipleChoiceForm(forms.ModelForm):
     """
-    Custom ModelForm for Role admin to manage many-to-many relationship
-    with Screen objects through a user-friendly multiple select widget.
+    Custom ModelForm for Role admin to manage:
 
-    This form replaces the standard widget for screens with a filtered
-    select multiple widget and synchronizes the RoleScreenAccess join model
-    on save.
+      - Role fields (name, description, can_control_simulation)
+      - Screens via a nice FilteredSelectMultiple widget
+
+    It also keeps the RoleScreenAccess join model in sync.
     """
+
+    # This field is NOT on the model directly; we map it manually
     screens = forms.ModelMultipleChoiceField(
         queryset=Screen.objects.all(),
         required=False,
-        widget=admin.widgets.FilteredSelectMultiple("Screens", is_stacked=False)
+        widget=admin.widgets.FilteredSelectMultiple("Screens", is_stacked=False),
+        help_text="Screens that this role can access.",
     )
 
     class Meta:
         model = Role
-        fields = ["name", "description"]
+        # 👇 IMPORTANT: include can_control_simulation AND screens here
+        fields = ["name", "description", "can_control_simulation", "screens"]
 
     def __init__(self, *args, **kwargs):
         """
-        Initialize the form.
-
-        Pre-populates the 'screens' field with screens associated with
-        the Role instance, if editing an existing Role.
+        Pre-populate 'screens' with the screens already mapped to this role.
         """
         super().__init__(*args, **kwargs)
+
         if self.instance.pk:
-            self.fields["screens"].initial = Screen.objects.filter(roles=self.instance)
+            # Use the M2M relation from Role to Screen
+            self.fields["screens"].initial = self.instance.screens.all()
 
     def save(self, commit=True):
         """
-        Override save method to update RoleScreenAccess join table based
-        on selected screens.
+        Save the Role, then synchronize:
 
-        Removes unselected screens and creates new RoleScreenAccess records
-        as necessary.
+          - role.screens (M2M)
+          - RoleScreenAccess join table
 
-        Args:
-            commit (bool): Whether to commit changes to the database.
-
-        Returns:
-            Role instance saved.
+        based on the selected 'screens'.
         """
         role = super().save(commit=commit)
+
         if role.pk:
-            screens = self.cleaned_data["screens"]
-            # Remove RoleScreenAccess records for screens not selected
+            # Selected screens in the form
+            screens = self.cleaned_data.get("screens", Screen.objects.none())
+
+            # 1) Keep Role.screens M2M in sync
+            role.screens.set(screens)
+
+            # 2) Keep RoleScreenAccess in sync (if you still want this join table)
+            #    Remove mappings for unselected screens:
             RoleScreenAccess.objects.filter(role=role).exclude(screen__in=screens).delete()
-            # Add RoleScreenAccess records for newly selected screens
+            #    Add mappings for newly selected screens:
             for screen in screens:
                 RoleScreenAccess.objects.get_or_create(role=role, screen=screen)
+
         return role
 
 
+# -------------------------------------------------------------------
+# Inlines
+# -------------------------------------------------------------------
 class RoleScreenAccessInline(admin.TabularInline):
     """
-    Inline admin descriptor for RoleScreenAccess model.
-
-    Allows editing RoleScreenAccess records inline on the Role or Screen admin page.
+    Inline admin for RoleScreenAccess model.
     """
     model = RoleScreenAccess
     extra = 1
 
 
+# -------------------------------------------------------------------
+# Role admin
+# -------------------------------------------------------------------
 @admin.register(Role)
 class RoleAdmin(admin.ModelAdmin):
     """
     Admin configuration for Role model.
 
-    Displays role name and description, provides search,
-    and manages RoleScreenAccess inline records using a custom form.
+    - Shows name, description and can_control_simulation flag
+    - Uses custom form with FilteredSelectMultiple for screens
+    - Optionally shows RoleScreenAccess inline
     """
     form = RoleScreenMultipleChoiceForm
-    list_display = ("name", "description")
-    search_fields = ("name",)
+
+    list_display = ("name", "description", "can_control_simulation")
+    search_fields = ("name", "description")
+    list_filter = ("can_control_simulation",)
+
     inlines = [RoleScreenAccessInline]
 
-    def get_form(self, request, obj=None, **kwargs):
-        """
-        Returns the form to be used in the admin interface.
 
-        Args:
-            request: The current HttpRequest object.
-            obj: The Role instance being edited (or None if creating).
-            kwargs: Additional arguments.
-
-        Returns:
-            Form class to use.
-        """
-        form = super().get_form(request, obj, **kwargs)
-        return form
-
-
+# -------------------------------------------------------------------
+# TWCCUser admin
+# -------------------------------------------------------------------
 @admin.register(TWCCUser)
 class TWCCUserAdmin(admin.ModelAdmin):
     """
@@ -109,51 +124,51 @@ class TWCCUserAdmin(admin.ModelAdmin):
     filter_horizontal = ("roles",)
 
 
+# -------------------------------------------------------------------
+# Screen admin
+# -------------------------------------------------------------------
 @admin.register(Screen)
 class ScreenAdmin(admin.ModelAdmin):
     """
     Admin configuration for Screen model.
-
-    Displays name and description, allows search,
-    and includes RoleScreenAccess inline for managing role associations.
     """
-    list_display = ("name", "description")
-    search_fields = ("name",)
+    list_display = ("name", "description", "path")
+    search_fields = ("name", "description", "path")
     inlines = [RoleScreenAccessInline]
 
 
+# -------------------------------------------------------------------
+# Functionality admin
+# -------------------------------------------------------------------
 @admin.register(Functionality)
 class FunctionalityAdmin(admin.ModelAdmin):
     """
     Admin configuration for Functionality model.
-
-    Displays name and description, search enabled,
-    with horizontal filter widget for associated screens.
     """
     list_display = ("name", "description")
-    search_fields = ("name",)
+    search_fields = ("name", "description")
     filter_horizontal = ("screens",)
 
 
+# -------------------------------------------------------------------
+# RoleScreenAccess admin
+# -------------------------------------------------------------------
 @admin.register(RoleScreenAccess)
 class RoleScreenAccessAdmin(admin.ModelAdmin):
     """
     Admin configuration for RoleScreenAccess join model.
-
-    Displays role and screen with filtering options.
     """
     list_display = ("role", "screen")
     list_filter = ("role", "screen")
 
 
+# -------------------------------------------------------------------
+# Message admin
+# -------------------------------------------------------------------
 @admin.register(Message)
 class MessageAdmin(admin.ModelAdmin):
     """
     Admin configuration for Message model.
-
-    Displays user, content, timestamp, and visibility status.
-    Enables search by user username and message content.
-    Provides filter horizontal widgets for visible_roles and visible_users.
     """
     list_display = ("user", "content", "timestamp", "visibility")
     search_fields = ("user__username", "content")

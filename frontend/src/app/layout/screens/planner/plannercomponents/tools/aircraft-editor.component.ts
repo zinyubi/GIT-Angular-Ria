@@ -1,4 +1,3 @@
-// src/app/layout/screens/planner/plannercomponents/tools/aircraft-editor.component.ts
 import { Component, Input, Output, EventEmitter } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -50,8 +49,6 @@ export class AircraftEditorComponent {
 
   /** Angular-safe update (no spread operator in template) */
   updateField(field: keyof WaypointForm, value: any) {
-
-
     let v: any = value;
 
     // convert "", null, undefined → null
@@ -69,8 +66,6 @@ export class AircraftEditorComponent {
       ...this.waypointForm,
       [field]: v,
     };
-
-
 
     this.waypointForm = updated;
     this.waypointFormChange.emit(updated);

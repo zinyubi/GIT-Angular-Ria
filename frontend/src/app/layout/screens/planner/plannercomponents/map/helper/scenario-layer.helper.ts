@@ -13,7 +13,7 @@ import {
   Waypoint,
 } from "../../../../../../core/auth/services/scenario.service";
 
-import { RiaVizFacade } from "../../../../../../luciadmaps/components/util/riavisualization/index";
+import { RiaVizFacade } from "../../../../../../luciadmaps/components/util/riavisualization";
 import { makeCircleCanvas } from "../../../../../../luciadmaps/components/util/riavisualization/riaviz.utils";
 import { MapComponentRia } from "../../../../../../luciadmaps/components/map/map.component.ria";
 
@@ -29,13 +29,13 @@ export class ScenarioLayerHelper {
   /** Underlying MemoryStore used by the scenario FeatureModel */
   private scenarioStore?: MemoryStore;
 
-  /** Cached icon canvas for normal 3D points */
+  /** Cached icon canvas (kept if you want to use icons later) */
   private pointIconCanvas?: HTMLCanvasElement | null;
 
   /** Cached icon canvas for pick-preview (orange) */
   private pickPreviewIconCanvas?: HTMLCanvasElement | null;
 
-  // cached style objects for provider
+  // Cached style objects for initial styling
   private basePointStyle: any;
   private previewPointStyle: any;
   private lineStyle: any;
@@ -47,11 +47,14 @@ export class ScenarioLayerHelper {
     private mapCmp?: MapComponentRia
   ) {}
 
+  // ──────────────────────────── Public API ────────────────────────────
+
   applyScenario(s: Scenario | null, aircrafts: DeployedAircraft[] = []): void {
     const mapAny: any = this.map as any;
     const lt: AnyNode = mapAny.layerTree;
 
     if (!s) {
+      this.log("applyScenario(null) → removing scenario layer");
       this.removeCurrentLayer();
       mapAny.repaint?.();
       this.mapCmp?.refreshLayerTree?.();
@@ -61,10 +64,16 @@ export class ScenarioLayerHelper {
     const scenarioKey: string | number = (s as any).id ?? s.name;
     const label: string = s.name || `Scenario ${scenarioKey}`;
 
+    this.log("applyScenario → creating layer", {
+      scenarioKey,
+      label,
+      aircraftCount: aircrafts?.length ?? 0,
+    });
+
     // Always remove previous scenario layer
     this.removeCurrentLayer();
 
-    // Prepare icon canvases once
+    // Prepare icon canvases once (even though we now use circle style for editability)
     if (!this.pointIconCanvas) {
       this.pointIconCanvas = makeCircleCanvas(8, "#e91e63", {
         color: "#fff",
@@ -72,7 +81,6 @@ export class ScenarioLayerHelper {
       });
     }
     if (!this.pickPreviewIconCanvas) {
-      // 🔥 make preview *very obviously* orange and slightly larger
       this.pickPreviewIconCanvas = makeCircleCanvas(11, "#ff9800", {
         color: "#ffffff",
         width: 2,
@@ -84,54 +92,80 @@ export class ScenarioLayerHelper {
     const reference = getReference("EPSG:4979"); // 3D WGS84
     const model = new FeatureModel(store, { reference });
 
-    // Define base styles
+    // 🟣 Use a NORMAL "circle" style so the Style Editor’s point controls work.
     this.basePointStyle = {
-      symbol: "icon",
-      image: this.pointIconCanvas,
-      width: 18,
-      height: 18,
+      symbol: "circle",
+      size: 12,
+      fill: "#e91e63",
+      outline: "#ffffff",
+      outlineWidth: 2,
     };
+
     this.previewPointStyle = {
-      symbol: "icon",
-      image: this.pickPreviewIconCanvas,
-      width: 24,
-      height: 24,
+      symbol: "circle",
+      size: 16,
+      fill: "#ff9800",
+      outline: "#ffffff",
+      outlineWidth: 2,
     };
+
     this.lineStyle = {
       color: "rgba(11, 65, 240, 1)",
-      bloom: "10",
+      bloom: 10, // numeric, not string
       width: 1,
     };
 
     const layer = new FeatureLayer(model as any, {
       label,
+      selectable: true,
+      editable: true,
+      visible: true,
       style: {
         point: this.basePointStyle,
         line: this.lineStyle,
       } as any,
     } as any);
 
-    // Style provider so pick-preview is always orange, others use normal style
-    (layer as any).styleProvider = (feature: any) => {
-      const props = (feature && feature.properties) || {};
-      if (props.kind === PICK_PREVIEW_KIND) {
-        return {
-          point: this.previewPointStyle,
-        } as any;
-      }
-      return {
-        point: this.basePointStyle,
-        line: this.lineStyle,
-      } as any;
-    };
-
+    // Tag & debug
     (layer as any).__isScenarioLayer = true;
     (layer as any).__scenarioKey = scenarioKey;
+    (layer as any).kind = "point";
 
+    // 🔧 Style provider:
+    //  - baseStyle = layer.style (what "Apply Layer" edits)
+    //  - featureStyle = props.__style (what "Apply Feature" edits)
+    //  - merged = deep merge of both
+    //  - pick-preview overrides the point symbol
+    (layer as any).styleProvider = (feature: any) => {
+      const props = (feature && feature.properties) || {};
+      const baseStyle = (layer as any).style || {};
+      const featureStyle = props.__style || {};
+
+      let merged = this.mergeDeep(baseStyle, featureStyle);
+
+      if (props.kind === PICK_PREVIEW_KIND) {
+        merged = {
+          ...merged,
+          point: this.previewPointStyle,
+        };
+      }
+
+      return merged;
+    };
+
+    // Add to layer tree (robust: try rootNode if needed)
     try {
-      lt.addChild(layer);
+      if (lt && typeof lt.addChild === "function") {
+        lt.addChild(layer);
+      } else if (lt?.rootNode && typeof lt.rootNode.addChild === "function") {
+        lt.rootNode.addChild(layer);
+      } else {
+        this.warn(
+          "[ScenarioLayerHelper] layerTree has no addChild; scenario layer not attached"
+        );
+      }
     } catch (e) {
-      console.warn(
+      this.warn(
         "[ScenarioLayerHelper] Could not add scenario layer to layerTree",
         e
       );
@@ -141,11 +175,20 @@ export class ScenarioLayerHelper {
     this.currentLayer = layer;
     this.scenarioStore = store;
 
+    // 🔥 Register this scenario layer with the shared vizFacade
+    // so Style/Location editors & registry know about it.
+    try {
+      this.viz.setActiveLayer(layer);
+      this.log("Registered scenario layer with viz", { label, scenarioKey });
+    } catch (e) {
+      this.warn("Failed to register scenario layer with vizFacade", e);
+    }
+
     // Render aircraft + waypoints + routes into this layer
     try {
       this.renderAircraftForScenario(aircrafts, s, layer);
     } catch (e) {
-      console.warn(
+      this.warn(
         "[ScenarioLayerHelper] Failed to render aircraft for scenario",
         e
       );
@@ -162,7 +205,7 @@ export class ScenarioLayerHelper {
           ""
         ).toString()
       );
-      console.info("[ScenarioLayerHelper] LayerTree top-level:", labels);
+      this.log("LayerTree top-level labels after scenario add:", labels);
     } catch {
       /* best effort only */
     }
@@ -178,14 +221,22 @@ export class ScenarioLayerHelper {
     scenario: Scenario,
     layer: FeatureLayer
   ): void {
-    if (!aircrafts || aircrafts.length === 0) {
-      console.info(
-        "[ScenarioLayerHelper] No deployed aircraft to render for scenario (empty layer kept)"
+    const scenarioId = (scenario as any)?.id ?? null;
+
+    // Filter aircrafts for this scenario only (if they carry a scenario id)
+    const activeAircrafts =
+      scenarioId == null
+        ? aircrafts
+        : aircrafts.filter((ac) => (ac as any).scenario === scenarioId);
+
+    if (!activeAircrafts || activeAircrafts.length === 0) {
+      this.log(
+        "renderAircraftForScenario → no deployed aircraft for this scenario (empty scenario layer kept)",
+        { scenarioId, count: aircrafts?.length ?? 0 }
       );
       return;
     }
 
-    // Ensure icon canvas is available
     if (!this.pointIconCanvas) {
       this.pointIconCanvas = makeCircleCanvas(8, "#e91e63", {
         color: "#fff",
@@ -193,7 +244,11 @@ export class ScenarioLayerHelper {
       });
     }
 
-    for (const ac of aircrafts) {
+    this.log("renderAircraftForScenario → count =", activeAircrafts.length, {
+      scenarioId,
+    });
+
+    for (const ac of activeAircrafts) {
       const acId =
         ac.id ?? ac.name ?? `ac_${Math.random().toString(36).slice(2)}`;
       const typeObj = ac.aircraft_type as any;
@@ -203,16 +258,14 @@ export class ScenarioLayerHelper {
           : typeObj ?? "Type";
 
       const baseAlt =
-        ac.position?.altitude_m ??
-        ac.initial_altitude_m ??
-        10000;
+        ac.position?.altitude_m ?? ac.initial_altitude_m ?? 10000;
 
       const lat0 = ac.position?.latitude ?? ac.initial_latitude;
       const lon0 = ac.position?.longitude ?? ac.initial_longitude;
 
       const wps: Waypoint[] = ac.planned_waypoints ?? [];
 
-      // 1) Initial position as 3D icon
+      // 1) Initial position as 3D point
       if (typeof lon0 === "number" && typeof lat0 === "number") {
         this.viz.addPoint3DForLayer(
           layer,
@@ -222,36 +275,46 @@ export class ScenarioLayerHelper {
           {
             kind: "aircraft",
             aircraftId: acId,
-            scenarioId: ac.scenario ?? (scenario as any).id ?? null,
+            scenarioId: (ac as any).scenario ?? scenarioId,
             name: ac.name ?? "Aircraft",
             typeName,
             status: ac.status ?? null,
           },
-          {
-            point: {
-              symbol: "icon",
-              image: this.pointIconCanvas,
-              width: 18,
-              height: 18,
-            },
-          } as any
+          // 🔹 No custom style here: uses layer.style so Style Editor can control it
+          undefined
         );
+      } else {
+        this.warn("Skipping aircraft initial point: invalid lon/lat", {
+          acId,
+          lon0,
+          lat0,
+        });
       }
 
       if (!Array.isArray(wps) || wps.length === 0) {
+        this.log("Aircraft has no waypoints, skipping route", { acId });
         continue;
       }
 
       const routeCoords: [number, number, number][] = [];
 
-      // First route point = initial position
+      // First route point = initial position (if valid)
       if (typeof lon0 === "number" && typeof lat0 === "number") {
         routeCoords.push([lon0, lat0, baseAlt]);
+      } else {
+        this.warn("Route start skipped: invalid lon/lat", {
+          acId,
+          lon0,
+          lat0,
+        });
       }
 
       // 2) Waypoints icons + route
       wps.forEach((wp, idx) => {
-        if (typeof wp.lon !== "number" || typeof wp.lat !== "number") return;
+        if (typeof wp.lon !== "number" || typeof wp.lat !== "number") {
+          this.warn("Skipping waypoint with invalid lon/lat", { wp, idx });
+          return;
+        }
         const wpAlt = wp.alt ?? baseAlt;
 
         this.viz.addPoint3DForLayer(
@@ -262,34 +325,29 @@ export class ScenarioLayerHelper {
           {
             kind: "waypoint",
             aircraftId: acId,
-            scenarioId: ac.scenario ?? (scenario as any).id ?? null,
+            scenarioId: (ac as any).scenario ?? scenarioId,
             index: idx,
             alt_m: wpAlt,
           },
-          {
-            point: {
-              symbol: "icon",
-              image: this.pointIconCanvas,
-              width: 18,
-              height: 18,
-            },
-          } as any
+          // Again: let layer.style drive visualization
+          undefined
         );
 
         routeCoords.push([wp.lon, wp.lat, wpAlt]);
       });
 
       if (routeCoords.length >= 2) {
-        this.viz.addLine3DForLayer(
-          layer,
-          routeCoords,
-          {
-            kind: "route",
-            aircraftId: acId,
-            scenarioId: ac.scenario ?? (scenario as any).id ?? null,
-            waypointCount: routeCoords.length - 1,
-          }
-        );
+        this.viz.addLine3DForLayer(layer, routeCoords, {
+          kind: "route",
+          aircraftId: acId,
+          scenarioId: (ac as any).scenario ?? scenarioId,
+          waypointCount: routeCoords.length - 1,
+        });
+      } else {
+        this.log("Not enough points to build route polyline", {
+          acId,
+          routeCoordsLength: routeCoords.length,
+        });
       }
     }
   }
@@ -298,6 +356,7 @@ export class ScenarioLayerHelper {
 
   setPickPreview(point: { lon: number; lat: number; alt: number } | null): void {
     if (!this.currentLayer || !this.scenarioStore) {
+      this.log("setPickPreview called but no currentLayer/scenarioStore");
       return;
     }
 
@@ -306,8 +365,9 @@ export class ScenarioLayerHelper {
 
     // If null → just clear existing preview (if any)
     if (!point) {
+      this.log("Clearing pick preview feature");
       try {
-        store.remove(PICK_PREVIEW_ID);
+        store.remove(PICK_PREVIEW_ID as any);
       } catch {
         /* ignore if not present */
       }
@@ -323,7 +383,7 @@ export class ScenarioLayerHelper {
     if (existing) {
       store.put({
         ...existing,
-        shape, // Luciad FeatureModel expects 'shape'
+        shape,
         properties: {
           ...(existing as any).properties,
           kind: PICK_PREVIEW_KIND,
@@ -353,13 +413,18 @@ export class ScenarioLayerHelper {
     const lt: AnyNode = mapAny.layerTree;
     const layer = this.currentLayer;
 
+    this.log("Removing previous scenario layer", {
+      label: (layer as any).label,
+      scenarioKey: this.currentScenarioKey,
+    });
+
     try {
-      const parent: AnyNode = (layer as any).parent ?? lt;
+      const parent: AnyNode = (layer as any).parent ?? lt ?? lt?.rootNode;
       if (parent && typeof parent.removeChild === "function") {
         parent.removeChild(layer);
       }
     } catch (e) {
-      console.warn(
+      this.warn(
         "[ScenarioLayerHelper] Failed to remove previous scenario layer",
         e
       );
@@ -386,5 +451,31 @@ export class ScenarioLayerHelper {
       return arr;
     }
     return [];
+  }
+
+  // small local deep-merge (same behavior as in RiaVizFacade)
+  private mergeDeep<T extends object>(a: T, b: any): T {
+    const out: any = Array.isArray(a) ? [...(a as any)] : { ...(a as any) };
+    if (b && typeof b === "object") {
+      Object.keys(b).forEach((k) => {
+        const v = (b as any)[k];
+        if (v && typeof v === "object" && !Array.isArray(v)) {
+          out[k] = this.mergeDeep(out[k] || {}, v);
+        } else {
+          out[k] = v;
+        }
+      });
+    }
+    return out as T;
+  }
+
+  // ──────────────────────────── Debug helpers ────────────────────────────
+
+  private log(...args: any[]) {
+    console.info("[ScenarioLayerHelper]", ...args);
+  }
+
+  private warn(...args: any[]) {
+    console.warn("[ScenarioLayerHelper]", ...args);
   }
 }

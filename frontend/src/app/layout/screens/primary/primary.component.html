@@ -1,8 +1,186 @@
+<!-- src/app/layout/screens/primary/primary.component.html -->
 <div class="primarycontainer">
+
+  <!-- LEFT PANEL -->
   <div class="left-side">
-    <!-- Left content goes here -->
+    <div class="ae-card">
+
+      <!-- HEADER -->
+      <div class="ae-header">
+        <div class="ae-title">
+          <h3>Scenario Simulation</h3>
+          <div class="ae-subtle">
+            Scenario:
+            <strong>{{ scenarioName }}</strong> ·
+            State:
+            <span
+              [class.state-running]="simState === 'running'"
+              [class.state-paused]="simState === 'paused'"
+              [class.state-stopped]="simState === 'stopped'">
+              {{ simState }}
+            </span> ·
+            Socket:
+            <span
+              [class.online]="connectionStatus"
+              [class.offline]="!connectionStatus">
+              {{ connectionStatus ? 'Connected' : 'Disconnected' }}
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <!-- BODY -->
+      <div class="ae-body">
+        <div class="ae-scroll">
+
+          <!-- Scenario selector -->
+          <section>
+            <div class="ae-section-head">
+              <h4>Scenario</h4>
+            </div>
+            <div class="ae-grid ae-grid-2">
+              <div class="ae-field">
+                <label class="ae-label" for="scenarioSelect">Scenario</label>
+                <select
+                  id="scenarioSelect"
+                  class="ae-input"
+                  [ngModel]="selectedScenarioId"
+                  (ngModelChange)="onScenarioChange($event)">
+                  <option [ngValue]="null">-- Choose scenario --</option>
+                  <option *ngFor="let s of visibleScenarios" [ngValue]="s.id">
+                    {{ s.name }} ({{ s.sim_state || 'idle' }})
+                  </option>
+                </select>
+
+                <div class="ae-hint"
+                     *ngIf="visibleScenarios.length > 0 && !anyRunning">
+                  No scenario is currently running. Start one using the controls below.
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <hr class="ae-divider" />
+
+          <!-- Controls -->
+          <section>
+            <div class="ae-section-head">
+              <h4>Simulation Controls</h4>
+            </div>
+            <div class="sim-controls">
+              <button
+                type="button"
+                class="ae-btn ae-btn-secondary"
+                (click)="onStart()"
+                [disabled]="!canControl || simState === 'running'">
+                Start
+              </button>
+
+              <button
+                type="button"
+                class="ae-btn ae-btn-ghost"
+                (click)="onPause()"
+                [disabled]="!canControl || simState !== 'running'">
+                Pause
+              </button>
+
+              <button
+                type="button"
+                class="ae-btn ae-btn-ghost"
+                (click)="onStop()"
+                [disabled]="!canControl">
+                Stop
+              </button>
+
+              <button
+                type="button"
+                class="ae-btn ae-btn-primary"
+                (click)="onReset()"
+                [disabled]="!canControl">
+                Reset
+              </button>
+            </div>
+          </section>
+
+          <hr class="ae-divider" />
+
+          <!-- Simulation status / info -->
+          <section class="ae-block" *ngIf="info">
+            <div class="ae-section-head">
+              <h4>Simulation Info</h4>
+            </div>
+            <div class="ae-block-body small">
+              <div>Scenario Id: {{ info.scenario_id }}</div>
+              <div>Can Control: {{ info.can_control ? 'Yes' : 'No' }}</div>
+              <div *ngIf="info.time_now">Time Now: {{ info.time_now }}</div>
+              <div *ngIf="info.time_step">Time Step: {{ info.time_step }}</div>
+              <div *ngIf="info.sim_state">State: {{ info.sim_state }}</div>
+            </div>
+          </section>
+
+          <hr class="ae-divider" />
+
+          <!-- Deployed aircraft list -->
+          <section *ngIf="lastSnapshot" class="sim-summary">
+            <div class="ae-section-head">
+              <h4>Deployed Aircraft ({{ lastSnapshot.aircraft_count }})</h4>
+            </div>
+
+            <ul class="ae-wp-list">
+              <li
+                *ngFor="let ac of lastSnapshot.aircraft; let i = index"
+                class="ae-wp-item">
+                <ng-container *ngIf="getTrackForAircraft(ac, i) as t">
+                  <div class="ae-wp-values">
+                    <!-- Name -->
+                    <span class="ae-chip">
+                      <strong>{{ ac.name }}</strong>
+                    </span>
+
+                    <!-- Status + position -->
+                    <span class="ae-chip">
+                      {{ ac.sim_status }} &#64;
+                      {{ t.lat | number:'1.4-4' }},
+                      {{ t.lon | number:'1.4-4' }}
+                    </span>
+
+                    <!-- Extra telemetry -->
+                    <span class="ae-chip" *ngIf="t.alt_m != null">
+                      Alt {{ t.alt_m | number:'1.0-0' }} m
+                    </span>
+                    <span class="ae-chip" *ngIf="t.speed_mps != null">
+                      Spd {{ t.speed_mps | number:'1.0-0' }} m/s
+                    </span>
+                    <span class="ae-chip" *ngIf="t.heading_deg != null">
+                      Hd {{ t.heading_deg | number:'1.0-0' }}°
+                    </span>
+                  </div>
+                </ng-container>
+              </li>
+            </ul>
+          </section>
+
+          <!-- Empty state -->
+          <section *ngIf="!lastSnapshot" class="ae-empty">
+            <div class="ae-hint">
+              Select a scenario and start the simulation to see live aircraft tracks.
+            </div>
+          </section>
+
+          <!-- Error -->
+          <p *ngIf="lastError" class="error">
+            {{ lastError }}
+          </p>
+
+        </div>
+      </div>
+
+    </div>
   </div>
+
+  <!-- RIGHT SIDE MAP -->
   <div class="right-side">
     <riamap></riamap>
   </div>
+
 </div>

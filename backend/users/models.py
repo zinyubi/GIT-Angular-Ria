@@ -7,6 +7,11 @@ class Role(models.Model):
     """
     name = models.CharField(max_length=64, unique=True, help_text="Role display name, e.g. 'C2', 'Radar Operator'")
     description = models.TextField(blank=True, help_text="Optional description for this role")
+    
+    can_control_simulation = models.BooleanField(
+        default=False,
+        help_text="If enabled, users with this role can start/pause/stop/reset simulations.",
+    )
 
     def __str__(self) -> str:
         return self.name

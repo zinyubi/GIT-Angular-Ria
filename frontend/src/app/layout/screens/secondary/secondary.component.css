@@ -1,0 +1,281 @@
+/* ============================================
+   Root / host
+   ============================================ */
+
+:host {
+  display: block;
+  inline-size: 100%;
+  height: 100%;
+  min-block-size: 0;
+  color: var(--color-text, #e7ecf6);
+}
+
+/* ============================================
+   Layout: left panel + right map
+   ============================================ */
+
+.secondarycontainer {
+  display: flex;
+  flex-direction: row;
+  inline-size: 100%;
+  block-size: 100%;
+  min-block-size: 0;
+  background: #05070b;
+}
+
+/* Left panel area (card sits inside) */
+.left-side {
+  flex: 0 0 360px;
+  max-inline-size: 360px;
+  min-inline-size: 260px;
+  block-size: 100%;
+  box-sizing: border-box;
+  border-right: 1px solid rgba(255, 255, 255, 0.08);
+  background: #0b0f18;
+  display: flex;
+}
+
+/* Right side map container */
+.right-side {
+  flex: 1 1 auto;
+  min-inline-size: 0;
+  min-block-size: 0;
+  block-size: 100%;
+  background: #05070b;
+  display: flex;
+}
+
+/* Make the map fill the right side */
+riamap,
+riamap:host,
+riamap * {
+  display: block;
+  inline-size: 100%;
+  block-size: 100%;
+  min-block-size: 0;
+}
+
+/* ============================================
+   AE THEME (same as primary)
+   ============================================ */
+
+.ae-card {
+  display: flex;
+  flex-direction: column;
+  inline-size: 100%;
+  block-size: 100%;
+  background: transparent;
+}
+
+/* HEADER */
+
+.ae-header {
+  padding: 0.55rem 0.9rem;
+  background: #171b26;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.ae-title {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.ae-title h3 {
+  margin: 0;
+  font-size: 0.95rem;
+}
+
+.ae-subtle {
+  font-size: 0.78rem;
+  opacity: 0.7;
+}
+
+/* BODY */
+
+.ae-body {
+  flex: 1 1 auto;
+  min-block-size: 0;
+  background: #0f1216;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.ae-scroll {
+  flex: 1 1 auto;
+  min-height: 0;
+  padding: 0.7rem 0.9rem 0.2rem;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 0.8rem;
+}
+
+/* Sections */
+
+.ae-section-head h4 {
+  margin: 0 0 0.3rem 0;
+  font-size: 0.85rem;
+}
+
+.ae-divider {
+  margin: 0.3rem 0;
+  border: 0;
+  border-top: 1px solid rgba(255, 255, 255, 0.04);
+}
+
+/* GRID / FIELDS */
+
+.ae-grid {
+  display: grid;
+  gap: 0.55rem;
+}
+
+/* Match primary layout: 2 columns on wide screens, stack on small */
+.ae-grid-2 {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+@media (max-width: 1200px) {
+  .ae-grid-2 {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+.ae-field {
+  display: grid;
+  gap: 0.25rem;
+}
+
+.ae-label {
+  font-size: 0.78rem;
+  opacity: 0.78;
+}
+
+/* Inputs */
+
+.ae-input {
+  width: 100%;
+  box-sizing: border-box;
+  border-radius: 8px;
+  padding: 0.38rem 0.55rem;
+  border: 1px solid #242938;
+  background: #10131a;
+  color: var(--color-text, #e7ecf6);
+  font-size: 0.85rem;
+}
+
+.ae-input::placeholder {
+  opacity: 0.4;
+}
+
+.ae-input:focus {
+  outline: none;
+  border-color: color-mix(
+    in srgb,
+    var(--color-accent, #ff4b8b) 70%,
+    white 30%
+  );
+  box-shadow: 0 0 0 2px
+    color-mix(in srgb, var(--color-accent, #ff4b8b) 25%, transparent);
+}
+
+/* WAYPOINTS / LIST */
+
+.ae-wp-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  margin-bottom: 0.2rem;
+}
+
+.ae-wp-item {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.45rem;
+  padding: 0.25rem 0.5rem;
+  border-radius: 999px;
+  background: #151927;
+  border: 1px solid rgba(255, 255, 255, 0.07);
+}
+
+.ae-wp-values {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem;
+  align-items: center;
+}
+
+.ae-chip {
+  font-size: 0.78rem;
+  border-radius: 999px;
+  padding: 0.08rem 0.45rem;
+  background: #1c2131;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+/* EMPTY STATE */
+
+.ae-empty {
+  flex: 1 1 auto;
+  min-block-size: 0;
+  padding: 1rem 0.9rem;
+  background: #0f1216;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.ae-hint {
+  font-size: 0.8rem;
+  opacity: 0.8;
+}
+
+/* STATUS COLORS */
+
+.state-running {
+  color: #2ecc71;
+}
+
+.state-paused {
+  color: #f1c40f;
+}
+
+.state-stopped {
+  color: #e74c3c;
+}
+
+.online {
+  color: #2ecc71;
+}
+
+.offline {
+  color: #e74c3c;
+}
+
+.error {
+  color: #ff6b6b;
+  font-size: 0.8rem;
+}
+
+/* Aircraft list in summary */
+
+.sim-summary {
+  flex: 1 1 auto;
+}
+
+.sim-summary ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.sim-summary li {
+  padding: 0.25rem 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.sim-summary li:last-child {
+  border-bottom: none;
+}
