@@ -1,4 +1,3 @@
-// src/app/layout/screens/primary/primary-sim-layer.helper.ts
 import type { WebGLMap } from '@luciad/ria/view/WebGLMap.js';
 import { FeatureLayer } from '@luciad/ria/view/feature/FeatureLayer.js';
 import { FeatureModel } from '@luciad/ria/model/feature/FeatureModel.js';
@@ -7,7 +6,9 @@ import { getReference } from '@luciad/ria/reference/ReferenceProvider.js';
 
 import { RiaVizFacade } from '../../../luciadmaps/components/util/riavisualization';
 import { MapComponentRia } from '../../../luciadmaps/components/map/map.component.ria';
-import { SimLabelsPainter } from '../../../luciadmaps/components/util/riavisualization/labels.painter';
+
+import { SimStyleRegistry } from '../../../luciadmaps/components/util/riavisualization/simstyle.registry';
+import { PrimarySimPainter } from './primarysim.painter';
 
 export interface PrimaryTrailPoint {
   lon: number;
@@ -16,12 +17,15 @@ export interface PrimaryTrailPoint {
 }
 
 export interface PrimaryTrailAircraft {
-  id: string | number;
+  id: string;
   name: string;
   scenarioId: number;
   current: PrimaryTrailPoint;
-  /** Oldest → newest trail points (current is NOT included here) */
   trail: PrimaryTrailPoint[];
+
+  alt_m?: number | null;
+  speed_mps?: number | null;
+  heading_deg?: number | null;
 }
 
 type AnyNode = any;
@@ -29,34 +33,17 @@ type AnyNode = any;
 export class PrimarySimLayerHelper {
   private currentLayer: FeatureLayer | null = null;
   private store?: MemoryStore;
-  private currentScenarioId: number | null = null;
-
-  private basePointStyle: any;
-  private lineStyle: any;
 
   constructor(
     private map: WebGLMap,
     private viz: RiaVizFacade,
     private mapCmp?: MapComponentRia,
-  ) {
-    // Aircraft icon style
-    this.basePointStyle = {
-      symbol: 'circle',
-      size: 12,
-      fill: '#14b8a6', // teal
-      outline: '#ffffff',
-      outlineWidth: 2,
-    };
+    private styleRegistry: SimStyleRegistry = new SimStyleRegistry(),
+  ) {}
 
-    // Trail line style
-    this.lineStyle = {
-      color: 'rgba(56, 189, 248, 1)', // cyan-ish
-      width: 2,
-      bloom: 4,
-    };
+  getStyleRegistry(): SimStyleRegistry {
+    return this.styleRegistry;
   }
-
-  // ───────────────────────── clear / remove layer ─────────────────────────
 
   clear(): void {
     if (!this.currentLayer) return;
@@ -67,28 +54,19 @@ export class PrimarySimLayerHelper {
 
     try {
       const parent: AnyNode = (layer as any).parent ?? lt ?? lt?.rootNode;
-      if (parent && typeof parent.removeChild === 'function') {
-        parent.removeChild(layer);
-      }
+      if (parent && typeof parent.removeChild === 'function') parent.removeChild(layer);
     } catch (e) {
       console.warn('[PrimarySimLayerHelper] Failed to remove sim layer', e);
     }
 
     this.currentLayer = null;
     this.store = undefined;
-    this.currentScenarioId = null;
 
     mapAny.repaint?.();
     this.mapCmp?.refreshLayerTree?.();
   }
 
-  // ───────────────────── render snapshot as icons + trails ─────────────────────
-
-  renderScenarioTrail(
-    scenarioId: number,
-    scenarioName: string,
-    aircrafts: PrimaryTrailAircraft[],
-  ): void {
+  renderScenarioTrail(scenarioId: number, scenarioName: string, aircrafts: PrimaryTrailAircraft[]): void {
     const mapAny: any = this.map as any;
     const lt: AnyNode = mapAny.layerTree;
 
@@ -97,7 +75,6 @@ export class PrimarySimLayerHelper {
       return;
     }
 
-    // Simple: rebuild the layer every snapshot
     this.clear();
 
     const store = new MemoryStore();
@@ -111,62 +88,34 @@ export class PrimarySimLayerHelper {
       selectable: true,
       editable: false,
       visible: true,
-      style: {
-        point: this.basePointStyle,
-        line: this.lineStyle,
-      } as any,
     } as any);
 
     (layer as any).__isPrimarySimLayer = true;
     (layer as any).__scenarioId = scenarioId;
-    (layer as any).kind = 'point';
 
-    // Attach to layer tree
     try {
-      if (lt && typeof lt.addChild === 'function') {
-        lt.addChild(layer);
-      } else if (lt?.rootNode && typeof lt.rootNode.addChild === 'function') {
-        lt.rootNode.addChild(layer);
-      } else {
-        console.warn(
-          '[PrimarySimLayerHelper] layerTree has no addChild; primary sim layer not attached',
-        );
-      }
+      if (lt && typeof lt.addChild === 'function') lt.addChild(layer);
+      else if (lt?.rootNode && typeof lt.rootNode.addChild === 'function') lt.rootNode.addChild(layer);
     } catch (e) {
-      console.warn(
-        '[PrimarySimLayerHelper] Could not add primary sim layer to layerTree',
-        e,
-      );
+      console.warn('[PrimarySimLayerHelper] Could not add primary sim layer', e);
     }
 
     this.currentLayer = layer;
     this.store = store;
-    this.currentScenarioId = scenarioId;
 
-    // Hook into Style/Location editor ecosystem
+    try { this.viz.setActiveLayer(layer); } catch {}
+
+    // ✅ real painter: point + line + labels
     try {
-      this.viz.setActiveLayer(layer);
+      (layer as any).painter = new PrimarySimPainter(this.styleRegistry);
     } catch (e) {
-      console.warn('[PrimarySimLayerHelper] setActiveLayer failed', e);
+      console.warn('[PrimarySimLayerHelper] attaching PrimarySimPainter failed', e);
     }
 
-    // Attach label painter (for point + trail labels)
-    try {
-      (layer as any).painter = new SimLabelsPainter();
-    } catch (e) {
-      console.warn('[PrimarySimLayerHelper] attaching SimLabelsPainter failed', e);
-    }
-
-    // Draw one icon + one polyline (trail) per aircraft
     for (const ac of aircrafts) {
       const cur = ac.current;
 
-      // 1) Aircraft icon at current position
-      if (
-        Number.isFinite(cur.lon) &&
-        Number.isFinite(cur.lat) &&
-        Number.isFinite(cur.alt)
-      ) {
+      if (Number.isFinite(cur.lon) && Number.isFinite(cur.lat) && Number.isFinite(cur.alt)) {
         this.viz.addPoint3DForLayer(
           layer,
           cur.lon,
@@ -174,34 +123,27 @@ export class PrimarySimLayerHelper {
           cur.alt,
           {
             kind: 'sim-aircraft',
-            trail: true,
             aircraftId: ac.id,
             scenarioId,
             name: ac.name,
             label: ac.name,
+            alt_m: ac.alt_m ?? cur.alt,
+            speed_mps: ac.speed_mps ?? null,
+            heading_deg: ac.heading_deg ?? null,
           },
           undefined,
         );
       }
 
-      // 2) Trail line: trail points + current
       const coords: [number, number, number][] = [];
 
-      ac.trail.forEach((p: PrimaryTrailPoint) => {
-        if (
-          Number.isFinite(p.lon) &&
-          Number.isFinite(p.lat) &&
-          Number.isFinite(p.alt)
-        ) {
+      for (const p of ac.trail) {
+        if (Number.isFinite(p.lon) && Number.isFinite(p.lat) && Number.isFinite(p.alt)) {
           coords.push([p.lon, p.lat, p.alt]);
         }
-      });
+      }
 
-      if (
-        Number.isFinite(cur.lon) &&
-        Number.isFinite(cur.lat) &&
-        Number.isFinite(cur.alt)
-      ) {
+      if (Number.isFinite(cur.lon) && Number.isFinite(cur.lat) && Number.isFinite(cur.alt)) {
         coords.push([cur.lon, cur.lat, cur.alt]);
       }
 

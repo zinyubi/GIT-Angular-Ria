@@ -1,6 +1,4 @@
-<!-- src/app/layout/screens/primary/primary.component.html -->
 <div class="primarycontainer">
-
   <!-- LEFT PANEL -->
   <div class="left-side">
     <div class="ae-card">
@@ -10,8 +8,7 @@
         <div class="ae-title">
           <h3>Scenario Simulation</h3>
           <div class="ae-subtle">
-            Scenario:
-            <strong>{{ scenarioName }}</strong> ·
+            Scenario: <strong>{{ scenarioName }}</strong> ·
             State:
             <span
               [class.state-running]="simState === 'running'"
@@ -20,12 +17,16 @@
               {{ simState }}
             </span> ·
             Socket:
-            <span
-              [class.online]="connectionStatus"
-              [class.offline]="!connectionStatus">
+            <span [class.online]="connectionStatus" [class.offline]="!connectionStatus">
               {{ connectionStatus ? 'Connected' : 'Disconnected' }}
             </span>
           </div>
+        </div>
+
+        <div class="ae-header-actions">
+          <button type="button" class="ae-btn ae-btn-ghost ae-btn-xs" (click)="openSimStyleModal()">
+            Styling…
+          </button>
         </div>
       </div>
 
@@ -52,8 +53,7 @@
                   </option>
                 </select>
 
-                <div class="ae-hint"
-                     *ngIf="visibleScenarios.length > 0 && !anyRunning">
+                <div class="ae-hint" *ngIf="visibleScenarios.length > 0 && !anyRunning">
                   No scenario is currently running. Start one using the controls below.
                 </div>
               </div>
@@ -68,35 +68,27 @@
               <h4>Simulation Controls</h4>
             </div>
             <div class="sim-controls">
-              <button
-                type="button"
-                class="ae-btn ae-btn-secondary"
-                (click)="onStart()"
-                [disabled]="!canControl || simState === 'running'">
+              <button type="button" class="ae-btn ae-btn-secondary"
+                      (click)="onStart()"
+                      [disabled]="!canControl || simState === 'running'">
                 Start
               </button>
 
-              <button
-                type="button"
-                class="ae-btn ae-btn-ghost"
-                (click)="onPause()"
-                [disabled]="!canControl || simState !== 'running'">
+              <button type="button" class="ae-btn ae-btn-ghost"
+                      (click)="onPause()"
+                      [disabled]="!canControl || simState !== 'running'">
                 Pause
               </button>
 
-              <button
-                type="button"
-                class="ae-btn ae-btn-ghost"
-                (click)="onStop()"
-                [disabled]="!canControl">
+              <button type="button" class="ae-btn ae-btn-ghost"
+                      (click)="onStop()"
+                      [disabled]="!canControl">
                 Stop
               </button>
 
-              <button
-                type="button"
-                class="ae-btn ae-btn-primary"
-                (click)="onReset()"
-                [disabled]="!canControl">
+              <button type="button" class="ae-btn ae-btn-primary"
+                      (click)="onReset()"
+                      [disabled]="!canControl">
                 Reset
               </button>
             </div>
@@ -104,7 +96,7 @@
 
           <hr class="ae-divider" />
 
-          <!-- Simulation status / info -->
+          <!-- Simulation info -->
           <section class="ae-block" *ngIf="info">
             <div class="ae-section-head">
               <h4>Simulation Info</h4>
@@ -120,31 +112,25 @@
 
           <hr class="ae-divider" />
 
-          <!-- Deployed aircraft list -->
+          <!-- Aircraft list -->
           <section *ngIf="lastSnapshot" class="sim-summary">
             <div class="ae-section-head">
               <h4>Deployed Aircraft ({{ lastSnapshot.aircraft_count }})</h4>
             </div>
 
             <ul class="ae-wp-list">
-              <li
-                *ngFor="let ac of lastSnapshot.aircraft; let i = index"
-                class="ae-wp-item">
+              <li *ngFor="let ac of lastSnapshot.aircraft; let i = index" class="ae-wp-item">
                 <ng-container *ngIf="getTrackForAircraft(ac, i) as t">
                   <div class="ae-wp-values">
-                    <!-- Name -->
                     <span class="ae-chip">
-                      <strong>{{ ac.name }}</strong>
+                      <strong>{{ aircraftLabel(ac, i) }}</strong>
                     </span>
 
-                    <!-- Status + position -->
                     <span class="ae-chip">
                       {{ ac.sim_status }} &#64;
-                      {{ t.lat | number:'1.4-4' }},
-                      {{ t.lon | number:'1.4-4' }}
+                      {{ t.lat | number:'1.4-4' }}, {{ t.lon | number:'1.4-4' }}
                     </span>
 
-                    <!-- Extra telemetry -->
                     <span class="ae-chip" *ngIf="t.alt_m != null">
                       Alt {{ t.alt_m | number:'1.0-0' }} m
                     </span>
@@ -160,17 +146,13 @@
             </ul>
           </section>
 
-          <!-- Empty state -->
           <section *ngIf="!lastSnapshot" class="ae-empty">
             <div class="ae-hint">
               Select a scenario and start the simulation to see live aircraft tracks.
             </div>
           </section>
 
-          <!-- Error -->
-          <p *ngIf="lastError" class="error">
-            {{ lastError }}
-          </p>
+          <p *ngIf="lastError" class="error">{{ lastError }}</p>
 
         </div>
       </div>
@@ -178,9 +160,236 @@
     </div>
   </div>
 
-  <!-- RIGHT SIDE MAP -->
+  <!-- RIGHT MAP -->
   <div class="right-side">
     <riamap></riamap>
   </div>
 
+  <!-- ───────────── Styling Modal ───────────── -->
+  <div class="sim-style-backdrop" *ngIf="simStyleModalOpen" (click)="closeSimStyleModal()"></div>
+
+  <div class="sim-style-modal" *ngIf="simStyleModalOpen" (click)="$event.stopPropagation()">
+    <div class="sim-style-header">
+      <div class="sim-style-title">
+        <h3>Simulation Styling</h3>
+        <div class="sim-style-subtitle">Saved per scenario</div>
+      </div>
+
+      <button type="button" class="sim-icon-btn" aria-label="Close" (click)="closeSimStyleModal()">✕</button>
+    </div>
+
+    <div class="sim-style-tabs">
+      <button type="button" class="sim-tab" [class.active]="simStyleTab === 'defaults'" (click)="simStyleTab='defaults'">
+        Defaults
+      </button>
+      <button type="button" class="sim-tab" [class.active]="simStyleTab === 'overrides'" (click)="simStyleTab='overrides'">
+        Overrides
+      </button>
+    </div>
+
+    <div class="sim-style-body">
+
+      <!-- DEFAULTS -->
+      <ng-container *ngIf="simStyleTab === 'defaults'">
+        <div class="sim-style-grid-2">
+
+          <div class="sim-style-panel">
+            <div class="sim-style-panel-head">
+              <h5>Aircraft Point</h5>
+              <span class="sim-pill">Point</span>
+            </div>
+
+            <div class="sim-form">
+              <div class="sim-row">
+                <label class="sim-label">Fill</label>
+                <input class="sim-color" type="color" [(ngModel)]="simDefaultsPoint.fill">
+                <input class="sim-num" type="number" min="0" max="1" step="0.05" [(ngModel)]="simDefaultsPoint.fillA">
+                <span class="sim-suffix">α</span>
+              </div>
+
+              <div class="sim-row">
+                <label class="sim-label">Outline</label>
+                <input class="sim-color" type="color" [(ngModel)]="simDefaultsPoint.outline">
+                <input class="sim-num" type="number" min="0" max="1" step="0.05" [(ngModel)]="simDefaultsPoint.outlineA">
+                <span class="sim-suffix">α</span>
+              </div>
+
+              <div class="sim-row">
+                <label class="sim-label">Outline W</label>
+                <input class="sim-num-wide" type="number" min="0" step="1" [(ngModel)]="simDefaultsPoint.outlineWidth">
+              </div>
+
+              <div class="sim-row">
+                <label class="sim-label">Size</label>
+                <input class="sim-num-wide" type="number" min="2" step="1" [(ngModel)]="simDefaultsPoint.size">
+              </div>
+            </div>
+          </div>
+
+          <div class="sim-style-panel">
+            <div class="sim-style-panel-head">
+              <h5>Trail Line</h5>
+              <span class="sim-pill sim-pill-line">Line</span>
+            </div>
+
+            <div class="sim-form">
+              <div class="sim-row">
+                <label class="sim-label">Color</label>
+                <input class="sim-color" type="color" [(ngModel)]="simDefaultsLine.color">
+                <input class="sim-num" type="number" min="0" max="1" step="0.05" [(ngModel)]="simDefaultsLine.colorA">
+                <span class="sim-suffix">α</span>
+              </div>
+
+              <div class="sim-row">
+                <label class="sim-label">Width</label>
+                <input class="sim-num-wide" type="number" min="1" step="1" [(ngModel)]="simDefaultsLine.width">
+              </div>
+
+              <div class="sim-row">
+                <label class="sim-label">Dash</label>
+                <input class="sim-text-wide" type="text" placeholder="e.g. 4,2" [(ngModel)]="simDefaultsLine.dash">
+              </div>
+            </div>
+          </div>
+
+          <div class="sim-style-panel">
+            <div class="sim-style-panel-head">
+              <h5>Aircraft Labels</h5>
+              <span class="sim-pill sim-pill-label">Label</span>
+            </div>
+
+            <div class="sim-form">
+              <div class="sim-row">
+                <label class="sim-label">CSS Class</label>
+                <input class="sim-text-wide" type="text" [(ngModel)]="simAircraftLabel.cssClass">
+              </div>
+              <div class="sim-checkgrid">
+                <label><input type="checkbox" [(ngModel)]="simAircraftLabel.showName"> Name</label>
+                <label><input type="checkbox" [(ngModel)]="simAircraftLabel.showAltitude"> Alt</label>
+                <label><input type="checkbox" [(ngModel)]="simAircraftLabel.showSpeed"> Spd</label>
+                <label><input type="checkbox" [(ngModel)]="simAircraftLabel.showHeading"> Hd</label>
+              </div>
+            </div>
+          </div>
+
+          <div class="sim-style-panel">
+            <div class="sim-style-panel-head">
+              <h5>Trail Labels</h5>
+              <span class="sim-pill sim-pill-label">Label</span>
+            </div>
+
+            <div class="sim-form">
+              <div class="sim-row">
+                <label class="sim-label">CSS Class</label>
+                <input class="sim-text-wide" type="text" [(ngModel)]="simTrailLabel.cssClass">
+              </div>
+              <div class="sim-checkgrid">
+                <label><input type="checkbox" [(ngModel)]="simTrailLabel.showName"> Name</label>
+                <label><input type="checkbox" [(ngModel)]="simTrailLabel.showPointCount"> Pts</label>
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+        <div class="sim-style-actions">
+          <button type="button" class="ae-btn ae-btn-primary" (click)="applySimDefaults()">Apply Defaults</button>
+        </div>
+      </ng-container>
+
+      <!-- OVERRIDES -->
+      <ng-container *ngIf="simStyleTab === 'overrides'">
+        <div class="sim-style-panel">
+          <div class="sim-form">
+            <div class="sim-row">
+              <label class="sim-label">Aircraft</label>
+              <select class="sim-select-wide" [(ngModel)]="simSelectedAircraftId">
+                <option value="">-- Select aircraft --</option>
+                <option *ngFor="let ac of lastSnapshot?.aircraft; let i = index"
+                        [ngValue]="aircraftKey(ac, i)">
+                  {{ aircraftLabel(ac, i) }}
+                </option>
+              </select>
+            </div>
+            <div class="sim-muted">Overrides are saved per scenario.</div>
+          </div>
+        </div>
+
+        <div class="sim-style-grid-2">
+          <div class="sim-style-panel">
+            <div class="sim-style-panel-head">
+              <h5>Override Point</h5>
+              <span class="sim-pill">Point</span>
+            </div>
+
+            <div class="sim-form">
+              <div class="sim-row">
+                <label class="sim-label">Fill</label>
+                <input class="sim-color" type="color" [(ngModel)]="simOverridePoint.fill">
+                <input class="sim-num" type="number" min="0" max="1" step="0.05" [(ngModel)]="simOverridePoint.fillA">
+                <span class="sim-suffix">α</span>
+              </div>
+
+              <div class="sim-row">
+                <label class="sim-label">Outline</label>
+                <input class="sim-color" type="color" [(ngModel)]="simOverridePoint.outline">
+                <input class="sim-num" type="number" min="0" max="1" step="0.05" [(ngModel)]="simOverridePoint.outlineA">
+                <span class="sim-suffix">α</span>
+              </div>
+
+              <div class="sim-row">
+                <label class="sim-label">Outline W</label>
+                <input class="sim-num-wide" type="number" min="0" step="1" [(ngModel)]="simOverridePoint.outlineWidth">
+              </div>
+
+              <div class="sim-row">
+                <label class="sim-label">Size</label>
+                <input class="sim-num-wide" type="number" min="2" step="1" [(ngModel)]="simOverridePoint.size">
+              </div>
+            </div>
+          </div>
+
+          <div class="sim-style-panel">
+            <div class="sim-style-panel-head">
+              <h5>Override Line</h5>
+              <span class="sim-pill sim-pill-line">Line</span>
+            </div>
+
+            <div class="sim-form">
+              <div class="sim-row">
+                <label class="sim-label">Color</label>
+                <input class="sim-color" type="color" [(ngModel)]="simOverrideLine.color">
+                <input class="sim-num" type="number" min="0" max="1" step="0.05" [(ngModel)]="simOverrideLine.colorA">
+                <span class="sim-suffix">α</span>
+              </div>
+
+              <div class="sim-row">
+                <label class="sim-label">Width</label>
+                <input class="sim-num-wide" type="number" min="1" step="1" [(ngModel)]="simOverrideLine.width">
+              </div>
+
+              <div class="sim-row">
+                <label class="sim-label">Dash</label>
+                <input class="sim-text-wide" type="text" placeholder="4,2" [(ngModel)]="simOverrideLine.dash">
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="sim-style-actions">
+          <button type="button" class="ae-btn ae-btn-secondary"
+                  [disabled]="!simSelectedAircraftId"
+                  (click)="applySimPerAircraft()">
+            Apply Override
+          </button>
+
+          <button type="button" class="ae-btn ae-btn-ghost"
+                  [disabled]="!simSelectedAircraftId"
+                  (click)="clearSimPerAircraft()">
+            Clear Override
+          </button>
+        </div>
+      </ng-container>
+    </div>
+  </div>
 </div>

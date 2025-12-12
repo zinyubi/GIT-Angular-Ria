@@ -1,4 +1,3 @@
-// src/app/layout/screens/primary/primary.component.ts
 import {
   Component,
   OnDestroy,
@@ -17,8 +16,8 @@ import {
   SimulationWebsocketService,
   SimulationInfoMessage,
   SimulationSnapshot,
-  SimulationControlAck,
 } from './simulationwebsocket.service';
+
 import {
   SimulationMonitorService,
   SimulationOverview,
@@ -33,6 +32,8 @@ import {
   PrimaryTrailPoint,
 } from './primarysimlayer.helper';
 
+import { SimStyleRegistry, SimUiSnapshot } from '../../../luciadmaps/components/util/riavisualization/simstyle.registry';
+
 interface ScenarioListItem {
   id: number;
   name: string;
@@ -45,10 +46,11 @@ type SimulationInfoView = SimulationInfoMessage & {
   time_step?: number;
   sim_state?: string;
   can_control?: boolean;
+  scenario_name?: string;
 };
 
 export interface LiveAircraftTrack {
-  id: string | number;
+  id: string;
   name?: string;
   lat: number;
   lon: number;
@@ -85,9 +87,26 @@ export class PrimaryComponent implements OnInit, OnDestroy, AfterViewInit {
   private simLayerHelper?: PrimarySimLayerHelper;
   private pendingSnapshot: SimulationSnapshot | null = null;
 
-  // Trail history: trackId → last ≤100 points
-  private trailHistory = new Map<string | number, TrailPoint[]>();
+  // Trail history
+  private trailHistory = new Map<string, TrailPoint[]>();
   private readonly TRAIL_LENGTH = 100;
+
+  // Style registry (shared between UI + painter)
+  private styleRegistry = new SimStyleRegistry();
+
+  // ───────────── Styling modal ─────────────
+  simStyleModalOpen = false;
+  simStyleTab: 'defaults' | 'overrides' = 'defaults';
+
+  // UI form models (kept in sync via getUiSnapshot / update...)
+  simDefaultsPoint: any = {};
+  simDefaultsLine: any = {};
+  simAircraftLabel: any = {};
+  simTrailLabel: any = {};
+
+  simSelectedAircraftId: string = '';
+  simOverridePoint: any = {};
+  simOverrideLine: any = {};
 
   constructor(
     private http: HttpClient,
@@ -99,7 +118,6 @@ export class PrimaryComponent implements OnInit, OnDestroy, AfterViewInit {
   // ───────────────────────── lifecycle ─────────────────────────
 
   ngOnInit(): void {
-    // 1) Global monitor WS (for "(running)" etc. in the scenario dropdown)
     this.monitorWs.connect();
     this.subs.push(
       this.monitorWs.simulations$.subscribe((sims: SimulationOverview[]) => {
@@ -108,7 +126,6 @@ export class PrimaryComponent implements OnInit, OnDestroy, AfterViewInit {
       }),
     );
 
-    // 2) Load scenarios once
     this.subs.push(
       this.http
         .get<any[]>(API_URLS.SCENARIOS, { headers: this.auth.getAuthHeaders() })
@@ -120,66 +137,56 @@ export class PrimaryComponent implements OnInit, OnDestroy, AfterViewInit {
             }));
             this.mergeMonitorStates();
           },
-          error: () => {
-            this.scenarios = [];
-          },
+          error: () => (this.scenarios = []),
         }),
     );
 
-    // 3) Per-scenario simulation websocket
     this.subs.push(
-      // Info message (sent once on connect)
       this.simWs.info$.subscribe((info: SimulationInfoMessage | null) => {
-        if (!info) {
-          this.info = null;
-          return;
-        }
-        this.info = info as SimulationInfoView;
-
-        // If backend info has its own sim_state, sync it into scenarios
-        if (info.sim_state && info.scenario_id != null) {
-          this.applySimState(info.scenario_id, info.sim_state);
-        }
+        this.info = info as SimulationInfoView | null;
       }),
 
-      // Pure snapshot messages (type: "snapshot")
       this.simWs.snapshot$.subscribe((snap: SimulationSnapshot) => {
         this.lastSnapshot = snap;
         this.updateScenarioStateFromSnapshot(snap);
         this.updateScenarioLayerFromSnapshot(snap);
       }),
 
-      // Control acks & other state messages (type: "control_ack", etc.)
-      this.simWs.state$.subscribe((msg: SimulationControlAck | any) => {
+      this.simWs.state$.subscribe((msg: any) => {
         if (!msg) return;
 
         const snapshot: SimulationSnapshot | null | undefined = msg.snapshot;
         const newState: string | undefined = msg.state;
         const scenarioId: number | undefined = msg.scenario_id;
 
-        // If backend included a fresh snapshot inside the control_ack
         if (snapshot) {
           this.lastSnapshot = snapshot;
           this.updateScenarioStateFromSnapshot(snapshot);
           this.updateScenarioLayerFromSnapshot(snapshot);
         }
 
-        // Also update state from the control_ack itself (for immediate UI refresh)
         if (newState && scenarioId != null) {
-          this.applySimState(scenarioId, newState);
+          this.scenarios = this.scenarios.map((s) =>
+            s.id === scenarioId ? { ...s, sim_state: newState } : s,
+          );
+
+          if (this.info && this.info.scenario_id === scenarioId) {
+            this.info = { ...this.info, sim_state: newState } as SimulationInfoView;
+          }
         }
       }),
 
-      // Socket connection flag
       this.simWs.connected$.subscribe((isConnected: boolean) => {
         this.connectionStatus = isConnected;
       }),
 
-      // Error stream
       this.simWs.errors$.subscribe((err: string) => {
         this.lastError = err;
       }),
     );
+
+    // initialize UI model from registry
+    this.pullUiFromRegistry();
   }
 
   ngAfterViewInit(): void {
@@ -188,6 +195,7 @@ export class PrimaryComponent implements OnInit, OnDestroy, AfterViewInit {
         this.mapComponent.map,
         this.mapComponent.vizFacade,
         this.mapComponent,
+        this.styleRegistry,
       );
 
       if (this.pendingSnapshot) {
@@ -198,7 +206,7 @@ export class PrimaryComponent implements OnInit, OnDestroy, AfterViewInit {
   }
 
   ngOnDestroy(): void {
-    this.subs.forEach((s: Subscription) => s.unsubscribe());
+    this.subs.forEach((s) => s.unsubscribe());
     this.simWs.disconnect();
     this.monitorWs.disconnect();
     this.simLayerHelper?.clear();
@@ -208,49 +216,25 @@ export class PrimaryComponent implements OnInit, OnDestroy, AfterViewInit {
   // ───────────────────────── scenario list / monitor ─────────────────────────
 
   private mergeMonitorStates(): void {
-    if (!this.scenarios.length && !this.monitorSimulations.length) return;
+    if (!this.scenarios.length) return;
 
     const byId = new Map<number, SimulationOverview>();
-    for (const sim of this.monitorSimulations) {
-      byId.set(sim.scenario_id, sim);
-    }
+    for (const sim of this.monitorSimulations) byId.set(sim.scenario_id, sim);
 
-    // Update scenarios[].sim_state from monitor
-    this.scenarios = this.scenarios.map((s: ScenarioListItem) => ({
+    this.scenarios = this.scenarios.map((s) => ({
       ...s,
       sim_state: byId.get(s.id)?.state ?? s.sim_state,
     }));
-
-    // Also keep info.sim_state in sync for the current scenario
-    if (this.info && this.info.scenario_id != null) {
-      const m = byId.get(this.info.scenario_id);
-      if (m) {
-        this.info = {
-          ...this.info,
-          sim_state: m.state,
-        } as SimulationInfoView;
-      }
-    }
-  }
-
-  /** Central helper: whenever we know "scenario X is now in state Y" we call this. */
-  private applySimState(scenarioId: number, state: string): void {
-    // Update scenario list
-    this.scenarios = this.scenarios.map((s: ScenarioListItem) =>
-      s.id === scenarioId ? { ...s, sim_state: state } : s,
-    );
-
-    // Update info if it belongs to the same scenario
-    if (this.info && this.info.scenario_id === scenarioId) {
-      this.info = {
-        ...this.info,
-        sim_state: state,
-      } as SimulationInfoView;
-    }
   }
 
   private updateScenarioStateFromSnapshot(snap: SimulationSnapshot): void {
-    this.applySimState(snap.scenario_id, snap.state);
+    this.scenarios = this.scenarios.map((s) =>
+      s.id === snap.scenario_id ? { ...s, sim_state: snap.state } : s,
+    );
+
+    if (this.info && this.info.scenario_id === snap.scenario_id) {
+      this.info = { ...this.info, sim_state: snap.state } as SimulationInfoView;
+    }
   }
 
   get visibleScenarios(): ScenarioListItem[] {
@@ -258,35 +242,31 @@ export class PrimaryComponent implements OnInit, OnDestroy, AfterViewInit {
   }
 
   get anyRunning(): boolean {
-    // Prefer monitor for "any running?"
     if (this.monitorSimulations.length) {
-      return this.monitorSimulations.some(
-        (s: SimulationOverview) => s.state === 'running',
-      );
+      return this.monitorSimulations.some((s) => s.state === 'running');
     }
-    return this.scenarios.some((s: ScenarioListItem) => s.sim_state === 'running');
+    return this.scenarios.some((s) => s.sim_state === 'running');
   }
 
   // ───────────────────────── scenario change + controls ─────────────────────────
 
   onScenarioChange(newId: number | null): void {
-    // Clear map layer + trail history when switching
     this.simLayerHelper?.clear();
     this.trailHistory.clear();
+    this.lastSnapshot = null;
+
+    // load styles for the new scenario
+    this.selectedScenarioId = newId;
+    this.loadStylesForScenario(newId);
 
     if (!newId) {
-      this.selectedScenarioId = null;
       this.simWs.disconnect();
       this.info = null;
-      this.lastSnapshot = null;
       return;
     }
 
-    this.selectedScenarioId = newId;
     this.simWs.connect(newId);
   }
-
-  // 🔹 Optimistic updates so we *don't* have to refresh the page
 
   onStart(): void {
     if (!this.canControl || !this.selectedScenarioId) return;
@@ -296,28 +276,28 @@ export class PrimaryComponent implements OnInit, OnDestroy, AfterViewInit {
       type: 'info',
       scenario_id: this.selectedScenarioId,
       sim_state: 'running',
-      can_control: true,
     } as SimulationInfoView;
 
-    this.applySimState(this.selectedScenarioId, 'running');
+    this.scenarios = this.scenarios.map((s) =>
+      s.id === this.selectedScenarioId ? { ...s, sim_state: 'running' } : s,
+    );
 
     this.simWs.sendAction('start');
   }
 
   onPause(): void {
-    if (!this.canControl || this.simState !== 'running' || !this.selectedScenarioId) {
-      return;
-    }
+    if (!this.canControl || this.simState !== 'running' || !this.selectedScenarioId) return;
 
     this.info = {
       ...(this.info ?? {}),
       type: 'info',
       scenario_id: this.selectedScenarioId,
       sim_state: 'paused',
-      can_control: true,
     } as SimulationInfoView;
 
-    this.applySimState(this.selectedScenarioId, 'paused');
+    this.scenarios = this.scenarios.map((s) =>
+      s.id === this.selectedScenarioId ? { ...s, sim_state: 'paused' } : s,
+    );
 
     this.simWs.sendAction('pause');
   }
@@ -330,10 +310,11 @@ export class PrimaryComponent implements OnInit, OnDestroy, AfterViewInit {
       type: 'info',
       scenario_id: this.selectedScenarioId,
       sim_state: 'stopped',
-      can_control: true,
     } as SimulationInfoView;
 
-    this.applySimState(this.selectedScenarioId, 'stopped');
+    this.scenarios = this.scenarios.map((s) =>
+      s.id === this.selectedScenarioId ? { ...s, sim_state: 'stopped' } : s,
+    );
 
     this.simWs.sendAction('stop');
   }
@@ -341,7 +322,6 @@ export class PrimaryComponent implements OnInit, OnDestroy, AfterViewInit {
   onReset(): void {
     if (!this.canControl || !this.selectedScenarioId) return;
 
-    // Clear map + history
     this.trailHistory.clear();
     this.simLayerHelper?.clear();
     this.lastSnapshot = null;
@@ -351,10 +331,11 @@ export class PrimaryComponent implements OnInit, OnDestroy, AfterViewInit {
       type: 'info',
       scenario_id: this.selectedScenarioId,
       sim_state: 'idle',
-      can_control: true,
     } as SimulationInfoView;
 
-    this.applySimState(this.selectedScenarioId, 'idle');
+    this.scenarios = this.scenarios.map((s) =>
+      s.id === this.selectedScenarioId ? { ...s, sim_state: 'idle' } : s,
+    );
 
     this.simWs.sendAction('reset');
   }
@@ -364,39 +345,28 @@ export class PrimaryComponent implements OnInit, OnDestroy, AfterViewInit {
   }
 
   get simState(): string {
-    // 1) Prefer monitor state for the selected scenario
-    if (this.selectedScenarioId != null && this.monitorSimulations.length) {
-      const m = this.monitorSimulations.find(
-        (s) => s.scenario_id === this.selectedScenarioId,
-      );
-      if (m?.state) {
-        return m.state;
-      }
-    }
-
-    // 2) Then prefer info.sim_state (per-scenario WS)
-    if (this.info?.sim_state) return this.info.sim_state;
-
-    // 3) Then snapshot.state
-    if (this.lastSnapshot?.state) return this.lastSnapshot.state;
-
-    // 4) Finally, fall back to scenarios[] entry
-    if (this.selectedScenarioId != null) {
-      const s = this.scenarios.find((x) => x.id === this.selectedScenarioId);
-      if (s?.sim_state) return s.sim_state;
-    }
-
-    return 'unknown';
+    return this.info?.sim_state ?? this.lastSnapshot?.state ?? 'unknown';
   }
 
   get scenarioName(): string {
     if (this.info?.scenario_name) return this.info.scenario_name;
-    if (this.lastSnapshot?.scenario_name) return this.lastSnapshot.scenario_name;
+    if ((this.lastSnapshot as any)?.scenario_name) return (this.lastSnapshot as any).scenario_name;
 
-    const selected = this.scenarios.find(
-      (s: ScenarioListItem) => s.id === this.selectedScenarioId,
-    );
+    const selected = this.scenarios.find((s) => s.id === this.selectedScenarioId);
     return selected?.name ?? 'N/A';
+  }
+
+  // ───────────────────────── SAFE helpers for template ─────────────────────────
+
+  /** Stable key for per-aircraft selection/override. Avoids .id/.callsign compile errors. */
+  aircraftKey(ac: any, i: number): string {
+    const ext = ac?.external_id;
+    if (ext != null && String(ext).trim().length) return String(ext);
+    return `idx:${i}`;
+  }
+
+  aircraftLabel(ac: any, i: number): string {
+    return String(ac?.name ?? ac?.external_id ?? `Aircraft ${i + 1}`);
   }
 
   // ───────────────────────── telemetry for UI ─────────────────────────
@@ -409,53 +379,29 @@ export class PrimaryComponent implements OnInit, OnDestroy, AfterViewInit {
       .map((raw: any, idx: number) => {
         const sp: any = raw.sim_position || {};
         return {
-          id: raw.external_id ?? raw.id ?? idx,
+          id: this.aircraftKey(raw, idx),
           name: raw.name ?? raw.external_id ?? `Aircraft ${idx + 1}`,
           lat: sp.latitude,
           lon: sp.longitude,
-          alt_m: sp.altitude_m,
+          alt_m: sp.altitude_m ?? null,
           speed_mps: raw.ground_speed_mps ?? raw.speed_mps ?? null,
           heading_deg: raw.heading_deg ?? null,
         } as LiveAircraftTrack;
       })
-      .filter(
-        (t: LiveAircraftTrack) =>
-          Number.isFinite(t.lat) && Number.isFinite(t.lon),
-      );
+      .filter((t) => Number.isFinite(t.lat) && Number.isFinite(t.lon));
   }
 
-  get primaryTrack(): LiveAircraftTrack | null {
-    const tracks = this.liveTracks;
-    return tracks.length ? tracks[0] : null;
-  }
-
-  getTrackForAircraft(ac: any, idx: number): LiveAircraftTrack | undefined {
+  public getTrackForAircraft(ac: any, idx: number): LiveAircraftTrack | undefined {
     const list = this.liveTracks;
     if (!list.length) return undefined;
 
-    const id = ac.external_id ?? ac.id ?? ac.callsign ?? null;
-
-    let match: LiveAircraftTrack | undefined;
-    if (id !== null) {
-      match = list.find((t: LiveAircraftTrack) => t.id === id);
-    }
-    if (!match && ac.name) {
-      match = list.find((t: LiveAircraftTrack) => t.name === ac.name);
-    }
-    if (!match && idx < list.length) {
-      match = list[idx];
-    }
-    return match;
+    const id = this.aircraftKey(ac, idx);
+    return list.find((t) => t.id === id) ?? list[idx];
   }
 
   // ───────────────── trail history + snapshot → trail aircraft ─────────────────
 
-  private pushTrailPoint(
-    trackKey: string | number,
-    lat: number,
-    lon: number,
-    alt: number,
-  ): void {
+  private pushTrailPoint(trackKey: string, lat: number, lon: number, alt: number): void {
     if (!Number.isFinite(lat) || !Number.isFinite(lon)) return;
 
     let arr = this.trailHistory.get(trackKey);
@@ -470,9 +416,7 @@ export class PrimaryComponent implements OnInit, OnDestroy, AfterViewInit {
     }
   }
 
-  private snapshotToTrailAircrafts(
-    snap: SimulationSnapshot,
-  ): PrimaryTrailAircraft[] {
+  private snapshotToTrailAircrafts(snap: SimulationSnapshot): PrimaryTrailAircraft[] {
     const list: any[] = (snap as any).aircraft || [];
 
     return list.map((raw: any, idx: number) => {
@@ -481,60 +425,141 @@ export class PrimaryComponent implements OnInit, OnDestroy, AfterViewInit {
       const lon = Number(sp.longitude ?? 0);
       const alt = Number(sp.altitude_m ?? 0);
 
-      const trackKey: string | number =
-        raw.external_id ?? raw.id ?? raw.callsign ?? idx;
-
+      const trackKey = this.aircraftKey(raw, idx);
       this.pushTrailPoint(trackKey, lat, lon, alt);
 
-      const history: TrailPoint[] = this.trailHistory.get(trackKey) || [];
+      const history = this.trailHistory.get(trackKey) || [];
       const current: PrimaryTrailPoint = { lon, lat, alt };
 
-      const trailPoints: PrimaryTrailPoint[] = history.map(
-        (p: TrailPoint): PrimaryTrailPoint => ({
-          lon: p.lon,
-          lat: p.lat,
-          alt: p.alt,
-        }),
-      );
+      const trailPoints: PrimaryTrailPoint[] = history.map((p) => ({
+        lon: p.lon,
+        lat: p.lat,
+        alt: p.alt,
+      }));
 
-      const name: string =
-        raw.name ?? raw.external_id ?? `Aircraft ${idx + 1}`;
+      const name = this.aircraftLabel(raw, idx);
 
       return {
         id: trackKey,
         name,
-        scenarioId: snap.scenario_id,
+        scenarioId: (snap as any).scenario_id,
         current,
         trail: trailPoints,
+        alt_m: alt,
+        speed_mps: raw.ground_speed_mps ?? raw.speed_mps ?? null,
+        heading_deg: raw.heading_deg ?? null,
       };
     });
   }
 
-  private updateScenarioLayerFromSnapshot(
-    snap: SimulationSnapshot | null,
-  ): void {
+  public updateScenarioLayerFromSnapshot(snap: SimulationSnapshot | null): void {
     if (!snap) return;
+    if (!this.selectedScenarioId || (snap as any).scenario_id !== this.selectedScenarioId) return;
 
-    if (!this.selectedScenarioId || snap.scenario_id !== this.selectedScenarioId) {
-      return;
-    }
-
-    if (
-      !this.mapComponent?.map ||
-      !this.mapComponent.vizFacade ||
-      !this.simLayerHelper
-    ) {
+    if (!this.mapComponent?.map || !this.mapComponent.vizFacade || !this.simLayerHelper) {
       this.pendingSnapshot = snap;
       return;
     }
 
-    const aircrafts: PrimaryTrailAircraft[] =
-      this.snapshotToTrailAircrafts(snap);
+    const aircrafts = this.snapshotToTrailAircrafts(snap);
 
     this.simLayerHelper.renderScenarioTrail(
-      snap.scenario_id,
-      snap.scenario_name ?? `Scenario ${snap.scenario_id}`,
+      (snap as any).scenario_id,
+      (snap as any).scenario_name ?? `Scenario ${(snap as any).scenario_id}`,
       aircrafts,
     );
+  }
+
+  // ───────────────────── Style modal + persistence ─────────────────────
+
+  openSimStyleModal(): void {
+    this.simStyleModalOpen = true;
+    this.simStyleTab = 'defaults';
+    this.pullUiFromRegistry();
+  }
+
+  closeSimStyleModal(): void {
+    this.simStyleModalOpen = false;
+  }
+
+  private pullUiFromRegistry(): void {
+    const snap = this.styleRegistry.getUiSnapshot();
+    this.simDefaultsPoint = { ...snap.aircraftPoint };
+    this.simDefaultsLine = { ...snap.trailLine };
+    this.simAircraftLabel = { ...snap.aircraftLabel };
+    this.simTrailLabel = { ...snap.trailLabel };
+
+    // reset overrides UI (doesn't delete stored overrides)
+    this.simSelectedAircraftId = '';
+    this.simOverridePoint = this.styleRegistry.emptyPointOverride();
+    this.simOverrideLine = this.styleRegistry.emptyLineOverride();
+  }
+
+  private persistStylesForScenario(): void {
+    if (!this.selectedScenarioId) return;
+    const key = `sim-style:scenario:${this.selectedScenarioId}`;
+    const data = this.styleRegistry.exportScenarioSnapshot();
+    localStorage.setItem(key, JSON.stringify(data));
+  }
+
+  private loadStylesForScenario(scenarioId: number | null): void {
+    // Reset to defaults first
+    this.styleRegistry.resetAll();
+
+    if (!scenarioId) {
+      this.pullUiFromRegistry();
+      return;
+    }
+
+    const key = `sim-style:scenario:${scenarioId}`;
+    const raw = localStorage.getItem(key);
+    if (raw) {
+      try {
+        const parsed = JSON.parse(raw) as SimUiSnapshot;
+        this.styleRegistry.importScenarioSnapshot(parsed);
+      } catch {
+        // ignore bad JSON
+      }
+    }
+
+    this.pullUiFromRegistry();
+  }
+
+  applySimDefaults(): void {
+    this.styleRegistry.updateDefaultsFromUi({
+      aircraftPoint: { ...this.simDefaultsPoint },
+      trailLine: { ...this.simDefaultsLine },
+      aircraftLabel: { ...this.simAircraftLabel },
+      trailLabel: { ...this.simTrailLabel },
+    });
+
+    this.persistStylesForScenario();
+
+    if (this.lastSnapshot) this.updateScenarioLayerFromSnapshot(this.lastSnapshot);
+  }
+
+  applySimPerAircraft(): void {
+    if (!this.simSelectedAircraftId) return;
+
+    const pointPatch = this.styleRegistry.cleanPointOverride({ ...this.simOverridePoint });
+    const linePatch = this.styleRegistry.cleanLineOverride({ ...this.simOverrideLine });
+
+    this.styleRegistry.setAircraftOverride(this.simSelectedAircraftId, {
+      point: pointPatch,
+      line: linePatch,
+    });
+
+    this.persistStylesForScenario();
+
+    if (this.lastSnapshot) this.updateScenarioLayerFromSnapshot(this.lastSnapshot);
+  }
+
+  clearSimPerAircraft(): void {
+    if (!this.simSelectedAircraftId) return;
+    this.styleRegistry.clearAircraftOverride(this.simSelectedAircraftId);
+
+    this.persistStylesForScenario();
+
+    if (this.lastSnapshot) this.updateScenarioLayerFromSnapshot(this.lastSnapshot);
   }
 }
